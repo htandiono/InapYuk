@@ -3,7 +3,7 @@ import { prisma } from '../../libs/prisma';
 import { sendMail } from '../../libs/mailer';
 import { conflict } from '../../utils/app-error';
 import { env } from '../../config/env';
-import type { RegisterUserInput } from './auth.schema';
+import type { RegisterUserInput, RegisterTenantInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
 /**
@@ -67,6 +67,65 @@ export async function registerUser(input: RegisterUserInput) {
   }).catch((err) => {
     // We swallow errors here because mail failure shouldn't fail registration.
     // In production, logger handles this.
+  });
+
+  return result.user;
+}
+
+export async function registerTenant(input: RegisterTenantInput) {
+  const existingUser = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  if (existingUser) {
+    throw conflict('Email sudah terdaftar');
+  }
+
+  const { rawToken, tokenHash, expiresAt } = createTokenData();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        email: input.email,
+        name: input.name,
+        role: 'TENANT',
+        provider: 'EMAIL',
+        isVerified: false,
+      },
+    });
+
+    await tx.tenantProfile.create({
+      data: {
+        userId: user.id,
+        companyName: input.companyName,
+      },
+    });
+
+    const token = await tx.verificationToken.create({
+      data: {
+        userId: user.id,
+        type: 'EMAIL_VERIFICATION',
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    return { user, token };
+  });
+
+  const verificationUrl = `${env.WEB_BASE_URL}/verify?token=${rawToken}`;
+
+  sendMail({
+    to: result.user.email,
+    subject: 'Verifikasi Akun InapYuk (Tenant)',
+    template: 'email-verification',
+    context: {
+      name: result.user.name,
+      verificationUrl,
+      expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
+    },
+  }).catch((err) => {
+    // Swallowed mail error
   });
 
   return result.user;
