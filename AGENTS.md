@@ -82,4 +82,6 @@ npm run typecheck
 npm run lint
 ```
 
-Read the issue's acceptance criteria on the GitHub Project board.
+Read the card's acceptance criteria on the GitHub Project board
+(https://github.com/users/htandiono/projects/1). Do not file Feature 1/2 tasks
+as repo Issues — those belong on the Project as draft items.

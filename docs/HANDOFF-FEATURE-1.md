@@ -46,7 +46,10 @@ Seeded logins (all verified, password `Inapyuk123!`):
 | User | `budi@inapyuk.space` |
 | User | `siti@inapyuk.space` |
 
-6. Open the board: https://github.com/users/htandiono/projects/1 — filter **Feature = Feature 1**, **Sprint = Sprint 1**.
+6. Open the board: https://github.com/users/htandiono/projects/1
+   Filter **Feature = Feature 1** and **Sprint = Sprint 1**. Tasks live on the Project,
+   not under the repo Issues tab. Convert a card to an Issue only when you start it
+   and need a PR linked to it.
 
 ## What you implement
 
@@ -102,7 +105,7 @@ Sprint-by-sprint map: [SPRINT-PLAN.md](SPRINT-PLAN.md). Schema pictures: [ERD.md
 
 1. Open the repo root as the workspace (not `apps/web` alone).
 2. Tell the tool to read `AGENTS.md` and this file before it writes code.
-3. Paste **one GitHub issue** at a time. Do not ask it to “implement all of Feature 1”.
+3. Paste **one Project card** at a time. Do not ask it to “implement all of Feature 1”.
 4. After it edits, run `npm run typecheck` yourself.
 
 ### Starter prompt (copy this)
@@ -120,8 +123,8 @@ I am awanstywn. I only own Feature 1 paths. Do not edit Feature 2 folders, do no
 
 Stack is already set: Next.js 16 App Router, Express, Prisma 7, packages/types. Fill in the existing module stubs. Reuse jwt, mailer, upload, pricing.service, and sendSuccess.
 
-Work on this single issue only:
-<paste the GitHub issue title + acceptance criteria>
+Work on this single Project card only:
+<paste the card title + acceptance criteria>
 
 When you are done, list the files you changed and how to verify them.
 ```

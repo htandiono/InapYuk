@@ -27,7 +27,7 @@ apps/
 packages/
   types/      DTOs and enums shared by both apps
 docs/         ERD, API contract, sprint plan, workflow guide
-scripts/      Backlog-as-code that provisions GitHub issues and the project board
+scripts/      Backlog-as-code that provisions the GitHub Project board
 ```
 
 ## Getting started
