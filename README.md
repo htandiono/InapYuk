@@ -94,6 +94,10 @@ See [docs/WORKFLOW.md](docs/WORKFLOW.md) for the branch model and the file owner
 [docs/ERD.md](docs/ERD.md) for the data model, and
 [docs/SPRINT-PLAN.md](docs/SPRINT-PLAN.md) for the sprint breakdown.
 
+Starting Feature 1? Read [docs/HANDOFF-FEATURE-1.md](docs/HANDOFF-FEATURE-1.md) and
+[docs/UI.md](docs/UI.md). If you (or your AI tool) need a single rules file, that is
+[AGENTS.md](AGENTS.md).
+
 ## Scheduled jobs
 
 Booking auto-cancellation and check-in reminders are plain functions in
