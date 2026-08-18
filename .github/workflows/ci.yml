@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+
+    env:
+      # Build-time placeholders. No real database is contacted; Prisma only
+      # needs a syntactically valid URL to generate the client.
+      DATABASE_URL: postgresql://user:password@localhost:5432/inapyuk
+      DIRECT_URL: postgresql://user:password@localhost:5432/inapyuk
+      JWT_ACCESS_SECRET: ci-access-secret-placeholder
+      JWT_REFRESH_SECRET: ci-refresh-secret-placeholder
+      CRON_SECRET: ci-cron-secret
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

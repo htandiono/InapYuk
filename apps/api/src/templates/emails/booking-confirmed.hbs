@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+  <body style="margin:0;padding:24px;background:#f6f7f9;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;padding:32px">
+            <tr>
+              <td>
+                <h1 style="margin:0 0 8px;font-size:22px;color:#0f766e">{{appName}}</h1>
+                <p style="margin:0 0 24px;font-size:14px;color:#6b7280">Pembayaran dikonfirmasi</p>
+
+                <p style="font-size:15px;line-height:1.6">Halo <strong>{{guestName}}</strong>,</p>
+                <p style="font-size:15px;line-height:1.6">
+                  Pembayaran untuk pesanan <strong>{{orderNumber}}</strong> sudah kami terima.
+                  Berikut detail pemesanan kamu.
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="8" cellspacing="0"
+                       style="margin:20px 0;border:1px solid #e5e7eb;border-radius:8px;font-size:14px">
+                  <tr><td style="color:#6b7280">Properti</td><td align="right"><strong>{{propertyName}}</strong></td></tr>
+                  <tr><td style="color:#6b7280">Kamar</td><td align="right">{{roomName}}</td></tr>
+                  <tr><td style="color:#6b7280">Check-in</td><td align="right">{{checkIn}}</td></tr>
+                  <tr><td style="color:#6b7280">Check-out</td><td align="right">{{checkOut}}</td></tr>
+                  <tr><td style="color:#6b7280">Jumlah tamu</td><td align="right">{{guestCount}} orang</td></tr>
+                  <tr><td style="color:#6b7280">Total dibayar</td><td align="right"><strong>{{totalPrice}}</strong></td></tr>
+                </table>
+
+                <h2 style="font-size:16px;margin:24px 0 8px">Tata cara &amp; aturan menginap</h2>
+                <ul style="font-size:14px;line-height:1.8;color:#374151;padding-left:20px;margin:0">
+                  {{#each houseRules}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+
+                <p style="margin:28px 0 0">
+                  <a href="{{bookingUrl}}"
+                     style="background:#0f766e;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:15px;display:inline-block">
+                    Lihat Detail Pesanan
+                  </a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

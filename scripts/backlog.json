@@ -1,0 +1,1213 @@
+{
+  "repo": "htandiono/InapYuk",
+  "projectTitle": "InapYuk Final Project",
+  "projectOwner": "htandiono",
+  "collaborators": ["awanstywn"],
+
+  "labels": [
+    { "name": "feature-1", "color": "1D76DB", "description": "Feature 1 - awanstywn" },
+    { "name": "feature-2", "color": "0E8A16", "description": "Feature 2 - htandiono" },
+    {
+      "name": "shared",
+      "color": "5319E7",
+      "description": "Shared foundation, needs both reviewers"
+    },
+    { "name": "backend", "color": "B60205", "description": "Express API work" },
+    { "name": "frontend", "color": "FBCA04", "description": "Next.js work" },
+    { "name": "devops", "color": "0052CC", "description": "CI, deployment, tooling" },
+    { "name": "blocked", "color": "D93F0B", "description": "Waiting on another task" },
+    { "name": "priority:high", "color": "B60205", "description": "Blocks other work" },
+    { "name": "priority:medium", "color": "FBCA04", "description": "Normal sprint work" },
+    { "name": "priority:low", "color": "C2E0C6", "description": "Nice to have" }
+  ],
+
+  "milestones": [
+    {
+      "title": "Sprint 1",
+      "dueOn": "2026-08-21",
+      "description": "18-21 Aug - Auth core and booking domain"
+    },
+    {
+      "title": "Sprint 2",
+      "dueOn": "2026-08-27",
+      "description": "24-27 Aug - Public browsing and the money trail"
+    },
+    {
+      "title": "Sprint 3",
+      "dueOn": "2026-09-03",
+      "description": "31 Aug-3 Sep - Tenant CRUD and tenant transactions"
+    },
+    {
+      "title": "Sprint 4",
+      "dueOn": "2026-09-10",
+      "description": "7-10 Sep - Pricing engine, emails and reviews"
+    },
+    {
+      "title": "Sprint 5",
+      "dueOn": "2026-09-17",
+      "description": "14-17 Sep - Reports, profiles and polish"
+    },
+    {
+      "title": "Review",
+      "dueOn": "2026-09-23",
+      "description": "18-23 Sep - Bug fixes, deployment and slides"
+    }
+  ],
+
+  "fields": [
+    {
+      "name": "Sprint",
+      "dataType": "SINGLE_SELECT",
+      "options": ["Sprint 1", "Sprint 2", "Sprint 3", "Sprint 4", "Sprint 5", "Review"]
+    },
+    {
+      "name": "Feature",
+      "dataType": "SINGLE_SELECT",
+      "options": ["Feature 1", "Feature 2", "Shared"]
+    },
+    {
+      "name": "Area",
+      "dataType": "SINGLE_SELECT",
+      "options": ["Backend", "Frontend", "Fullstack", "DevOps"]
+    },
+    { "name": "Estimate", "dataType": "NUMBER" }
+  ],
+
+  "statusOptions": ["Todo", "In Progress", "In Review", "Blocked", "Done"],
+
+  "issues": [
+    {
+      "title": "[F1] Scaffold the auth module and validation schemas",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 2,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Create the auth module skeleton so every later auth task drops into a consistent structure.",
+      "acceptance": [
+        "auth.routes, auth.controller, auth.service and auth.schema files exist and are wired into src/routes/index.ts",
+        "Zod schemas cover register, verify, login, refresh and reset payloads",
+        "Every handler is wrapped in asyncHandler and returns the shared ApiResponse envelope"
+      ]
+    },
+    {
+      "title": "[F1] User and tenant registration endpoints",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let both account types register with an email address and no password, per the spec.",
+      "acceptance": [
+        "POST /auth/register/user and POST /auth/register/tenant accept different payloads",
+        "Tenant registration also creates the TenantProfile row",
+        "A duplicate email returns 409 and never leaks whether the account is verified",
+        "Registration sends the verification email and does not accept a password"
+      ]
+    },
+    {
+      "title": "[F1] Email verification with set password",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Verify the account and capture the first password in a single step.",
+      "acceptance": [
+        "The link expires 60 minutes after it is sent and can only be used once (usedAt)",
+        "Only the SHA-256 digest of the token is stored",
+        "Password is hashed with bcrypt before it is written",
+        "The user is asked to log in again after verifying",
+        "POST /auth/resend-verification works for unverified accounts only"
+      ]
+    },
+    {
+      "title": "[F1] Login, refresh and logout with JWT",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Issue and rotate tokens so every guarded route has an identity to check.",
+      "acceptance": [
+        "POST /auth/login returns an access token, a refresh token and the AuthUser payload",
+        "Wrong credentials return a generic message that does not reveal which field was wrong",
+        "POST /auth/refresh rotates the access token",
+        "A tenant token cannot be used on user-only routes and vice versa"
+      ]
+    },
+    {
+      "title": "[F1] Registration and login pages for user and tenant",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Give each role its own registration and login screen, as the spec requires separate pages.",
+      "acceptance": [
+        "Four pages exist: register user, register tenant, login user, login tenant",
+        "Client-side validation mirrors the server Zod rules",
+        "After login each role is redirected to its own landing area",
+        "Mobile-first layout, works down to 360px wide"
+      ]
+    },
+    {
+      "title": "[F1] Verification page, session store and route guards",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 1",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Hold the session on the client and stop unauthorised users reaching protected pages.",
+      "acceptance": [
+        "Verification page accepts the token, collects a password and confirms it",
+        "Session is persisted and restored on reload, with token refresh on 401",
+        "Unauthenticated visits to protected pages redirect to the homepage",
+        "Unverified users see a banner and transaction actions are disabled, not hidden"
+      ]
+    },
+
+    {
+      "title": "[F2] Scaffold the booking module and validation schemas",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 2,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Create the booking module skeleton and shared Zod schemas.",
+      "acceptance": [
+        "bookings.routes, controller, service and schema files exist and are wired into the router",
+        "Zod schemas cover quote, create, list query, cancel and confirm payloads",
+        "List query schema coerces page, limit, dates and enforces the max limit"
+      ]
+    },
+    {
+      "title": "[F2] Booking quote endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Price a stay before a booking row exists so checkout can show a breakdown.",
+      "acceptance": [
+        "POST /bookings/quote returns per-night prices, the night count and the total",
+        "Uses services/pricing.service rather than recomputing prices",
+        "Unavailable dates are listed so the UI can mark them",
+        "Guest count above room capacity is rejected"
+      ]
+    },
+    {
+      "title": "[F2] Create reservation with per-night price snapshot",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Turn a quote into a booking that holds inventory and freezes its pricing.",
+      "acceptance": [
+        "POST /bookings writes the Booking plus one BookingNight per night in a transaction",
+        "Availability is re-checked inside the transaction to avoid double booking",
+        "Status starts at WAITING_PAYMENT with paymentDeadline set from PAYMENT_DEADLINE_MINUTES",
+        "Only verified users can create a booking",
+        "Total price equals the sum of the night snapshots"
+      ]
+    },
+    {
+      "title": "[F2] Order number generator and status state machine",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Centralise legal status transitions so no endpoint can move a booking illegally.",
+      "acceptance": [
+        "Order numbers follow INP-YYYYMMDD-NNNN and are unique",
+        "A single canTransition helper defines every allowed status move",
+        "Illegal transitions throw a 409 with a readable message",
+        "The transition table matches the diagram in docs/ERD.md"
+      ]
+    },
+    {
+      "title": "[F2] Auto-cancel job for unpaid bookings",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Release rooms when a guest never uploads payment proof in time.",
+      "acceptance": [
+        "expire-unpaid-bookings cancels WAITING_PAYMENT bookings past their deadline",
+        "cancelledBy is set to SYSTEM and a reason is recorded",
+        "The job is idempotent and safe to run every five minutes",
+        "Runs locally through node-cron and remotely through POST /api/cron/expire-unpaid-bookings"
+      ]
+    },
+    {
+      "title": "[F2] Booking detail endpoint with ownership scoping",
+      "assignee": "htandiono",
+      "sprint": "Sprint 1",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Return one booking with everything the detail screen needs.",
+      "acceptance": [
+        "GET /bookings/:orderNumber returns the night breakdown and computed action flags",
+        "A guest can only read their own booking",
+        "A tenant can only read bookings for properties they own",
+        "canBeCancelled, canUploadPaymentProof and canBeReviewed are computed server-side"
+      ]
+    },
+
+    {
+      "title": "[F1] Property catalog endpoint with server-side paging, filter and sort",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Power the search results page entirely from the server, as the spec demands.",
+      "acceptance": [
+        "GET /properties filters by city, date range, guests, category and price range",
+        "Sorts by name and price, ascending and descending",
+        "Paginates on the server and returns the shared PaginationMeta",
+        "startingPrice is the cheapest available room for the requested dates",
+        "Properties with no availability in the range are excluded"
+      ]
+    },
+    {
+      "title": "[F1] Property detail endpoint",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Return one property with its rooms so checkout has something to start from.",
+      "acceptance": [
+        "GET /properties/:slug returns images, rooms, tenant name, rating and review count",
+        "Each room carries its resolved price for the requested dates",
+        "Soft-deleted properties and rooms are excluded",
+        "Returns 404 for an unknown slug"
+      ]
+    },
+    {
+      "title": "[F1] Monthly room price calendar endpoint",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let guests compare prices across dates, which is the core idea of the product.",
+      "acceptance": [
+        "GET /properties/:id/calendar returns every day of the requested month",
+        "Each day carries basePrice, finalPrice, availability and the adjustment that applied",
+        "Uses services/pricing.service so it never disagrees with the quote endpoint",
+        "Unavailable days are flagged rather than omitted"
+      ]
+    },
+    {
+      "title": "[F1] Landing page shell: navbar, hero carousel and footer",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Build the first screen a visitor sees.",
+      "acceptance": [
+        "Navbar holds the main menu and adapts to signed-in, signed-out, user and tenant states",
+        "Hero section is a carousel of promotional slides",
+        "Footer carries supporting links and company information",
+        "Mobile-first, verified at 360px, 768px and 1280px"
+      ]
+    },
+    {
+      "title": "[F1] Search form: destination, dates, duration and guests",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Collect the search criteria the spec requires before showing any listings.",
+      "acceptance": [
+        "Destination is a dropdown of available cities loaded from the API",
+        "Dates are chosen from a calendar, with check-out after check-in enforced",
+        "Duration and guest count are captured and validated",
+        "Submitting pushes the criteria into the results URL so the search is shareable"
+      ]
+    },
+    {
+      "title": "[F1] Catalog results and property detail pages",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 2",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Let a guest browse results and land on a property they want to book.",
+      "acceptance": [
+        "Results page renders server-driven pagination, filters and sorting",
+        "Loading skeletons and an empty state are handled",
+        "Detail page shows the gallery, room list and the monthly price calendar",
+        "Each room card links into the checkout flow with dates already applied"
+      ]
+    },
+
+    {
+      "title": "[F2] Payment proof upload endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Accept a transfer receipt and move the booking forward.",
+      "acceptance": [
+        "POST /bookings/:id/payment-proof accepts only .jpg and .png, max 1MB",
+        "Status moves to WAITING_CONFIRMATION and paymentProofUploadedAt is set",
+        "Uploading after the deadline or in the wrong status is rejected",
+        "Only the booking owner can upload"
+      ]
+    },
+    {
+      "title": "[F2] User order list endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Let guests find their own bookings, in progress or finished.",
+      "acceptance": [
+        "GET /bookings paginates, filters by status and sorts on the server",
+        "Search by order number and by date range works",
+        "Only the signed-in user's bookings are returned",
+        "Response uses the shared Paginated envelope"
+      ]
+    },
+    {
+      "title": "[F2] User cancel order endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Allow a guest to back out before they have paid.",
+      "acceptance": [
+        "Cancelling is only allowed while no payment proof has been uploaded",
+        "Any later attempt returns 409 with a clear reason",
+        "cancelledBy is set to USER and the nights are released",
+        "The tenant receives a notification"
+      ]
+    },
+    {
+      "title": "[F2] Checkout page with price breakdown",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Turn a selected room and date range into a confirmed reservation.",
+      "acceptance": [
+        "Shows the per-night breakdown from the quote endpoint, including peak season nights",
+        "Guest count and dates can be adjusted and the quote refreshes",
+        "Unverified users are blocked with an explanation and a resend link",
+        "On success the user lands on the order detail page"
+      ]
+    },
+    {
+      "title": "[F2] Order list page with filters and search",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Give guests one place to track every booking.",
+      "acceptance": [
+        "Status tabs, date range filter and order number search all drive server queries",
+        "Pagination controls reflect the server meta",
+        "Each row shows status in Indonesian using BOOKING_STATUS_LABEL",
+        "Empty and loading states are handled"
+      ]
+    },
+    {
+      "title": "[F2] Order detail page with upload and payment countdown",
+      "assignee": "htandiono",
+      "sprint": "Sprint 2",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Show one booking and every action available on it right now.",
+      "acceptance": [
+        "Displays the night breakdown, total and current status",
+        "Payment proof upload validates type and size before sending",
+        "A live countdown shows the remaining payment window",
+        "Cancel is only offered when the server says it is allowed, with a confirmation dialog"
+      ]
+    },
+
+    {
+      "title": "[F1] Property category CRUD",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let tenants define their own property categories.",
+      "acceptance": [
+        "Create, list, update and soft-delete endpoints exist under /tenant/categories",
+        "A tenant only ever sees and edits their own categories",
+        "Slugs are unique per tenant",
+        "Deleting a category that still has properties is refused"
+      ]
+    },
+    {
+      "title": "[F1] Property CRUD with image upload",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let tenants publish and maintain their listings.",
+      "acceptance": [
+        "Create, update and soft-delete endpoints enforce tenant ownership",
+        "Required fields are name, category, description, picture and at least one room",
+        "Images validate extension and size and go through libs/cloudinary",
+        "Slug is generated and stays unique"
+      ]
+    },
+    {
+      "title": "[F1] Room CRUD",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let a property offer several room types, each with its own price.",
+      "acceptance": [
+        "Create, update and soft-delete endpoints nested under a property",
+        "Required fields are name, price, description, capacity and total units",
+        "Only the owning tenant can modify a room",
+        "A room with active bookings cannot be hard-deleted"
+      ]
+    },
+    {
+      "title": "[F1] Tenant property list page",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Give tenants an overview of everything they rent out.",
+      "acceptance": [
+        "Lists the tenant's properties with their rooms nested underneath",
+        "Server-side pagination, search and sorting",
+        "Row actions for edit, manage rooms and delete",
+        "Delete asks for confirmation first"
+      ]
+    },
+    {
+      "title": "[F1] Property create and edit form with image manager",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Provide the form tenants use to publish a property.",
+      "acceptance": [
+        "All required fields validated on the client before submitting",
+        "Multiple images can be uploaded, reordered and removed, with previews",
+        "Extension and size are checked before the request is sent",
+        "Works as both a create and an edit screen"
+      ]
+    },
+    {
+      "title": "[F1] Room form and category management UI",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 3",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Manage rooms and categories without leaving the tenant area.",
+      "acceptance": [
+        "Room create and edit forms cover name, price, description, capacity and units",
+        "Category management supports create, rename and delete inline",
+        "Destructive actions confirm first",
+        "Validation errors from the server are shown against the right field"
+      ]
+    },
+
+    {
+      "title": "[F2] Tenant order list endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Let tenants work through incoming bookings by status.",
+      "acceptance": [
+        "GET /tenant/bookings paginates, filters by status and property, and sorts on the server",
+        "Only bookings for the caller's own properties are returned",
+        "Search by order number and guest name works",
+        "Each row exposes whether it is awaiting a confirmation decision"
+      ]
+    },
+    {
+      "title": "[F2] Confirm or reject payment proof",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Give tenants the decision step the spec describes.",
+      "acceptance": [
+        "Accepting moves the booking to PROCESSED and stamps confirmedAt",
+        "Rejecting returns it to WAITING_PAYMENT with a reason and a fresh deadline",
+        "Only the owning tenant can decide, and only from WAITING_CONFIRMATION",
+        "The guest is notified either way"
+      ]
+    },
+    {
+      "title": "[F2] Tenant cancel order endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Let tenants drop a booking that was never paid for.",
+      "acceptance": [
+        "Only allowed while no payment proof has been uploaded",
+        "cancelledBy is set to TENANT and a reason is stored",
+        "The nights are released for rebooking",
+        "The guest receives a notification"
+      ]
+    },
+    {
+      "title": "[F2] Notification endpoints",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Surface in-app notifications for booking events.",
+      "acceptance": [
+        "GET /notifications paginates the caller's notifications",
+        "Mark-one-read and mark-all-read endpoints exist",
+        "A createNotification helper is reused by the booking service",
+        "Unread count is available for the header badge"
+      ]
+    },
+    {
+      "title": "[F2] Tenant transactions page",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Give tenants one screen to process every incoming booking.",
+      "acceptance": [
+        "Status tabs backed by server-side queries and pagination",
+        "Payment proof opens in a preview dialog before a decision is made",
+        "Accept and reject both confirm first, and reject captures a reason",
+        "The list refreshes optimistically after a decision"
+      ]
+    },
+    {
+      "title": "[F2] Notification bell and list",
+      "assignee": "htandiono",
+      "sprint": "Sprint 3",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "low",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Tell users about booking events without making them refresh.",
+      "acceptance": [
+        "Header bell shows an unread count",
+        "Dropdown lists recent notifications and marks them read on open",
+        "Each notification deep-links to the related booking",
+        "Works for both user and tenant headers"
+      ]
+    },
+
+    {
+      "title": "[F1] Room availability management endpoints",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let tenants close or reopen dates for a room.",
+      "acceptance": [
+        "PUT /tenant/rooms/:id/availability sets a date range available or blocked",
+        "Available unit count can be reduced below totalUnits for a range",
+        "Blocking a date that already has bookings is refused with a clear message",
+        "Only the owning tenant can change availability"
+      ]
+    },
+    {
+      "title": "[F1] Peak season rate CRUD",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let tenants raise prices on long weekends and public holidays.",
+      "acceptance": [
+        "Create, list, update and delete rates for a room",
+        "Both NOMINAL and PERCENTAGE adjustments are supported",
+        "A rate can cover a whole range or a single date",
+        "End date before start date is rejected"
+      ]
+    },
+    {
+      "title": "[Shared] Extend the pricing resolver for overlapping rate windows",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Shared",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "high",
+      "labels": ["shared", "backend"],
+      "goal": "Settle what happens when two peak season windows cover the same night.",
+      "acceptance": [
+        "The precedence rule is documented in the file header",
+        "Percentage and nominal adjustments both round to whole rupiah",
+        "Feature 2 quote, calendar and booking snapshots all agree on the same number",
+        "Reviewed and approved by both contributors"
+      ]
+    },
+    {
+      "title": "[F1] Availability calendar management UI",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Let a tenant manage availability by clicking a calendar.",
+      "acceptance": [
+        "Month calendar per room showing open, blocked and booked days",
+        "A date range can be selected and toggled in one action",
+        "Days with existing bookings are visibly locked",
+        "Changes confirm before saving"
+      ]
+    },
+    {
+      "title": "[F1] Peak season rate management UI",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Make seasonal pricing easy to set up and easy to read back.",
+      "acceptance": [
+        "Form captures name, date range, adjustment type and value",
+        "A live preview shows the resulting nightly price",
+        "Existing rates are listed with edit and delete, delete confirms first",
+        "Percentage and nominal inputs validate their own ranges"
+      ]
+    },
+    {
+      "title": "[F1] Show real pricing and availability in the detail calendar",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 4",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Deliver the price comparison across dates that the product is built around.",
+      "acceptance": [
+        "The public calendar shows the resolved price on every day of the month",
+        "Unavailable days are clearly marked as such",
+        "Peak season days are visually distinct from base-price days",
+        "Picking a date range updates the checkout link"
+      ]
+    },
+
+    {
+      "title": "[F2] Booking confirmed email with detail and house rules",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Email the guest everything they need once their payment is accepted.",
+      "acceptance": [
+        "Sent automatically when a tenant accepts a payment proof",
+        "Contains booking detail, total paid and the property rules",
+        "Uses the booking-confirmed Handlebars template",
+        "A send failure is logged and never rolls back the confirmation"
+      ]
+    },
+    {
+      "title": "[F2] H-1 check-in reminder job",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Remind guests the day before their stay starts.",
+      "acceptance": [
+        "Finds PROCESSED bookings with check-in tomorrow",
+        "reminderSentAt prevents a second email if the job runs again",
+        "Uses the checkin-reminder template",
+        "Runs from node-cron locally and Vercel Cron in production"
+      ]
+    },
+    {
+      "title": "[F2] Create review endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Let guests review a property once they have actually stayed.",
+      "acceptance": [
+        "Only allowed after the check-out date has passed",
+        "Exactly one review per booking, enforced by the unique constraint",
+        "Only the guest who made the booking can review it",
+        "Rating range and comment length are validated"
+      ]
+    },
+    {
+      "title": "[F2] Review list and tenant reply endpoints",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Show reviews publicly and let tenants respond once.",
+      "acceptance": [
+        "GET /properties/:id/reviews paginates public reviews with replies",
+        "A tenant can reply once per review, only on their own properties",
+        "Average rating and review count are exposed for the catalog",
+        "The reviewer is notified when a reply arrives"
+      ]
+    },
+    {
+      "title": "[F2] Review submission UI",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Prompt guests to review after they check out.",
+      "acceptance": [
+        "Completed orders show a review action only when canBeReviewed is true",
+        "Rating and comment are validated before submitting",
+        "After submitting, the action is replaced by the saved review",
+        "Already-reviewed bookings never show the form again"
+      ]
+    },
+    {
+      "title": "[F2] Property review list and tenant reply UI",
+      "assignee": "htandiono",
+      "sprint": "Sprint 4",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Show reviews on the property page and let tenants answer them.",
+      "acceptance": [
+        "Public review list paginates on the property detail page",
+        "Average rating is shown alongside the review count",
+        "Tenant area lists reviews awaiting a reply and supports replying inline",
+        "Empty state reads well when a property has no reviews yet"
+      ]
+    },
+
+    {
+      "title": "[F1] Reset password request and confirm endpoints",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let email-registered users recover their account.",
+      "acceptance": [
+        "Requesting a reset emails a single-use link that expires in an hour",
+        "The response is identical whether or not the email exists",
+        "Social-login accounts are refused with an explanation",
+        "Confirming sets a new hashed password and burns the token"
+      ]
+    },
+    {
+      "title": "[F1] Profile endpoints: details, avatar, email and password",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Backend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "backend"],
+      "goal": "Let both roles maintain their own account.",
+      "acceptance": [
+        "Read and update personal details, plus the tenant company profile",
+        "Avatar accepts .jpg, .jpeg, .png and .gif up to 1MB only",
+        "Changing the email sets isVerified to false and sends a new verification link",
+        "Changing the password requires the current password"
+      ]
+    },
+    {
+      "title": "[F1] Google social login",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Fullstack",
+      "estimate": 8,
+      "priority": "medium",
+      "labels": ["feature-1", "backend", "frontend"],
+      "goal": "Offer the social login path the spec asks for.",
+      "acceptance": [
+        "Google sign-in works for both registration and login",
+        "Social accounts are created already verified with provider set to GOOGLE",
+        "An email already registered with a password cannot be silently taken over",
+        "Reset password is disabled for social accounts"
+      ]
+    },
+    {
+      "title": "[F1] Reset password pages",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Build the two screens the reset flow needs.",
+      "acceptance": [
+        "Request page collects the email and always shows the same confirmation",
+        "Confirm page collects and confirms the new password",
+        "An expired or used token shows a helpful message with a way to retry",
+        "Both pages are mobile-first"
+      ]
+    },
+    {
+      "title": "[F1] User and tenant profile pages",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Give each role a place to manage their account.",
+      "acceptance": [
+        "Separate profile screens for user and tenant",
+        "Avatar upload previews and validates before sending",
+        "Email change warns that re-verification is required",
+        "Unverified accounts see a resend-verification action"
+      ]
+    },
+    {
+      "title": "[F1] Responsive pass over Feature 1 screens",
+      "assignee": "awanstywn",
+      "sprint": "Sprint 5",
+      "feature": "Feature 1",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-1", "frontend"],
+      "goal": "Meet the mobile-first requirement across every Feature 1 page.",
+      "acceptance": [
+        "Every Feature 1 screen checked at 360px, 768px and 1280px",
+        "No horizontal scrolling and no overlapping content",
+        "Tap targets are large enough on mobile",
+        "Tables and calendars degrade sensibly on small screens"
+      ]
+    },
+
+    {
+      "title": "[F2] Sales report endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-2", "backend"],
+      "goal": "Tell tenants what they earned and where it came from.",
+      "acceptance": [
+        "Group by property, transaction or user",
+        "Filter by date range, sort by date or total revenue",
+        "Revenue aggregates BookingNight snapshots, not current prices",
+        "Only the caller's own properties are included"
+      ]
+    },
+    {
+      "title": "[F2] Property availability report endpoint",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Show occupancy per room as a calendar.",
+      "acceptance": [
+        "Returns each room's days for a month with booked, available and blocked counts",
+        "Scoped to the caller's own properties",
+        "Handles rooms with multiple units correctly",
+        "Month parameter is validated"
+      ]
+    },
+    {
+      "title": "[F2] Sales report page",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 8,
+      "priority": "high",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Make the sales numbers readable at a glance.",
+      "acceptance": [
+        "Grouping switch for property, transaction and user",
+        "Date range filter and sorting drive server queries",
+        "Summary cards show total revenue, booking count and average value",
+        "Currency is formatted as rupiah and the empty state reads well"
+      ]
+    },
+    {
+      "title": "[F2] Property report calendar page",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Let tenants see occupancy per room month by month.",
+      "acceptance": [
+        "Calendar per room with booked, available and blocked days colour-coded",
+        "Property and month selectors reload the data",
+        "A legend explains the colours",
+        "Readable on mobile"
+      ]
+    },
+    {
+      "title": "[F2] Complete bookings after check-out",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Backend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["feature-2", "backend"],
+      "goal": "Move finished stays to COMPLETED so reviews unlock.",
+      "acceptance": [
+        "A daily job moves PROCESSED bookings past their check-out date to COMPLETED",
+        "The job is idempotent",
+        "canBeReviewed becomes true once the booking completes",
+        "Registered in the job registry and in vercel.json"
+      ]
+    },
+    {
+      "title": "[F2] Responsive pass over Feature 2 screens",
+      "assignee": "htandiono",
+      "sprint": "Sprint 5",
+      "feature": "Feature 2",
+      "area": "Frontend",
+      "estimate": 5,
+      "priority": "medium",
+      "labels": ["feature-2", "frontend"],
+      "goal": "Meet the mobile-first requirement across every Feature 2 page.",
+      "acceptance": [
+        "Every Feature 2 screen checked at 360px, 768px and 1280px",
+        "Order and report tables are usable on mobile",
+        "Dialogs and upload controls work with touch",
+        "No horizontal scrolling"
+      ]
+    },
+
+    {
+      "title": "[Review] Feature 1 clean-code and standardization pass",
+      "assignee": "awanstywn",
+      "sprint": "Review",
+      "feature": "Feature 1",
+      "area": "Fullstack",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-1"],
+      "goal": "Meet the standardization checklist the judges score against.",
+      "acceptance": [
+        "Every Feature 1 file is under 200 lines and every function under 15 lines",
+        "No leftover console logs or unused code",
+        "Every list paginates, filters and sorts on the server",
+        "Client and server validation present on every input"
+      ]
+    },
+    {
+      "title": "[Review] Feature 2 clean-code and standardization pass",
+      "assignee": "htandiono",
+      "sprint": "Review",
+      "feature": "Feature 2",
+      "area": "Fullstack",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["feature-2"],
+      "goal": "Meet the standardization checklist the judges score against.",
+      "acceptance": [
+        "Every Feature 2 file is under 200 lines and every function under 15 lines",
+        "No leftover console logs or unused code",
+        "REST methods and status codes follow convention",
+        "Authorization verified on every tenant-scoped endpoint"
+      ]
+    },
+    {
+      "title": "[Review] Title, favicon, metadata and error pages",
+      "assignee": "awanstywn",
+      "sprint": "Review",
+      "feature": "Shared",
+      "area": "Frontend",
+      "estimate": 3,
+      "priority": "medium",
+      "labels": ["shared", "frontend"],
+      "goal": "Finish the presentation details that are explicitly graded.",
+      "acceptance": [
+        "Favicon and per-page titles match the project",
+        "Open Graph metadata is set for sharing",
+        "Custom 404 and error pages exist",
+        "Loading and empty states are consistent across the app"
+      ]
+    },
+    {
+      "title": "[Review] Deploy to Vercel on inapyuk.space",
+      "assignee": "htandiono",
+      "sprint": "Review",
+      "feature": "Shared",
+      "area": "DevOps",
+      "estimate": 5,
+      "priority": "high",
+      "labels": ["shared", "devops"],
+      "goal": "Put the finished app on the domain for the presentation.",
+      "acceptance": [
+        "Web deployed to inapyuk.space and API to api.inapyuk.space",
+        "Environment variables set in Vercel for both projects",
+        "Vercel Cron jobs firing against the protected cron endpoints",
+        "Neon production database migrated and seeded with demo data"
+      ]
+    },
+    {
+      "title": "[Review] Feature 1 slides and demo script",
+      "assignee": "awanstywn",
+      "sprint": "Review",
+      "feature": "Feature 1",
+      "area": "Fullstack",
+      "estimate": 3,
+      "priority": "high",
+      "labels": ["feature-1"],
+      "goal": "Prepare the Feature 1 half of the final presentation.",
+      "acceptance": [
+        "Slides cover group name, project spec, user flow, task split and references",
+        "A rehearsed demo path covers registration through property management",
+        "Screenshots or recordings are ready as a fallback",
+        "Submitted to the academic and operational emails by D-1"
+      ]
+    },
+    {
+      "title": "[Review] Feature 2 slides and demo script",
+      "assignee": "htandiono",
+      "sprint": "Review",
+      "feature": "Feature 2",
+      "area": "Fullstack",
+      "estimate": 3,
+      "priority": "high",
+      "labels": ["feature-2"],
+      "goal": "Prepare the Feature 2 half of the final presentation.",
+      "acceptance": [
+        "Slides cover the transaction lifecycle, reviews and reports",
+        "A rehearsed demo path covers booking through tenant confirmation to the sales report",
+        "Seeded demo data prepared so every status can be shown",
+        "Submitted to the academic and operational emails by D-1"
+      ]
+    }
+  ]
+}

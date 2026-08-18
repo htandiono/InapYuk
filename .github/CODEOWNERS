@@ -1,0 +1,26 @@
+# Reviewers are requested automatically from these paths.
+# The shared foundation deliberately requires both of us.
+
+# Feature 1
+/apps/api/src/modules/auth/          @awanstywn
+/apps/api/src/modules/users/         @awanstywn
+/apps/api/src/modules/properties/    @awanstywn
+/apps/api/src/modules/categories/    @awanstywn
+/apps/api/src/modules/rooms/         @awanstywn
+
+# Feature 2
+/apps/api/src/modules/bookings/      @htandiono
+/apps/api/src/modules/reviews/       @htandiono
+/apps/api/src/modules/reports/       @htandiono
+/apps/api/src/modules/notifications/ @htandiono
+/apps/api/src/jobs/                  @htandiono
+
+# Shared foundation
+/apps/api/prisma/                    @htandiono @awanstywn
+/apps/api/src/config/                @htandiono @awanstywn
+/apps/api/src/libs/                  @htandiono @awanstywn
+/apps/api/src/middlewares/           @htandiono @awanstywn
+/apps/api/src/utils/                 @htandiono @awanstywn
+/apps/api/src/services/              @htandiono @awanstywn
+/packages/types/                     @htandiono @awanstywn
+/.github/                            @htandiono @awanstywn

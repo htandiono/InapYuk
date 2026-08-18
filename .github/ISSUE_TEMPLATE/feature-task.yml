@@ -1,0 +1,52 @@
+name: Feature task
+description: A unit of sprint work for Feature 1 or Feature 2
+title: '[F?] '
+labels: []
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should exist when this is done?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Feature
+      options:
+        - Feature 1 (awanstywn)
+        - Feature 2 (htandiono)
+        - Shared
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Backend
+        - Frontend
+        - Fullstack
+        - DevOps
+    validations:
+      required: true
+
+  - type: input
+    id: blocked_by
+    attributes:
+      label: Blocked by
+      description: Issue numbers this depends on, if any.
