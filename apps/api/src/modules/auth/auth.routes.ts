@@ -15,6 +15,13 @@ import { Router } from 'express';
  *   POST   /auth/password/reset      request a reset link
  *   POST   /auth/password/confirm    confirm reset with a new password
  */
+import { asyncHandler } from '../../utils/async-handler';
+import { validateBody } from '../../middlewares/validate.middleware';
+import { registerUserSchema } from './auth.schema';
+import { handleRegisterUser } from './auth.controller';
+
 const router = Router();
+
+router.post('/register/user', validateBody(registerUserSchema), asyncHandler(handleRegisterUser));
 
 export default router;
