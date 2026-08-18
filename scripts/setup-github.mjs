@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
- * Provisions the GitHub side of the project from scripts/backlog.json:
- * labels, milestones, issues, and a GitHub Projects board with the sprint,
- * feature, area and estimate fields populated.
+ * Provisions the GitHub Project board from scripts/backlog.json.
+ * Tasks are draft items on the Project (not repo Issues), grouped by Sprint.
  *
  * Safe to re-run - every step checks for an existing record first.
  *
- * Usage:  node scripts/setup-github.mjs [--dry-run]
+ * Usage:
+ *   node scripts/setup-github.mjs
+ *   node scripts/setup-github.mjs --migrate-from-issues
+ *   node scripts/setup-github.mjs --dry-run
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
@@ -106,60 +108,6 @@ function ensureCollaborators() {
     if (result?.error) console.log(`  ${login}: ${result.error.split('\n')[0]}`);
     else console.log(`  ${login}: invited with write access`);
   }
-}
-
-function ensureLabels() {
-  heading('Labels');
-  const existing =
-    ghJson(['label', 'list', '--repo', backlog.repo, '--limit', '100', '--json', 'name']) ?? [];
-  const names = new Set(existing.map((label) => label.name));
-
-  for (const label of backlog.labels) {
-    if (names.has(label.name)) {
-      console.log(`  ${label.name}: exists`);
-      continue;
-    }
-    gh([
-      'label',
-      'create',
-      label.name,
-      '--repo',
-      backlog.repo,
-      '--color',
-      label.color,
-      '--description',
-      label.description,
-    ]);
-    console.log(`  ${label.name}: created`);
-  }
-}
-
-function ensureMilestones() {
-  heading('Milestones');
-  const existing = ghJson(['api', `repos/${backlog.repo}/milestones?state=all&per_page=100`]) ?? [];
-  const byTitle = new Map(existing.map((m) => [m.title, m.number]));
-
-  for (const milestone of backlog.milestones) {
-    if (byTitle.has(milestone.title)) {
-      console.log(`  ${milestone.title}: exists`);
-      continue;
-    }
-    const created = ghJson([
-      'api',
-      '--method',
-      'POST',
-      `repos/${backlog.repo}/milestones`,
-      '-f',
-      `title=${milestone.title}`,
-      '-f',
-      `description=${milestone.description}`,
-      '-f',
-      `due_on=${milestone.dueOn}T16:00:00Z`,
-    ]);
-    if (created?.number) byTitle.set(milestone.title, created.number);
-    console.log(`  ${milestone.title}: created`);
-  }
-  return byTitle;
 }
 
 // ---------------------------------------------------------------------------
@@ -264,72 +212,34 @@ function extendStatusField(project, fields) {
 
 // ---------------------------------------------------------------------------
 
-function buildIssueBody(issue) {
+function buildItemBody(issue) {
   const criteria = issue.acceptance.map((line) => `- [ ] ${line}`).join('\n');
   return [
     `## Goal\n\n${issue.goal}`,
     `## Acceptance criteria\n\n${criteria}`,
-    `## Details\n\n- Sprint: ${issue.sprint}\n- Feature: ${issue.feature}\n- Area: ${issue.area}\n- Estimate: ${issue.estimate} points`,
+    `## Details\n\n- Owner: ${issue.assignee}\n- Sprint: ${issue.sprint}\n- Feature: ${issue.feature}\n- Area: ${issue.area}\n- Estimate: ${issue.estimate} points`,
   ].join('\n\n');
 }
 
-function createIssue(issue, milestones) {
-  const args = [
-    'issue',
-    'create',
-    '--repo',
-    backlog.repo,
-    '--title',
-    issue.title,
-    '--body',
-    buildIssueBody(issue),
-    '--milestone',
-    issue.sprint,
-  ];
-  for (const label of [...issue.labels, `priority:${issue.priority}`]) {
-    args.push('--label', label);
-  }
-
-  const withAssignee = [...args, '--assignee', issue.assignee];
-  const result = gh(withAssignee, { allowFailure: true });
-  if (typeof result === 'string' && result) return result.split('\n').pop();
-
-  // A collaborator who has not accepted their invitation yet is not assignable.
-  console.log(`    (could not assign ${issue.assignee}; creating unassigned)`);
-  const retry = gh(args);
-  return typeof retry === 'string' ? retry.split('\n').pop() : null;
-}
-
-function ensureIssues(milestones) {
-  heading(`Issues (${backlog.issues.length} in the backlog)`);
-  const existing =
+function listProjectItems(owner, project) {
+  return (
     ghJson([
-      'issue',
-      'list',
-      '--repo',
-      backlog.repo,
-      '--state',
-      'all',
+      'project',
+      'item-list',
+      project.number,
+      '--owner',
+      owner,
+      '--format',
+      'json',
       '--limit',
       '300',
-      '--json',
-      'title,url',
-    ]) ?? [];
-  const byTitle = new Map(existing.map((issue) => [issue.title, issue.url]));
+    ])?.items ?? []
+  );
+}
 
-  const urls = [];
-  for (const issue of backlog.issues) {
-    const known = byTitle.get(issue.title);
-    if (known) {
-      urls.push({ issue, url: known });
-      continue;
-    }
-    console.log(`  + ${issue.title}`);
-    const url = createIssue(issue, milestones);
-    if (url) urls.push({ issue, url });
-  }
-  console.log(`  ${urls.length} issues ready`);
-  return urls;
+function capitalise(value) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 // ---------------------------------------------------------------------------
@@ -359,68 +269,133 @@ function setField(project, itemId, field, value, isNumber = false) {
   gh(args, { allowFailure: true });
 }
 
-function addToBoard(owner, project, fields, entries) {
-  heading('Adding issues to the board');
-  const items =
-    ghJson([
+function applyFields(project, itemId, fields, issue) {
+  setField(project, itemId, fields.get('Sprint'), issue.sprint);
+  setField(project, itemId, fields.get('Feature'), issue.feature);
+  setField(project, itemId, fields.get('Area'), issue.area);
+  setField(project, itemId, fields.get('Owner'), issue.assignee);
+  setField(project, itemId, fields.get('Priority'), capitalise(issue.priority));
+  setField(project, itemId, fields.get('Estimate'), issue.estimate, true);
+  setField(project, itemId, fields.get('Status'), 'Todo');
+}
+
+function ensureDraftItems(owner, project, fields) {
+  heading(`Project tasks (${backlog.issues.length} in the backlog)`);
+  const items = listProjectItems(owner, project);
+  const byTitle = new Map(items.map((item) => [item.title, item]));
+
+  let created = 0;
+  for (const issue of backlog.issues) {
+    const existing = byTitle.get(issue.title);
+    if (existing?.content?.type === 'Issue') {
+      // Still a repo issue linked to the board. Replace it with a draft.
+      console.log(`  ~ ${issue.title} (converting from issue)`);
+      gh(['project', 'item-delete', project.number, '--owner', owner, '--id', existing.id], {
+        allowFailure: true,
+      });
+    } else if (existing) {
+      applyFields(project, existing.id, fields, issue);
+      continue;
+    } else {
+      console.log(`  + ${issue.title}`);
+    }
+
+    const createdItem = ghJson([
       'project',
-      'item-list',
+      'item-create',
       project.number,
       '--owner',
       owner,
+      '--title',
+      issue.title,
+      '--body',
+      buildItemBody(issue),
       '--format',
       'json',
-      '--limit',
-      '300',
-    ])?.items ?? [];
-  const byUrl = new Map(items.map((item) => [item.content?.url, item.id]));
-
-  let added = 0;
-  for (const { issue, url } of entries) {
-    let itemId = byUrl.get(url);
-    if (!itemId) {
-      const result = ghJson([
-        'project',
-        'item-add',
-        project.number,
-        '--owner',
-        owner,
-        '--url',
-        url,
-        '--format',
-        'json',
-      ]);
-      itemId = result?.id;
-      added += 1;
-    }
-    setField(project, itemId, fields.get('Sprint'), issue.sprint);
-    setField(project, itemId, fields.get('Feature'), issue.feature);
-    setField(project, itemId, fields.get('Area'), issue.area);
-    setField(project, itemId, fields.get('Estimate'), issue.estimate, true);
+    ]);
+    if (!createdItem?.id) continue;
+    applyFields(project, createdItem.id, fields, issue);
+    created += 1;
   }
-  console.log(`  ${added} newly added, ${entries.length} total with fields set`);
+  console.log(`  ${created} draft tasks created`);
+}
+
+function closeBacklogIssues() {
+  heading('Closing repo issues that belong on the board');
+  const titles = new Set(backlog.issues.map((issue) => issue.title));
+  const open =
+    ghJson([
+      'issue',
+      'list',
+      '--repo',
+      backlog.repo,
+      '--state',
+      'open',
+      '--limit',
+      '200',
+      '--json',
+      'number,title',
+    ]) ?? [];
+
+  let closed = 0;
+  for (const issue of open) {
+    if (!titles.has(issue.title)) continue;
+    gh(
+      [
+        'issue',
+        'close',
+        String(issue.number),
+        '--repo',
+        backlog.repo,
+        '--reason',
+        'not planned',
+        '--comment',
+        'Moved to the InapYuk Final Project board as a draft item (not tracked as a GitHub Issue).',
+      ],
+      { allowFailure: true },
+    );
+    closed += 1;
+  }
+  console.log(`  ${closed} issues closed`);
+}
+
+function removeIssueItemsFromBoard(owner, project) {
+  heading('Removing linked issues from the board');
+  const items = listProjectItems(owner, project);
+  let removed = 0;
+  for (const item of items) {
+    if (item.content?.type !== 'Issue') continue;
+    gh(['project', 'item-delete', project.number, '--owner', owner, '--id', item.id], {
+      allowFailure: true,
+    });
+    removed += 1;
+  }
+  console.log(`  ${removed} issue items removed`);
 }
 
 // ---------------------------------------------------------------------------
 
 function main() {
+  const migrate = process.argv.includes('--migrate-from-issues');
   if (DRY_RUN) console.log('Running in dry-run mode; no changes will be made.\n');
 
   const owner = checkAuth();
   ensureRepo();
   ensureCollaborators();
-  ensureLabels();
-  const milestones = ensureMilestones();
 
   const project = ensureProject(backlog.projectOwner);
   const fields = ensureFields(backlog.projectOwner, project);
   extendStatusField(project, fields);
 
-  const entries = ensureIssues(milestones);
-  addToBoard(backlog.projectOwner, project, fields, entries);
+  if (migrate) {
+    removeIssueItemsFromBoard(backlog.projectOwner, project);
+    closeBacklogIssues();
+  }
+
+  ensureDraftItems(backlog.projectOwner, project, fields);
 
   console.log(`\nDone. Board: ${project.url}`);
-  console.log(`Issues: https://github.com/${backlog.repo}/issues`);
+  console.log('Group the board by Sprint (board view → Group by → Sprint).');
 }
 
 try {

@@ -1,5 +1,8 @@
 # Git workflow and ownership
 
+Feature 1 onboarding: [HANDOFF-FEATURE-1.md](HANDOFF-FEATURE-1.md).
+UI tokens: [UI.md](UI.md). AI tools: [AGENTS.md](../AGENTS.md).
+
 ## Branches
 
 | Branch      | Purpose                                                                    |
