@@ -5,4 +5,9 @@ export const registerUserSchema = z.object({
   name: z.string().min(1, 'Nama tidak boleh kosong'),
 });
 
+export const registerTenantSchema = registerUserSchema.extend({
+  companyName: z.string().min(1, 'Nama perusahaan tidak boleh kosong'),
+});
+
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
+export type RegisterTenantInput = z.infer<typeof registerTenantSchema>;
