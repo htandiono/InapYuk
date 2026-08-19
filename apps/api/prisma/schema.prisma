@@ -90,6 +90,7 @@ model User {
 
   tenantProfile      TenantProfile?
   verificationTokens VerificationToken[]
+  refreshTokens      RefreshToken[]
   bookings           Booking[]
   reviews            Review[]
   notifications      Notification[]
@@ -135,6 +136,20 @@ model VerificationToken {
   @@index([userId, type])
   @@index([expiresAt])
   @@map("verification_tokens")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 // ---------------------------------------------------------------------------

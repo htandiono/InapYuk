@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
 import { prisma } from '../../libs/prisma';
 import { sendMail } from '../../libs/mailer';
-import { badRequest, conflict } from '../../utils/app-error';
+import { badRequest, conflict, unauthorized } from '../../utils/app-error';
 import { env } from '../../config/env';
-import { hashToken, hashPassword } from '../../libs/password';
-import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput } from './auth.schema';
+import { hashToken, hashPassword, verifyPassword } from '../../libs/password';
+import { issueTokens } from '../../libs/jwt';
+import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput, LoginInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
 /**
@@ -194,4 +195,52 @@ export async function resendVerification(input: ResendVerificationInput) {
   }).catch((err) => {
     // Swallowed mail error
   });
+}
+
+export async function login(input: LoginInput) {
+  const user = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  if (!user || !user.passwordHash) {
+    throw unauthorized('Email atau password salah');
+  }
+
+  const isMatch = await verifyPassword(input.password, user.passwordHash);
+  if (!isMatch) {
+    throw unauthorized('Email atau password salah');
+  }
+
+  const { accessToken, refreshToken } = issueTokens({
+    sub: user.id,
+    role: user.role,
+    email: user.email,
+    isVerified: user.isVerified,
+  });
+
+  const hashedRefresh = hashToken(refreshToken);
+
+  // Parse refresh token TTL to calculate expiry
+  const refreshTtlStr = env.JWT_REFRESH_EXPIRES_IN;
+  // It's '7d'. We will just parse the 'd' and assume Date arithmetic.
+  const days = parseInt(refreshTtlStr.replace('d', ''), 10) || 7;
+  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+  await prisma.refreshToken.create({
+    data: {
+      userId: user.id,
+      tokenHash: hashedRefresh,
+      expiresAt,
+    },
+  });
+
+  return {
+    tokens: { accessToken, refreshToken },
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    },
+  };
 }

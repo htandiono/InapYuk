@@ -32,7 +32,13 @@ export const resendVerificationSchema = z.object({
   email: z.string().email('Format email tidak valid'),
 });
 
+export const loginSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+  password: z.string().min(1, 'Password tidak boleh kosong'),
+});
+
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type RegisterTenantInput = z.infer<typeof registerTenantSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
