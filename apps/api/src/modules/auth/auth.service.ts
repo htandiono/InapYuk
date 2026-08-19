@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
 import { prisma } from '../../libs/prisma';
 import { sendMail } from '../../libs/mailer';
-import { conflict } from '../../utils/app-error';
+import { badRequest, conflict } from '../../utils/app-error';
 import { env } from '../../config/env';
-import type { RegisterUserInput, RegisterTenantInput } from './auth.schema';
+import { hashToken, hashPassword } from '../../libs/password';
+import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
 /**
@@ -129,4 +130,31 @@ export async function registerTenant(input: RegisterTenantInput) {
   });
 
   return result.user;
+}
+
+export async function verifyEmail(input: VerifyEmailInput) {
+  const tokenRecord = await prisma.verificationToken.findUnique({
+    where: { tokenHash: hashToken(input.token) },
+  });
+
+  if (!tokenRecord || tokenRecord.type !== 'EMAIL_VERIFICATION') {
+    throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
+  }
+
+  if (tokenRecord.usedAt !== null || tokenRecord.expiresAt < new Date()) {
+    throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
+  }
+
+  const hashedPw = await hashPassword(input.password);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: tokenRecord.userId },
+      data: { isVerified: true, passwordHash: hashedPw },
+    }),
+    prisma.verificationToken.update({
+      where: { id: tokenRecord.id },
+      data: { usedAt: new Date() },
+    }),
+  ]);
 }
