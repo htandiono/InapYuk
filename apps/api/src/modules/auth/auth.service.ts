@@ -4,7 +4,7 @@ import { sendMail } from '../../libs/mailer';
 import { badRequest, conflict } from '../../utils/app-error';
 import { env } from '../../config/env';
 import { hashToken, hashPassword } from '../../libs/password';
-import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput } from './auth.schema';
+import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
 /**
@@ -157,4 +157,41 @@ export async function verifyEmail(input: VerifyEmailInput) {
       data: { usedAt: new Date() },
     }),
   ]);
+}
+
+export async function resendVerification(input: ResendVerificationInput) {
+  const user = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  // OWASP enumeration defense: silently return if user doesn't exist or is already verified
+  if (!user || user.isVerified) {
+    return;
+  }
+
+  const { rawToken, tokenHash, expiresAt } = createTokenData();
+
+  await prisma.verificationToken.create({
+    data: {
+      userId: user.id,
+      type: 'EMAIL_VERIFICATION',
+      tokenHash,
+      expiresAt,
+    },
+  });
+
+  const verificationUrl = `${env.WEB_BASE_URL}/verify?token=${rawToken}`;
+
+  sendMail({
+    to: user.email,
+    subject: 'Verifikasi Akun InapYuk',
+    template: 'email-verification',
+    context: {
+      name: user.name,
+      verificationUrl,
+      expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
+    },
+  }).catch((err) => {
+    // Swallowed mail error
+  });
 }
