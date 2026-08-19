@@ -28,6 +28,11 @@ export const verifyEmailSchema = z
     path: ['confirmPassword'],
   });
 
+export const resendVerificationSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+});
+
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type RegisterTenantInput = z.infer<typeof registerTenantSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
