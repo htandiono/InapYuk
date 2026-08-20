@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { sendCreated, sendSuccess } from '../../utils/api-response';
-import { registerUser, registerTenant, verifyEmail, resendVerification, login, refreshAccessToken } from './auth.service';
+import { registerUser, registerTenant, verifyEmail, resendVerification, login, refreshAccessToken, logout } from './auth.service';
 import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput, LoginInput } from './auth.schema';
 import { env, isProduction } from '../../config/env';
 
@@ -91,4 +91,15 @@ export async function handleRefreshToken(req: Request, res: Response, next: Next
     res.clearCookie('refreshToken');
     res.status(401).json({ success: false, message: 'Sesi Anda telah berakhir, silakan login kembali' });
   }
+}
+
+export async function handleLogout(req: Request, res: Response) {
+  const { refreshToken } = req.cookies;
+
+  await logout(refreshToken);
+
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+
+  sendSuccess(res, null, 'Berhasil logout');
 }

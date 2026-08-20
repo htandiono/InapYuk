@@ -273,3 +273,13 @@ export async function refreshAccessToken(token: string) {
 
   return accessToken;
 }
+
+export async function logout(token: string | undefined) {
+  if (!token) return;
+
+  const hashedToken = hashToken(token);
+
+  await prisma.refreshToken.deleteMany({
+    where: { tokenHash: hashedToken },
+  });
+}
