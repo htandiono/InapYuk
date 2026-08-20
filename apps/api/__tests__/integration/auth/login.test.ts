@@ -56,7 +56,7 @@ describe('POST /api/auth/login', () => {
     );
 
     // Verify cookies are set
-    const cookies = (res.headers['set-cookie'] as string[]) || [];
+    const cookies = (res.headers['set-cookie'] as unknown as string[]) || [];
     expect(cookies).toBeDefined();
     expect(cookies.length).toBeGreaterThanOrEqual(2);
     expect(cookies.some((c: string) => c.startsWith('accessToken='))).toBe(true);
