@@ -6,7 +6,7 @@ export const registerUserSchema = z.object({
     .string()
     .trim()
     .min(3, 'Nama minimal 3 karakter')
-    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
+    .regex(/^[a-zA-Z0-9\s.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
 });
 
 export const registerTenantSchema = registerUserSchema.extend({
@@ -14,7 +14,7 @@ export const registerTenantSchema = registerUserSchema.extend({
     .string()
     .trim()
     .min(3, 'Nama perusahaan minimal 3 karakter')
-    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
+    .regex(/^[a-zA-Z0-9\s.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
 });
 
 const passwordSchema = z
