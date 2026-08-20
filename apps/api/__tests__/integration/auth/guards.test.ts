@@ -23,7 +23,7 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
     });
     
     // Simple error handler matching what errorHandler does
-    expressApp.use((err: any, req: any, res: any, next: any) => {
+    expressApp.use((err: Error & { statusCode?: number }, req: express.Request, res: express.Response, _next: express.NextFunction) => {
       res.status(err.statusCode || 500).json({ message: err.message || 'Internal Server Error' });
     });
 
