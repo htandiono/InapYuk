@@ -10,8 +10,8 @@ vi.mock('../src/lib/api-client', () => ({
   },
   ApiError: class ApiError extends Error {
     status: number;
-    fieldErrors: any[];
-    constructor(status: number, message: string, fieldErrors: any[] = []) {
+    fieldErrors: unknown[];
+    constructor(status: number, message: string, fieldErrors: unknown[] = []) {
       super(message);
       this.status = status;
       this.fieldErrors = fieldErrors;
@@ -50,7 +50,7 @@ describe('Login Page', () => {
 
   it('submits form successfully and redirects USER to homepage', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(api.post).mockResolvedValueOnce({
       role: 'USER'
     });
@@ -74,7 +74,7 @@ describe('Login Page', () => {
 
   it('submits form successfully and redirects TENANT to /tenant/properties', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(api.post).mockResolvedValueOnce({
       role: 'TENANT'
     });

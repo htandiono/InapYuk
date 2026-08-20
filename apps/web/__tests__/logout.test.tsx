@@ -26,7 +26,7 @@ describe('Logout Button', () => {
 
   it('calls logout API and redirects to login on click', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<LogoutButton />);

@@ -36,6 +36,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterTenantPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);

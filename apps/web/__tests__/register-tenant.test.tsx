@@ -10,8 +10,8 @@ vi.mock('../src/lib/api-client', () => ({
   },
   ApiError: class ApiError extends Error {
     status: number;
-    fieldErrors: any[];
-    constructor(status: number, message: string, fieldErrors: any[] = []) {
+    fieldErrors: unknown[];
+    constructor(status: number, message: string, fieldErrors: unknown[] = []) {
       super(message);
       this.status = status;
       this.fieldErrors = fieldErrors;
@@ -55,7 +55,7 @@ describe('Tenant Registration Page', () => {
 
   it('submits form successfully to tenant endpoint', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<RegisterTenantPage />);
