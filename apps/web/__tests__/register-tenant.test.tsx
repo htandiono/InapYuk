@@ -31,8 +31,10 @@ describe('Tenant Registration Page', () => {
   it('renders tenant registration form', () => {
     render(<RegisterTenantPage />);
     expect(screen.getByText(/daftar sebagai tenant/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/nama/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/nama lengkap/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/nama perusahaan/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/alamat perusahaan/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /daftar/i })).toBeInTheDocument();
   });
 
@@ -44,6 +46,8 @@ describe('Tenant Registration Page', () => {
     await waitFor(() => {
       expect(screen.getByText(/nama wajib diisi/i)).toBeInTheDocument();
       expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
+      expect(screen.getByText(/nama perusahaan wajib diisi/i)).toBeInTheDocument();
+      expect(screen.getByText(/alamat perusahaan wajib diisi/i)).toBeInTheDocument();
     });
     
     expect(api.post).not.toHaveBeenCalled();
@@ -56,8 +60,10 @@ describe('Tenant Registration Page', () => {
 
     render(<RegisterTenantPage />);
     
-    fireEvent.change(screen.getByLabelText(/nama/i), { target: { value: 'Tenant Bali' } });
+    fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant Bali' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'bali@example.com' } });
+    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Bali Villas' } });
+    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl. Kuta No 1' } });
     
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     
@@ -65,6 +71,8 @@ describe('Tenant Registration Page', () => {
       expect(api.post).toHaveBeenCalledWith('/api/auth/register/tenant', {
         name: 'Tenant Bali',
         email: 'bali@example.com',
+        companyName: 'PT Bali Villas',
+        companyAddress: 'Jl. Kuta No 1',
       });
       expect(screen.getByText(/silakan cek email kamu/i)).toBeInTheDocument();
     });
@@ -77,8 +85,10 @@ describe('Tenant Registration Page', () => {
 
     render(<RegisterTenantPage />);
     
-    fireEvent.change(screen.getByLabelText(/nama/i), { target: { value: 'Tenant' } });
+    fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
+    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT' } });
+    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl' } });
     
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     

@@ -1,16 +1,35 @@
+import Link from 'next/link';
+
+import { cookies } from 'next/headers';
+import { LogoutButton } from '@/components/LogoutButton';
+
 /**
  * Placeholder home. Feature 1 (awanstywn) owns the real landing page in Sprint 2.
  * This is just a visual direction so the app does not look like a blank scaffold.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('accessToken')?.value;
+  const isAuthenticated = !!token;
+
   return (
     <div className="flex min-h-full flex-col">
       <header className="flex items-center justify-between px-5 py-4 sm:px-8">
         <p className="font-heading text-2xl tracking-tight text-primary">InapYuk</p>
-        <nav className="flex items-center gap-5 text-sm">
+        <nav className="flex items-center gap-4 sm:gap-5 text-sm">
           <span className="hidden text-muted-foreground sm:inline">Cari penginapan</span>
-          <span className="text-muted-foreground">Masuk</span>
-          <span className="rounded-full bg-primary px-3 py-1.5 text-primary-foreground">Daftar</span>
+          <Link href="/tenant/login" className="hidden sm:inline-flex font-medium text-foreground hover:bg-muted px-3 py-1.5 rounded-full transition-colors">
+            Untuk Tenant
+          </Link>
+          
+          {isAuthenticated ? (
+            <LogoutButton />
+          ) : (
+            <>
+              <Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Masuk</Link>
+              <Link href="/register" className="rounded-full bg-primary px-3 py-1.5 text-primary-foreground hover:bg-primary/90 transition-colors">Daftar</Link>
+            </>
+          )}
         </nav>
       </header>
 

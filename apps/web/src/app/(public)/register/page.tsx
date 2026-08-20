@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,7 +14,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { toast } from 'sonner';
 
 const registerSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi'),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
   email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
 });
 
@@ -24,10 +29,21 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const {
     register,
     handleSubmit,
+    setError,
+    getValues,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -40,15 +56,41 @@ export default function RegisterPage() {
     try {
       await api.post('/api/auth/register/user', data);
       setSuccess(true);
+      setCooldown(60);
       toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
     } catch (error) {
       if (error instanceof ApiError) {
         setServerError(error.message);
+        if (error.fieldErrors && error.fieldErrors.length > 0) {
+          error.fieldErrors.forEach((fe) => {
+            setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message });
+          });
+        }
       } else {
         setServerError('Terjadi kesalahan yang tidak diketahui.');
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onResend = async () => {
+    const email = getValues('email');
+    if (!email) return;
+
+    setIsResending(true);
+    try {
+      await api.post('/api/auth/resend-verification', { email });
+      toast.success('Email verifikasi baru telah dikirim!');
+      setCooldown(60);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('Terjadi kesalahan yang tidak diketahui.');
+      }
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -62,9 +104,21 @@ export default function RegisterPage() {
               Pendaftaran berhasil. Silakan cek email kamu untuk link verifikasi.
             </CardDescription>
           </CardHeader>
-          <CardFooter className="flex justify-center">
-            <Button onClick={() => router.push('/')} variant="outline">
+          <CardFooter className="flex flex-col gap-3 justify-center">
+            <Button onClick={() => router.push('/')} variant="outline" className="w-full">
               Kembali ke Beranda
+            </Button>
+            <Button 
+              onClick={onResend} 
+              variant="link" 
+              className="text-sm text-primary p-0 h-auto"
+              disabled={isResending || cooldown > 0}
+            >
+              {isResending 
+                ? 'Mengirim...' 
+                : cooldown > 0 
+                ? `Kirim ulang email (${cooldown}s)` 
+                : 'Belum menerima email? Kirim ulang'}
             </Button>
           </CardFooter>
         </Card>
@@ -117,6 +171,13 @@ export default function RegisterPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Mendaftar...' : 'Daftar Sekarang'}
             </Button>
+
+            <div className="mt-4 text-center text-sm">
+              Punya properti?{' '}
+              <Link href="/tenant/register" className="text-primary hover:underline">
+                Daftar sebagai Tenant
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

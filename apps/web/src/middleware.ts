@@ -10,8 +10,8 @@ interface JwtPayload {
   email: string;
 }
 
-const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/'];
-const authRoutes = ['/login', '/register', '/tenant/register'];
+const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/'];
+const authRoutes = ['/login', '/register', '/tenant/register', '/tenant/login'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -57,11 +57,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (role === 'TENANT' && !isTenantRoute && pathname !== '/') {
-    // Tenants cannot access user-specific routes (e.g., /profile). 
-    // They can only access /tenant/* routes and maybe the public homepage (for now).
+  if (role === 'TENANT' && !isTenantRoute) {
+    // Tenants cannot access user-specific routes (e.g., /profile) or the consumer homepage (/).
+    // They can only access /tenant/* routes.
     // The ticket says: "Given a TENANT, When accessing user-only routes, Then redirected to /tenant/properties"
-    // To be safe, if they try to access anything that isn't /tenant/..., we redirect them.
     return NextResponse.redirect(new URL('/tenant/properties', request.url));
   }
 

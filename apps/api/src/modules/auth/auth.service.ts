@@ -1,12 +1,17 @@
 import crypto from 'node:crypto';
-import { prisma } from '../../libs/prisma';
-import { sendMail } from '../../libs/mailer';
-import { badRequest, conflict, unauthorized } from '../../utils/app-error';
 import { env } from '../../config/env';
-import { hashToken, hashPassword, verifyPassword } from '../../libs/password';
-import { issueTokens, verifyRefreshToken, signAccessToken } from '../../libs/jwt';
-import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput, LoginInput } from './auth.schema';
-import type { User, VerificationToken } from '../../generated/prisma/client';
+import { issueTokens, signAccessToken, verifyRefreshToken } from '../../libs/jwt';
+import { sendMail } from '../../libs/mailer';
+import { hashPassword, hashToken, verifyPassword } from '../../libs/password';
+import { prisma } from '../../libs/prisma';
+import { badRequest, conflict, unauthorized } from '../../utils/app-error';
+import type {
+  LoginInput,
+  RegisterTenantInput,
+  RegisterUserInput,
+  ResendVerificationInput,
+  VerifyEmailInput,
+} from './auth.schema';
 
 /**
  * Creates a raw token string and its SHA-256 hash.
@@ -66,7 +71,7 @@ export async function registerUser(input: RegisterUserInput) {
       verificationUrl,
       expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
     },
-  }).catch((err) => {
+  }).catch((_err) => {
     // We swallow errors here because mail failure shouldn't fail registration.
     // In production, logger handles this.
   });
@@ -126,7 +131,7 @@ export async function registerTenant(input: RegisterTenantInput) {
       verificationUrl,
       expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
     },
-  }).catch((err) => {
+  }).catch((_err) => {
     // Swallowed mail error
   });
 
@@ -148,7 +153,7 @@ export async function verifyEmail(input: VerifyEmailInput) {
 
   const hashedPw = await hashPassword(input.password);
 
-  await prisma.$transaction([
+  const [updatedUser] = await prisma.$transaction([
     prisma.user.update({
       where: { id: tokenRecord.userId },
       data: { isVerified: true, passwordHash: hashedPw },
@@ -158,6 +163,8 @@ export async function verifyEmail(input: VerifyEmailInput) {
       data: { usedAt: new Date() },
     }),
   ]);
+
+  return { role: updatedUser.role };
 }
 
 export async function resendVerification(input: ResendVerificationInput) {
@@ -192,7 +199,7 @@ export async function resendVerification(input: ResendVerificationInput) {
       verificationUrl,
       expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
     },
-  }).catch((err) => {
+  }).catch((_err) => {
     // Swallowed mail error
   });
 }
@@ -203,6 +210,10 @@ export async function login(input: LoginInput) {
   });
 
   if (!user || !user.passwordHash) {
+    throw unauthorized('Email atau password salah');
+  }
+
+  if (input.role && user.role !== input.role) {
     throw unauthorized('Email atau password salah');
   }
 
@@ -248,7 +259,7 @@ export async function login(input: LoginInput) {
 export async function refreshAccessToken(token: string) {
   // 1. Verify JWT signature. Throws unauthorized if invalid/expired.
   // We use try/catch just to map to a standard message if we want, but verifyRefreshToken already throws unauthorized.
-  // Actually, verifyRefreshToken throws unauthorized('Refresh token is invalid or has expired'). 
+  // Actually, verifyRefreshToken throws unauthorized('Refresh token is invalid or has expired').
   // We will let it throw, and the controller will catch it and clear cookies.
   verifyRefreshToken(token);
 

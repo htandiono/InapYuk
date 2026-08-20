@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import LoginPage from '../src/app/(public)/login/page';
+import TenantLoginPage from '../src/app/(public)/tenant/login/page';
 import { api, ApiError } from '../src/lib/api-client';
 import { useRouter } from 'next/navigation';
 
@@ -23,20 +23,20 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
-describe('Login Page', () => {
+describe('Tenant Login Page', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('renders login form', () => {
-    render(<LoginPage />);
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  it('renders tenant login form', () => {
+    render(<TenantLoginPage />);
+    expect(screen.getByText(/masuk sebagai tenant/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /masuk/i })).toBeInTheDocument();
   });
 
   it('shows validation errors for empty fields', async () => {
-    render(<LoginPage />);
+    render(<TenantLoginPage />);
     
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
     
@@ -55,7 +55,7 @@ describe('Login Page', () => {
       role: 'USER'
     });
 
-    render(<LoginPage />);
+    render(<TenantLoginPage />);
     
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
@@ -66,7 +66,7 @@ describe('Login Page', () => {
       expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
         email: 'user@example.com',
         password: 'password123',
-        role: 'USER',
+        role: 'TENANT',
       });
       expect(pushMock).toHaveBeenCalledWith('/');
     });
@@ -79,7 +79,7 @@ describe('Login Page', () => {
       role: 'TENANT'
     });
 
-    render(<LoginPage />);
+    render(<TenantLoginPage />);
     
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
@@ -90,7 +90,7 @@ describe('Login Page', () => {
       expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
         email: 'tenant@example.com',
         password: 'password123',
-        role: 'USER',
+        role: 'TENANT',
       });
       expect(pushMock).toHaveBeenCalledWith('/tenant/properties');
     });
@@ -101,7 +101,7 @@ describe('Login Page', () => {
       new ApiError(401, 'Email atau password salah')
     );
 
-    render(<LoginPage />);
+    render(<TenantLoginPage />);
     
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
@@ -112,7 +112,7 @@ describe('Login Page', () => {
       expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
         email: 'wrong@example.com',
         password: 'wrongpass',
-        role: 'USER',
+        role: 'TENANT',
       });
       expect(screen.getByText(/email atau password salah/i)).toBeInTheDocument();
     });

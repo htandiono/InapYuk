@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,14 @@ export default function ResendVerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   const {
     register,
@@ -32,10 +40,12 @@ export default function ResendVerificationPage() {
   const onSubmit = async (data: ResendFormValues) => {
     setIsSubmitting(true);
     setServerError(null);
+    setSuccess(false);
 
     try {
-      await api.post('/api/auth/verify/resend', data);
+      await api.post('/api/auth/resend-verification', data);
       setSuccess(true);
+      setCooldown(60);
     } catch (error) {
       if (error instanceof ApiError) {
         setServerError(error.message);
@@ -55,38 +65,42 @@ export default function ResendVerificationPage() {
           <CardDescription>Masukkan email terdaftar untuk mendapatkan link verifikasi baru</CardDescription>
         </CardHeader>
         <CardContent>
-          {success ? (
-            <div className="rounded-md bg-emerald-50 p-4 text-center">
+          {success && (
+            <div className="mb-4 rounded-md bg-emerald-50 p-4 text-center">
               <p className="text-emerald-800 font-medium">Berhasil terkirim!</p>
               <p className="text-sm text-emerald-600 mt-1">Silakan cek kotak masuk email kamu.</p>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {serverError && (
-                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                  {serverError}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="budi@example.com"
-                  {...register('email')}
-                  disabled={isSubmitting}
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Mengirim...' : 'Kirim Ulang'}
-              </Button>
-            </form>
           )}
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {serverError && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                {serverError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="budi@example.com"
+                {...register('email')}
+                disabled={isSubmitting || cooldown > 0}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isSubmitting || cooldown > 0}>
+              {isSubmitting 
+                ? 'Mengirim...' 
+                : cooldown > 0 
+                ? `Kirim Ulang dalam ${cooldown}s` 
+                : 'Kirim Ulang'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

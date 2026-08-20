@@ -2,11 +2,19 @@ import { z } from 'zod';
 
 export const registerUserSchema = z.object({
   email: z.string().email('Format email tidak valid'),
-  name: z.string().min(1, 'Nama tidak boleh kosong'),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
 });
 
 export const registerTenantSchema = registerUserSchema.extend({
-  companyName: z.string().min(1, 'Nama perusahaan tidak boleh kosong'),
+  companyName: z
+    .string()
+    .trim()
+    .min(3, 'Nama perusahaan minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
 });
 
 const passwordSchema = z
@@ -35,6 +43,7 @@ export const resendVerificationSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email('Format email tidak valid'),
   password: z.string().min(1, 'Password tidak boleh kosong'),
+  role: z.enum(['USER', 'TENANT']).optional(),
 });
 
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
