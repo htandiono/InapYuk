@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,9 +13,23 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-const verifySchema = z.object({
-  password: z.string().min(6, 'Password minimal 6 karakter'),
-});
+const passwordSchema = z
+  .string()
+  .min(8, 'Password minimal 8 karakter')
+  .regex(/[A-Z]/, 'Password harus mengandung huruf besar')
+  .regex(/[a-z]/, 'Password harus mengandung huruf kecil')
+  .regex(/[0-9]/, 'Password harus mengandung angka')
+  .regex(/[^A-Za-z0-9]/, 'Password harus mengandung karakter spesial');
+
+const verifySchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Password tidak cocok',
+    path: ['confirmPassword'],
+  });
 
 type VerifyFormValues = z.infer<typeof verifySchema>;
 
@@ -29,6 +44,7 @@ function VerifyForm() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<VerifyFormValues>({
     resolver: zodResolver(verifySchema),
@@ -43,6 +59,11 @@ function VerifyForm() {
             Link verifikasi tidak valid atau tidak lengkap. Silakan periksa kembali email kamu.
           </CardDescription>
         </CardHeader>
+        <CardFooter>
+          <Link href="/resend-verification" className="text-primary hover:underline text-sm mx-auto">
+            Kirim ulang link verifikasi
+          </Link>
+        </CardFooter>
       </Card>
     );
   }
@@ -52,15 +73,25 @@ function VerifyForm() {
     setServerError(null);
 
     try {
-      await api.post('/api/auth/verify', {
+      const res = await api.post<{ role: string }>('/api/auth/verify', {
         token,
         password: data.password,
+        confirmPassword: data.confirmPassword,
       });
       toast.success('Verifikasi berhasil! Silakan masuk.');
-      router.push('/login');
+      if (res.role === 'TENANT') {
+        router.push('/tenant/login');
+      } else {
+        router.push('/login');
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         setServerError(error.message);
+        if (error.fieldErrors && error.fieldErrors.length > 0) {
+          error.fieldErrors.forEach((fe) => {
+            setError(fe.path as keyof VerifyFormValues, { type: 'server', message: fe.message });
+          });
+        }
       } else {
         setServerError('Terjadi kesalahan yang tidak diketahui.');
       }
@@ -87,12 +118,26 @@ function VerifyForm() {
             <Input
               id="password"
               type="password"
-              placeholder="Minimal 6 karakter"
+              placeholder="Minimal 8 karakter"
               {...register('password')}
               disabled={isSubmitting}
             />
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Ketik ulang password"
+              {...register('confirmPassword')}
+              disabled={isSubmitting}
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
             )}
           </div>
 

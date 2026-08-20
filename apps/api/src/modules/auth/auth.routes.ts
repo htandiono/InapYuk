@@ -17,16 +17,17 @@ import { Router } from 'express';
  */
 import { asyncHandler } from '../../utils/async-handler';
 import { validateBody } from '../../middlewares/validate.middleware';
+import { authRateLimiter, resendRateLimiter } from '../../middlewares/rate-limit.middleware';
 import { registerUserSchema, registerTenantSchema, verifyEmailSchema, resendVerificationSchema, loginSchema } from './auth.schema';
 import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleResendVerification, handleLogin, handleRefreshToken, handleLogout } from './auth.controller';
 
 const router = Router();
 
-router.post('/register/user', validateBody(registerUserSchema), asyncHandler(handleRegisterUser));
-router.post('/register/tenant', validateBody(registerTenantSchema), asyncHandler(handleRegisterTenant));
-router.post('/verify', validateBody(verifyEmailSchema), asyncHandler(handleVerifyEmail));
-router.post('/resend-verification', validateBody(resendVerificationSchema), asyncHandler(handleResendVerification));
-router.post('/login', validateBody(loginSchema), asyncHandler(handleLogin));
+router.post('/register/user', authRateLimiter, validateBody(registerUserSchema), asyncHandler(handleRegisterUser));
+router.post('/register/tenant', authRateLimiter, validateBody(registerTenantSchema), asyncHandler(handleRegisterTenant));
+router.post('/verify', authRateLimiter, validateBody(verifyEmailSchema), asyncHandler(handleVerifyEmail));
+router.post('/resend-verification', resendRateLimiter, validateBody(resendVerificationSchema), asyncHandler(handleResendVerification));
+router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
 router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
 

@@ -25,7 +25,10 @@ export async function UnverifiedBanner() {
 
   return (
     <div className="bg-amber-100 p-3 text-center text-sm font-medium text-amber-800">
-      Akun kamu belum diverifikasi. Cek email untuk link verifikasi agar bisa menggunakan semua fitur.
+      Akun kamu belum diverifikasi. Cek email untuk link verifikasi agar bisa menggunakan semua fitur.{' '}
+      <a href="/resend-verification" className="underline hover:text-amber-900 font-bold">
+        Kirim ulang email
+      </a>
     </div>
   );
 }

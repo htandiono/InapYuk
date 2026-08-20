@@ -19,7 +19,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function TenantLoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export default function LoginPage() {
     try {
       const response = await api.post<{ role: string }>('/api/auth/login', {
         ...data,
-        role: 'USER'
+        role: 'TENANT'
       });
       
       // Redirect based on role
@@ -62,8 +62,8 @@ export default function LoginPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold font-heading text-primary">Masuk</CardTitle>
-          <CardDescription>Selamat datang kembali di InapYuk</CardDescription>
+          <CardTitle className="text-2xl font-bold font-heading text-primary">Masuk sebagai Tenant</CardTitle>
+          <CardDescription>Kelola properti dan pesanan kamu</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -108,9 +108,9 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-sm text-muted-foreground">
           <div className="text-center">
-            Belum punya akun?{' '}
-            <Link href="/register" className="text-primary hover:underline">
-              Daftar
+            Belum punya akun Tenant?{' '}
+            <Link href="/tenant/register" className="text-primary hover:underline">
+              Daftar sebagai Tenant
             </Link>
           </div>
         </CardFooter>

@@ -37,7 +37,7 @@ describe('Logout Button', () => {
     
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/api/auth/logout');
-      expect(pushMock).toHaveBeenCalledWith('/login');
+      expect(pushMock).toHaveBeenCalledWith('/');
     });
   });
 });
