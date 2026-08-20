@@ -73,7 +73,7 @@ describe('POST /api/auth/login', () => {
 
   it('should login a verified tenant (200)', async () => {
     const app = createTestApp();
-    const tenant = await seedVerifiedTenant();
+    await seedVerifiedTenant();
 
     const res = await app.post('/api/auth/login').send({
       email: 'tenant@example.com',

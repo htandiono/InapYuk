@@ -9,8 +9,8 @@ vi.mock('../src/lib/api-client', () => ({
   },
   ApiError: class ApiError extends Error {
     status: number;
-    fieldErrors: any[];
-    constructor(status: number, message: string, fieldErrors: any[] = []) {
+    fieldErrors: unknown[];
+    constructor(status: number, message: string, fieldErrors: unknown[] = []) {
       super(message);
       this.status = status;
       this.fieldErrors = fieldErrors;
