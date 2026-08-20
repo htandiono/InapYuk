@@ -4,7 +4,7 @@ import { sendMail } from '../../libs/mailer';
 import { badRequest, conflict, unauthorized } from '../../utils/app-error';
 import { env } from '../../config/env';
 import { hashToken, hashPassword, verifyPassword } from '../../libs/password';
-import { issueTokens } from '../../libs/jwt';
+import { issueTokens, verifyRefreshToken, signAccessToken } from '../../libs/jwt';
 import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput, LoginInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
@@ -243,4 +243,33 @@ export async function login(input: LoginInput) {
       role: user.role,
     },
   };
+}
+
+export async function refreshAccessToken(token: string) {
+  // 1. Verify JWT signature. Throws unauthorized if invalid/expired.
+  // We use try/catch just to map to a standard message if we want, but verifyRefreshToken already throws unauthorized.
+  // Actually, verifyRefreshToken throws unauthorized('Refresh token is invalid or has expired'). 
+  // We will let it throw, and the controller will catch it and clear cookies.
+  verifyRefreshToken(token);
+
+  // 2. Hash and find in DB
+  const hashedToken = hashToken(token);
+  const tokenRecord = await prisma.refreshToken.findUnique({
+    where: { tokenHash: hashedToken },
+    include: { user: true },
+  });
+
+  if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
+    throw unauthorized('Sesi Anda telah berakhir, silakan login kembali');
+  }
+
+  // 3. Issue new access token
+  const accessToken = signAccessToken({
+    sub: tokenRecord.user.id,
+    role: tokenRecord.user.role,
+    email: tokenRecord.user.email,
+    isVerified: tokenRecord.user.isVerified,
+  });
+
+  return accessToken;
 }
