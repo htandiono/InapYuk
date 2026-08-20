@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestApp, truncateAll } from '../../../src/test/helpers';
-import { prisma } from '../../../src/libs/prisma';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { hashPassword } from '../../../src/libs/password';
+import { prisma } from '../../../src/libs/prisma';
+import { createTestApp, truncateAll } from '../../../src/test/helpers';
 
 describe('POST /api/auth/login', () => {
   beforeEach(async () => {
@@ -56,7 +56,7 @@ describe('POST /api/auth/login', () => {
     );
 
     // Verify cookies are set
-    const cookies = res.headers['set-cookie'];
+    const cookies = (res.headers['set-cookie'] as string[]) || [];
     expect(cookies).toBeDefined();
     expect(cookies.length).toBeGreaterThanOrEqual(2);
     expect(cookies.some((c: string) => c.startsWith('accessToken='))).toBe(true);
