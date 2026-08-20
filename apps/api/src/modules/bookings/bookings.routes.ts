@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
-import { validateBody } from '../../middlewares/validate.middleware';
-import { createBooking, quoteBooking } from './bookings.controller';
-import { createSchema, quoteSchema } from './bookings.schema';
+import { validateBody, validateParams } from '../../middlewares/validate.middleware';
+import { createBooking, getBooking, quoteBooking } from './bookings.controller';
+import { createSchema, orderNumberParamsSchema, quoteSchema } from './bookings.schema';
 
 /**
  * Owner: Feature 2 - htandiono (Sprint 1, Sprint 2, Sprint 3)
@@ -31,5 +31,6 @@ router.post(
   validateBody(createSchema),
   createBooking,
 );
+router.get('/:orderNumber', authenticate, validateParams(orderNumberParamsSchema), getBooking);
 
 export default router;
