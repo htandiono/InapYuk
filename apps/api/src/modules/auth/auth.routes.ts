@@ -18,7 +18,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../../utils/async-handler';
 import { validateBody } from '../../middlewares/validate.middleware';
 import { registerUserSchema, registerTenantSchema, verifyEmailSchema, resendVerificationSchema, loginSchema } from './auth.schema';
-import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleResendVerification, handleLogin } from './auth.controller';
+import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleResendVerification, handleLogin, handleRefreshToken } from './auth.controller';
 
 const router = Router();
 
@@ -27,5 +27,6 @@ router.post('/register/tenant', validateBody(registerTenantSchema), asyncHandler
 router.post('/verify', validateBody(verifyEmailSchema), asyncHandler(handleVerifyEmail));
 router.post('/resend-verification', validateBody(resendVerificationSchema), asyncHandler(handleResendVerification));
 router.post('/login', validateBody(loginSchema), asyncHandler(handleLogin));
+router.post('/refresh', handleRefreshToken);
 
 export default router;

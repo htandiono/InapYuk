@@ -1,6 +1,6 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { sendCreated, sendSuccess } from '../../utils/api-response';
-import { registerUser, registerTenant, verifyEmail, resendVerification, login } from './auth.service';
+import { registerUser, registerTenant, verifyEmail, resendVerification, login, refreshAccessToken } from './auth.service';
 import type { RegisterUserInput, RegisterTenantInput, VerifyEmailInput, ResendVerificationInput, LoginInput } from './auth.schema';
 import { env, isProduction } from '../../config/env';
 
@@ -52,17 +52,43 @@ export async function handleLogin(req: Request, res: Response) {
     sameSite: 'strict' as const,
   };
 
-  // 15 minutes in MS
   res.cookie('accessToken', tokens.accessToken, {
     ...cookieOptions,
     maxAge: 15 * 60 * 1000,
   });
 
-  // 7 days in MS
   res.cookie('refreshToken', tokens.refreshToken, {
     ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   sendSuccess(res, user, 'Login berhasil');
+}
+
+export async function handleRefreshToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      res.status(401).json({ success: false, message: 'Sesi Anda telah berakhir, silakan login kembali' });
+      return;
+    }
+
+    const accessToken = await refreshAccessToken(refreshToken);
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    sendSuccess(res, null, 'Token berhasil diperbarui');
+  } catch (error) {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(401).json({ success: false, message: 'Sesi Anda telah berakhir, silakan login kembali' });
+  }
 }
