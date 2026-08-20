@@ -5,15 +5,13 @@ import { prisma } from '../libs/prisma';
 import { forbidden, unauthorized } from '../utils/app-error';
 import { asyncHandler } from '../utils/async-handler';
 
-function readBearerToken(req: Request): string | null {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  return header.slice('Bearer '.length).trim() || null;
+function readAccessToken(req: Request): string | null {
+  return req.cookies?.accessToken || null;
 }
 
 /** Rejects the request unless a valid access token is present. */
 export function authenticate(req: Request, _res: Response, next: NextFunction): void {
-  const token = readBearerToken(req);
+  const token = readAccessToken(req);
   if (!token) throw unauthorized('Missing access token');
   req.user = verifyAccessToken(token);
   next();
@@ -21,7 +19,7 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
 /** Attaches the user when a token is present but never rejects. */
 export function optionalAuthenticate(req: Request, _res: Response, next: NextFunction): void {
-  const token = readBearerToken(req);
+  const token = readAccessToken(req);
   if (token) {
     try {
       req.user = verifyAccessToken(token);
@@ -40,7 +38,7 @@ export function requireRole(...roles: UserRole[]): RequestHandler {
   return (req, _res, next) => {
     if (!req.user) throw unauthorized();
     if (!roles.includes(req.user.role)) {
-      throw forbidden('This area is not available for your account type');
+      throw forbidden('Akses ditolak');
     }
     next();
   };
@@ -50,7 +48,7 @@ export function requireRole(...roles: UserRole[]): RequestHandler {
 export function requireVerified(req: Request, _res: Response, next: NextFunction): void {
   if (!req.user) throw unauthorized();
   if (!req.user.isVerified) {
-    throw forbidden('Please verify your email address before continuing');
+    throw forbidden('Akun belum diverifikasi');
   }
   next();
 }
