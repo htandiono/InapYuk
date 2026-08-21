@@ -16,6 +16,21 @@ export function createTestApp() {
  * Call this in `beforeEach` so every test starts with a clean DB.
  */
 export async function truncateAll(): Promise<void> {
-  await prisma.verificationToken.deleteMany();
-  await prisma.user.deleteMany();
+  const tablenames = await prisma.$queryRaw<
+    Array<{ tablename: string }>
+  >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;
+
+  const tables = tablenames
+    .map(({ tablename }) => tablename)
+    .filter((name) => name !== '_prisma_migrations')
+    .map((name) => `"${name}"`)
+    .join(', ');
+
+  try {
+    if (tables.length > 0) {
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
+    }
+  } catch (error) {
+    console.log({ error });
+  }
 }
