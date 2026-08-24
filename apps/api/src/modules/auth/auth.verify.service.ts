@@ -5,8 +5,9 @@ import { prisma } from '../../libs/prisma';
 import { badRequest } from '../../utils/app-error';
 import { createTokenData } from './auth.utils';
 import type { ResendVerificationInput, VerifyEmailInput } from './auth.schema';
+import type { User, VerificationToken } from '../../generated/prisma/client';
 
-async function validateTokenRecord(tokenRecord: any) {
+async function validateTokenRecord(tokenRecord: (VerificationToken & { user: User }) | null) {
   if (!tokenRecord || tokenRecord.type !== 'EMAIL_VERIFICATION') {
     throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
   }
