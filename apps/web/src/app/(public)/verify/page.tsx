@@ -73,7 +73,7 @@ function VerifyForm() {
     setServerError(null);
 
     try {
-      const res = await api.post<{ role: string }>('/api/auth/verify', {
+      const res = await api.post<{ role: string }>('/auth/verify', {
         token,
         password: data.password,
         confirmPassword: data.confirmPassword,

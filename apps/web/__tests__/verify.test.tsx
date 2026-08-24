@@ -50,7 +50,7 @@ describe('Verify Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
     
     await waitFor(() => {
-      expect(screen.getByText(/minimal 6 karakter/i)).toBeInTheDocument();
+      expect(screen.getByText(/minimal 8 karakter/i)).toBeInTheDocument();
     });
     
     expect(api.post).not.toHaveBeenCalled();

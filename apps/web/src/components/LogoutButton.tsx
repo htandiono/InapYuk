@@ -13,7 +13,7 @@ export function LogoutButton() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/auth/logout');
       toast.success('Berhasil keluar');
       router.push('/');
     } catch {

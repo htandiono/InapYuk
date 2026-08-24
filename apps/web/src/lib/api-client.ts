@@ -47,7 +47,7 @@ let refreshPromise: Promise<boolean> | null = null;
 async function attemptRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = fetch(`${clientEnv.apiBaseUrl}/api/auth/refresh`, {
+  refreshPromise = fetch(`${clientEnv.apiBaseUrl}/auth/refresh`, {
     method: 'POST',
     credentials: 'include',
     headers: { Accept: 'application/json' },
@@ -86,7 +86,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   if (!response.ok || !payload || payload.success === false) {
     // Silent Refresh Interceptor
-    if (response.status === 401 && !_retry && path !== '/api/auth/refresh') {
+    if (response.status === 401 && !_retry && path !== '/auth/refresh') {
       const refreshed = await attemptRefresh();
       if (refreshed) {
         // Retry original request

@@ -15,6 +15,7 @@ export const registerTenantSchema = registerUserSchema.extend({
     .trim()
     .min(3, 'Nama perusahaan minimal 3 karakter')
     .regex(/^[a-zA-Z0-9\s.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
+  companyAddress: z.string().trim().min(5, 'Alamat perusahaan minimal 5 karakter'),
 });
 
 const passwordSchema = z

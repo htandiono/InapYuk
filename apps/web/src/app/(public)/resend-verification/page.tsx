@@ -43,7 +43,7 @@ export default function ResendVerificationPage() {
     setSuccess(false);
 
     try {
-      await api.post('/api/auth/resend-verification', data);
+      await api.post('/auth/resend-verification', data);
       setSuccess(true);
       setCooldown(60);
     } catch (error) {

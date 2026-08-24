@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { env } from '../../config/env';
-import { issueTokens, signAccessToken, verifyRefreshToken } from '../../libs/jwt';
+import { issueTokens, verifyRefreshToken } from '../../libs/jwt';
 import { sendMail } from '../../libs/mailer';
 import { hashPassword, hashToken, verifyPassword } from '../../libs/password';
 import { prisma } from '../../libs/prisma';
@@ -105,6 +105,7 @@ export async function registerTenant(input: RegisterTenantInput) {
       data: {
         userId: user.id,
         companyName: input.companyName,
+        companyAddress: input.companyAddress,
       },
     });
 
@@ -141,6 +142,7 @@ export async function registerTenant(input: RegisterTenantInput) {
 export async function verifyEmail(input: VerifyEmailInput) {
   const tokenRecord = await prisma.verificationToken.findUnique({
     where: { tokenHash: hashToken(input.token) },
+    include: { user: true },
   });
 
   if (!tokenRecord || tokenRecord.type !== 'EMAIL_VERIFICATION') {
@@ -151,6 +153,10 @@ export async function verifyEmail(input: VerifyEmailInput) {
     throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
   }
 
+  if (tokenRecord.user.isVerified) {
+    throw badRequest('Akun ini sudah diverifikasi sebelumnya');
+  }
+
   const hashedPw = await hashPassword(input.password);
 
   const [updatedUser] = await prisma.$transaction([
@@ -158,8 +164,8 @@ export async function verifyEmail(input: VerifyEmailInput) {
       where: { id: tokenRecord.userId },
       data: { isVerified: true, passwordHash: hashedPw },
     }),
-    prisma.verificationToken.update({
-      where: { id: tokenRecord.id },
+    prisma.verificationToken.updateMany({
+      where: { userId: tokenRecord.userId, type: 'EMAIL_VERIFICATION' },
       data: { usedAt: new Date() },
     }),
   ]);
@@ -274,15 +280,31 @@ export async function refreshAccessToken(token: string) {
     throw unauthorized('Sesi Anda telah berakhir, silakan login kembali');
   }
 
-  // 3. Issue new access token
-  const accessToken = signAccessToken({
+  // 3. Issue new tokens (rotation)
+  const tokens = issueTokens({
     sub: tokenRecord.user.id,
     role: tokenRecord.user.role,
     email: tokenRecord.user.email,
     isVerified: tokenRecord.user.isVerified,
   });
 
-  return accessToken;
+  const hashedNewRefresh = hashToken(tokens.refreshToken);
+  const refreshTtlStr = env.JWT_REFRESH_EXPIRES_IN;
+  const days = parseInt(refreshTtlStr.replace('d', ''), 10) || 7;
+  const newExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+  await prisma.$transaction([
+    prisma.refreshToken.delete({ where: { id: tokenRecord.id } }),
+    prisma.refreshToken.create({
+      data: {
+        userId: tokenRecord.user.id,
+        tokenHash: hashedNewRefresh,
+        expiresAt: newExpiresAt,
+      },
+    }),
+  ]);
+
+  return tokens;
 }
 
 export async function logout(token: string | undefined) {

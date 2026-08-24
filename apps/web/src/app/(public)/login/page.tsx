@@ -37,7 +37,7 @@ export default function LoginPage() {
     setServerError(null);
 
     try {
-      const response = await api.post<{ role: string }>('/api/auth/login', {
+      const response = await api.post<{ role: string }>('/auth/login', {
         ...data,
         role: 'USER'
       });
