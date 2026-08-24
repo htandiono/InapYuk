@@ -39,8 +39,8 @@ export async function verifyEmail(input: VerifyEmailInput) {
 
   const hashedPw = await hashPassword(input.password);
   const [updatedUser] = await prisma.$transaction([
-    prisma.user.update({ where: { id: tokenRecord.userId }, data: { isVerified: true, passwordHash: hashedPw } }),
-    prisma.verificationToken.updateMany({ where: { userId: tokenRecord.userId, type: 'EMAIL_VERIFICATION' }, data: { usedAt: new Date() } }),
+    prisma.user.update({ where: { id: tokenRecord!.userId }, data: { isVerified: true, passwordHash: hashedPw } }),
+    prisma.verificationToken.updateMany({ where: { userId: tokenRecord!.userId, type: 'EMAIL_VERIFICATION' }, data: { usedAt: new Date() } }),
   ]);
   return { role: updatedUser.role };
 }
