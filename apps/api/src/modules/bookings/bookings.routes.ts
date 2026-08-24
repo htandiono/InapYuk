@@ -1,11 +1,18 @@
 import { Router } from 'express';
 import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
+import { uploadPaymentProof } from '../../middlewares/upload.middleware';
 import {
   validateBody,
   validateParams,
   validateQuery,
 } from '../../middlewares/validate.middleware';
-import { createBooking, getBooking, listBookings, quoteBooking } from './bookings.controller';
+import {
+  createBooking,
+  getBooking,
+  listBookings,
+  quoteBooking,
+  uploadProof,
+} from './bookings.controller';
 import {
   createSchema,
   listQuerySchema,
@@ -50,5 +57,14 @@ router.get(
   listBookings,
 );
 router.get('/:orderNumber', authenticate, validateParams(orderNumberParamsSchema), getBooking);
+router.post(
+  '/:orderNumber/payment-proof',
+  authenticate,
+  requireRole('USER'),
+  requireVerified,
+  validateParams(orderNumberParamsSchema),
+  uploadPaymentProof.single('proof'),
+  uploadProof,
+);
 
 export default router;

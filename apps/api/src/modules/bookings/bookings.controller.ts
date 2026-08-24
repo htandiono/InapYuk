@@ -7,6 +7,7 @@ import {
   getByOrderNumber,
   listGuestBookings,
   quoteStay,
+  uploadPaymentProof,
 } from './bookings.service';
 
 export const quoteBooking = asyncHandler(async (req, res) => {
@@ -30,4 +31,14 @@ export const listBookings = asyncHandler(async (req, res) => {
   if (!req.user) throw unauthorized();
   const result = await listGuestBookings(req.user.sub, req.query as BookingListQuery);
   sendPaginated(res, result.items, result.meta, 'Daftar pesanan kamu');
+});
+
+export const uploadProof = asyncHandler(async (req, res) => {
+  if (!req.user) throw unauthorized();
+  const booking = await uploadPaymentProof(
+    String(req.params.orderNumber),
+    req.user,
+    req.file,
+  );
+  sendSuccess(res, booking, 'Bukti transfer sudah kami terima');
 });
