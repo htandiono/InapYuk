@@ -13,7 +13,10 @@ export async function registerUser(input: RegisterUserInput) {
   });
 
   if (existingUser) {
-    throw conflict('Email sudah terdaftar');
+    if (existingUser.isVerified) {
+      throw conflict('Email sudah terdaftar');
+    }
+    await prisma.user.delete({ where: { id: existingUser.id } });
   }
 
   const { rawToken, tokenHash, expiresAt } = createTokenData();
@@ -68,7 +71,10 @@ export async function registerTenant(input: RegisterTenantInput) {
   });
 
   if (existingUser) {
-    throw conflict('Email sudah terdaftar');
+    if (existingUser.isVerified) {
+      throw conflict('Email sudah terdaftar');
+    }
+    await prisma.user.delete({ where: { id: existingUser.id } });
   }
 
   const { rawToken, tokenHash, expiresAt } = createTokenData();

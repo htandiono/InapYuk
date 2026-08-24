@@ -19,12 +19,13 @@ import { asyncHandler } from '../../utils/async-handler';
 import { validateBody } from '../../middlewares/validate.middleware';
 import { authRateLimiter, resendRateLimiter } from '../../middlewares/rate-limit.middleware';
 import { registerUserSchema, registerTenantSchema, verifyEmailSchema, resendVerificationSchema, loginSchema } from './auth.schema';
-import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleResendVerification, handleLogin, handleRefreshToken, handleLogout } from './auth.controller';
+import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleCheckToken, handleResendVerification, handleLogin, handleRefreshToken, handleLogout } from './auth.controller';
 
 const router = Router();
 
 router.post('/register/user', authRateLimiter, validateBody(registerUserSchema), asyncHandler(handleRegisterUser));
 router.post('/register/tenant', authRateLimiter, validateBody(registerTenantSchema), asyncHandler(handleRegisterTenant));
+router.get('/verify/check', asyncHandler(handleCheckToken));
 router.post('/verify', authRateLimiter, validateBody(verifyEmailSchema), asyncHandler(handleVerifyEmail));
 router.post('/resend-verification', resendRateLimiter, validateBody(resendVerificationSchema), asyncHandler(handleResendVerification));
 router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
