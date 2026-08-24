@@ -12,7 +12,7 @@ import {
   registerTenant,
   registerUser,
 } from './auth.service';
-import { resendVerification, verifyEmail } from './auth.verify.service';
+import { resendVerification, verifyEmail, checkToken } from './auth.verify.service';
 import { login, logout, refreshAccessToken } from './auth.session.service';
 
 export async function handleRegisterUser(req: Request, res: Response) {
@@ -52,6 +52,16 @@ export async function handleVerifyEmail(req: Request, res: Response) {
   const { role } = await verifyEmail(input);
 
   sendSuccess(res, { role }, 'Akun berhasil diverifikasi, silakan login');
+}
+
+export async function handleCheckToken(req: Request, res: Response) {
+  const token = req.query.token as string;
+  if (!token) {
+    res.status(400).json({ success: false, message: 'Token is required' });
+    return;
+  }
+  await checkToken(token);
+  sendSuccess(res, null, 'Token valid');
 }
 
 export async function handleResendVerification(req: Request, res: Response) {
