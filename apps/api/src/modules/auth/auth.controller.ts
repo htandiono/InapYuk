@@ -9,14 +9,11 @@ import type {
   VerifyEmailInput,
 } from './auth.schema';
 import {
-  login,
-  logout,
-  refreshAccessToken,
   registerTenant,
   registerUser,
-  resendVerification,
-  verifyEmail,
 } from './auth.service';
+import { resendVerification, verifyEmail } from './auth.verify.service';
+import { login, logout, refreshAccessToken } from './auth.session.service';
 
 export async function handleRegisterUser(req: Request, res: Response) {
   const input = req.body as RegisterUserInput;
