@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
-import { validateBody, validateParams } from '../../middlewares/validate.middleware';
-import { createBooking, getBooking, quoteBooking } from './bookings.controller';
-import { createSchema, orderNumberParamsSchema, quoteSchema } from './bookings.schema';
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+} from '../../middlewares/validate.middleware';
+import { createBooking, getBooking, listBookings, quoteBooking } from './bookings.controller';
+import {
+  createSchema,
+  listQuerySchema,
+  orderNumberParamsSchema,
+  quoteSchema,
+} from './bookings.schema';
 
 /**
  * Owner: Feature 2 - htandiono (Sprint 1, Sprint 2, Sprint 3)
@@ -12,10 +21,12 @@ import { createSchema, orderNumberParamsSchema, quoteSchema } from './bookings.s
  *   POST   /bookings
  *   GET    /bookings/:orderNumber
  *
- * Later sprints:
+ * Sprint 2:
  *   GET    /bookings
- *   POST   /bookings/:id/payment-proof
- *   PATCH  /bookings/:id/cancel
+ *   POST   /bookings/:orderNumber/payment-proof
+ *   PATCH  /bookings/:orderNumber/cancel
+ *
+ * Later:
  *   GET    /tenant/bookings
  *   PATCH  /tenant/bookings/:id/confirm
  *   PATCH  /tenant/bookings/:id/cancel
@@ -30,6 +41,13 @@ router.post(
   requireVerified,
   validateBody(createSchema),
   createBooking,
+);
+router.get(
+  '/',
+  authenticate,
+  requireRole('USER'),
+  validateQuery(listQuerySchema),
+  listBookings,
 );
 router.get('/:orderNumber', authenticate, validateParams(orderNumberParamsSchema), getBooking);
 

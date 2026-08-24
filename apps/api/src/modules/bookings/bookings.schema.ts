@@ -44,8 +44,8 @@ export const listQuerySchema = z.object({
   dateFrom: isoDate.optional(),
   dateTo: isoDate.optional(),
   propertyId: z.string().uuid().optional(),
-  sortBy: z.enum(['createdAt', 'checkIn', 'totalPrice']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
+  sortBy: z.enum(['createdAt', 'checkIn', 'totalPrice']).optional().default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
 export const cancelSchema = z.object({
