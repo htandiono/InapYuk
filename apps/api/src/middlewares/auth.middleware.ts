@@ -6,7 +6,15 @@ import { forbidden, unauthorized } from '../utils/app-error';
 import { asyncHandler } from '../utils/async-handler';
 
 function readAccessToken(req: Request): string | null {
-  return req.cookies?.accessToken || null;
+  const cookieToken = req.cookies?.accessToken;
+  if (cookieToken) return cookieToken;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+
+  return null;
 }
 
 /** Rejects the request unless a valid access token is present. */

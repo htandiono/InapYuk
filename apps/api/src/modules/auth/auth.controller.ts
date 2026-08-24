@@ -104,13 +104,22 @@ export async function handleRefreshToken(req: Request, res: Response) {
       return;
     }
 
-    const accessToken = await refreshAccessToken(refreshToken);
+    const tokens = await refreshAccessToken(refreshToken);
 
-    res.cookie('accessToken', accessToken, {
+    const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict',
+      sameSite: 'strict' as const,
+    };
+
+    res.cookie('accessToken', tokens.accessToken, {
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     sendSuccess(res, null, 'Token berhasil diperbarui');
@@ -128,8 +137,14 @@ export async function handleLogout(req: Request, res: Response) {
 
   await logout(refreshToken);
 
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict' as const,
+  };
+
+  res.clearCookie('accessToken', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
 
   sendSuccess(res, null, 'Berhasil logout');
 }

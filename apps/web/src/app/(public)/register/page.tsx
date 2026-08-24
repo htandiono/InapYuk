@@ -54,7 +54,7 @@ export default function RegisterPage() {
     setServerError(null);
 
     try {
-      await api.post('/api/auth/register/user', data);
+      await api.post('/auth/register/user', data);
       setSuccess(true);
       setCooldown(60);
       toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
@@ -80,7 +80,7 @@ export default function RegisterPage() {
 
     setIsResending(true);
     try {
-      await api.post('/api/auth/resend-verification', { email });
+      await api.post('/auth/resend-verification', { email });
       toast.success('Email verifikasi baru telah dikirim!');
       setCooldown(60);
     } catch (error) {

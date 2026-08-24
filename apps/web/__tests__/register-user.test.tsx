@@ -41,7 +41,7 @@ describe('User Registration Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     
     await waitFor(() => {
-      expect(screen.getByText(/nama wajib diisi/i)).toBeInTheDocument();
+      expect(screen.getByText(/nama minimal 3 karakter/i)).toBeInTheDocument();
       expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
     });
     

@@ -63,7 +63,7 @@ export default function RegisterTenantPage() {
     setServerError(null);
 
     try {
-      await api.post('/api/auth/register/tenant', data);
+      await api.post('/auth/register/tenant', data);
       setSuccess(true);
       setCooldown(60);
       toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
@@ -89,7 +89,7 @@ export default function RegisterTenantPage() {
 
     setIsResending(true);
     try {
-      await api.post('/api/auth/resend-verification', { email });
+      await api.post('/auth/resend-verification', { email });
       toast.success('Email verifikasi baru telah dikirim!');
       setCooldown(60);
     } catch (error) {
