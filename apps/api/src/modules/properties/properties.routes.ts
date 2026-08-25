@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCities } from './properties.controller';
+import { getCities, getProperties } from './properties.controller';
 
 /**
  * Owner: Feature 1 - awanstywn (Sprint 2, Sprint 3)
@@ -18,6 +18,7 @@ import { getCities } from './properties.controller';
 const router = Router();
 
 // Routes
+router.get('/', getProperties);
 router.get('/cities', getCities);
 
 export default router;
