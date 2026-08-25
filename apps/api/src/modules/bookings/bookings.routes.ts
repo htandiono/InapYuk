@@ -7,6 +7,7 @@ import {
   validateQuery,
 } from '../../middlewares/validate.middleware';
 import {
+  cancelBooking,
   createBooking,
   getBooking,
   listBookings,
@@ -14,6 +15,7 @@ import {
   uploadProof,
 } from './bookings.controller';
 import {
+  cancelSchema,
   createSchema,
   listQuerySchema,
   orderNumberParamsSchema,
@@ -65,6 +67,15 @@ router.post(
   validateParams(orderNumberParamsSchema),
   uploadPaymentProof.single('proof'),
   uploadProof,
+);
+router.patch(
+  '/:orderNumber/cancel',
+  authenticate,
+  requireRole('USER'),
+  requireVerified,
+  validateParams(orderNumberParamsSchema),
+  validateBody(cancelSchema),
+  cancelBooking,
 );
 
 export default router;

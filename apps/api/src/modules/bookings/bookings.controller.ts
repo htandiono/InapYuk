@@ -1,8 +1,9 @@
-import type { BookingListQuery } from '@inapyuk/types';
+import type { BookingListQuery, CancelBookingRequest } from '@inapyuk/types';
 import { asyncHandler } from '../../utils/async-handler';
 import { sendCreated, sendPaginated, sendSuccess } from '../../utils/api-response';
 import { unauthorized } from '../../utils/app-error';
 import {
+  cancelGuestBooking,
   createReservation,
   getByOrderNumber,
   listGuestBookings,
@@ -41,4 +42,11 @@ export const uploadProof = asyncHandler(async (req, res) => {
     req.file,
   );
   sendSuccess(res, booking, 'Bukti transfer sudah kami terima');
+});
+
+export const cancelBooking = asyncHandler(async (req, res) => {
+  if (!req.user) throw unauthorized();
+  const body = req.body as CancelBookingRequest;
+  const booking = await cancelGuestBooking(String(req.params.orderNumber), req.user, body.reason);
+  sendSuccess(res, booking, 'Pesanan sudah dibatalkan');
 });
