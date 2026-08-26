@@ -22,3 +22,11 @@ export const getPropertiesQuerySchema = z.object({
 });
 
 export type GetPropertiesQuery = z.infer<typeof getPropertiesQuerySchema>;
+
+export const getPropertyPricingSchema = z.object({
+  roomId: z.string().uuid('Invalid Room ID'),
+  month: z.coerce.number().min(1).max(12),
+  year: z.coerce.number().min(2020),
+});
+
+export type GetPropertyPricingQuery = z.infer<typeof getPropertyPricingSchema>;

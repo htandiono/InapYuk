@@ -1,7 +1,7 @@
 export function HeroCarousel() {
   return (
     <section className="relative w-full rounded-3xl bg-primary/5 overflow-hidden border border-primary/10">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-primary/10 to-transparent pointer-events-none" />
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-20 text-center sm:py-32 sm:px-12">
         <p className="text-sm font-semibold tracking-wider text-accent uppercase mb-4">
           Liburan Nggak Bikin Kantong Kaget

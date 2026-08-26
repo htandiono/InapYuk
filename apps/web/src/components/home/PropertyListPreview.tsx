@@ -30,14 +30,14 @@ export function PropertyListPreview() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {dummies.map((d) => (
-          <Link key={d.city} href={`/properties?city=${d.city}`} className="group block relative rounded-2xl overflow-hidden aspect-[4/3]">
+          <Link key={d.city} href={`/properties?city=${d.city}`} className="group block relative rounded-2xl overflow-hidden aspect-4/3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src={d.img} 
               alt={d.city}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 p-5">
               <h3 className="text-xl font-heading text-white">{d.city}</h3>
               <p className="text-sm text-white/80 mt-1">{d.count} properti</p>

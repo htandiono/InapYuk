@@ -32,7 +32,7 @@ export function PropertyCard({
       href={`/properties/${slug}`} 
       className="group block rounded-2xl overflow-hidden border border-border bg-card shadow-sm hover:shadow-md transition-all"
     >
-      <div className="aspect-[4/3] w-full bg-muted relative overflow-hidden">
+      <div className="aspect-4/3 w-full bg-muted relative overflow-hidden">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img 
@@ -52,9 +52,9 @@ export function PropertyCard({
           <p className="text-xs font-semibold text-accent uppercase tracking-wider">
             {categoryName}
           </p>
-          <p className="text-xs text-muted-foreground truncate max-w-[120px]">
+          <span className="text-xs text-muted-foreground truncate max-w-30" title={`${city}, ${province}`}>
             {city}, {province}
-          </p>
+          </span>
         </div>
         
         <h3 className="font-heading text-lg font-bold text-foreground truncate mt-1">
