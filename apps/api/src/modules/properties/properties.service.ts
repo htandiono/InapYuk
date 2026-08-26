@@ -119,3 +119,23 @@ export async function searchProperties(query: GetPropertiesQuery) {
 
   return { items, meta };
 }
+
+export async function getPropertyBySlug(slug: string) {
+  const property = await prisma.property.findUnique({
+    where: { slug, deletedAt: null },
+    include: {
+      category: true,
+      images: {
+        orderBy: { sortOrder: 'asc' },
+      },
+      rooms: {
+        where: { deletedAt: null },
+        orderBy: { basePrice: 'asc' },
+      },
+    },
+  });
+
+  if (!property) return null;
+
+  return property;
+}

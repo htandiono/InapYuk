@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCities, getProperties } from './properties.controller';
+import { getCities, getProperties, getPropertyDetail, getPropertyCalendar } from './properties.controller';
 
 /**
  * Owner: Feature 1 - awanstywn (Sprint 2, Sprint 3)
@@ -20,5 +20,7 @@ const router = Router();
 // Routes
 router.get('/', getProperties);
 router.get('/cities', getCities);
+router.get('/:slug/calendar', getPropertyCalendar);
+router.get('/:slug', getPropertyDetail);
 
 export default router;
