@@ -28,7 +28,7 @@ export interface BookingRecord {
   id: string;
   orderNumber: string;
   userId: string;
-  status: string;
+  status: BookingStatus;
   checkIn: Date;
   checkOut: Date;
   guestCount: number;
@@ -77,7 +77,7 @@ export const bookingListInclude = {
 export type BookingListRecord = {
   id: string;
   orderNumber: string;
-  status: string;
+  status: BookingStatus;
   checkIn: Date;
   checkOut: Date;
   guestCount: number;

@@ -11,7 +11,7 @@ import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api-client';
 import { bookingPost } from './booking-api';
 import { NightBreakdown } from './NightBreakdown';
-import { readSession } from './session';
+import { useSession } from './session';
 
 interface Stay {
   roomId: string;
@@ -22,23 +22,16 @@ interface Stay {
 
 export function CheckoutForm({ initialStay }: { initialStay: Stay }) {
   const router = useRouter();
-  const [session, setSession] = useState<ReturnType<typeof readSession> | undefined>();
+  const session = useSession();
   const [stay, setStay] = useState(initialStay);
   const [quote, setQuote] = useState<BookingQuoteResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setSession(readSession());
-  }, []);
-
-  useEffect(() => {
     void refreshQuote(stay, setQuote, setError);
   }, [stay]);
 
-  if (session === undefined) {
-    return <p className="text-sm text-muted-foreground">Memuat...</p>;
-  }
   if (!session) return <NeedLogin />;
   if (!session.isVerified) return <NeedVerify />;
 
