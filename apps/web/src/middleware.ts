@@ -10,7 +10,7 @@ interface JwtPayload {
   email: string;
 }
 
-const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/', '/properties'];
+const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/', '/properties', '/bantuan', '/privasi', '/syarat'];
 const authRoutes = ['/login', '/register', '/tenant/register', '/tenant/login'];
 
 export function middleware(request: NextRequest) {
@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/properties');
   const isAuthRoute = authRoutes.includes(pathname);
 
   // 2. Unauthenticated User Logic
