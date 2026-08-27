@@ -7,7 +7,7 @@ interface NavbarProps {
 
 export function Navbar({ isAuthenticated }: NavbarProps) {
   return (
-    <header className="flex items-center justify-between px-5 py-4 sm:px-8 border-b border-border/40">
+    <header className="relative z-50 bg-background flex items-center justify-between px-5 py-4 sm:px-8 border-b border-border/40">
       <Link href="/" className="font-heading text-2xl tracking-tight text-primary">
         InapYuk
       </Link>
