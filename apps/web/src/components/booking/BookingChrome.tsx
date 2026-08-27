@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export function BookingChrome({ children }: { children: React.ReactNode }) {
+export function BookingChrome({
+  children,
+  wide = false,
+}: {
+  children: React.ReactNode;
+  wide?: boolean;
+}) {
   return (
     <div className="flex min-h-full flex-col">
       <header className="flex items-center justify-between px-5 py-4 sm:px-8">
@@ -16,7 +23,11 @@ export function BookingChrome({ children }: { children: React.ReactNode }) {
           </Link>
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-lg flex-1 px-5 pb-16 sm:px-8">{children}</main>
+      <main
+        className={cn('mx-auto w-full flex-1 px-5 pb-16 sm:px-8', wide ? 'max-w-2xl' : 'max-w-lg')}
+      >
+        {children}
+      </main>
     </div>
   );
 }

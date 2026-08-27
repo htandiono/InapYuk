@@ -5,6 +5,20 @@ function authOptions(extra?: RequestOptions): RequestOptions {
   return { ...extra, token: readAccessToken(), credentials: 'include' };
 }
 
+/** Turns `{ status: 'PROCESSED' }` into `?status=PROCESSED`, skipping blanks. */
+export function withQuery(
+  path: string,
+  query: Record<string, string | number | undefined | null>,
+): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === '') continue;
+    params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 export function bookingGet<T>(path: string) {
   return api.get<T>(path, authOptions());
 }
