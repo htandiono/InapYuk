@@ -48,11 +48,18 @@ function buildMonthDateRange(year: number, month: number) {
   };
 }
 
+import { prisma } from '../../libs/prisma';
+
 export async function getPropertyCalendar(
   req: Request, res: Response, next: NextFunction
 ) {
   try {
     const query = getPropertyPricingSchema.parse(req.query);
+    const room = await prisma.room.findFirst({ 
+      where: { id: query.roomId, property: { slug: req.params.slug as string } } 
+    });
+    if (!room) return sendError(res, 404, 'Room not found for this property');
+
     const { checkIn, checkOut } = buildMonthDateRange(query.year, query.month);
     const pricing = await resolveRoomPricing({ roomId: query.roomId, checkIn, checkOut });
     sendSuccess(res, pricing.nights, 'Success fetching room pricing');

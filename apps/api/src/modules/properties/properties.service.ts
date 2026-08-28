@@ -30,15 +30,36 @@ function buildPropertyWhereClause(query: GetPropertiesQuery): Prisma.PropertyWhe
   };
 }
 
-async function fetchBaseProperties(query: GetPropertiesQuery) {
-  return prisma.property.findMany({
+async function getPagedIdsByPrice(query: GetPropertiesQuery, skip: number, take: number) {
+  const all = await prisma.property.findMany({
     where: buildPropertyWhereClause(query),
+    select: { id: true, rooms: { select: { basePrice: true } } }
+  });
+  const mapped = all.map(p => ({
+    id: p.id,
+    min: p.rooms.length > 0 ? Math.min(...p.rooms.map(r => Number(r.basePrice))) : Infinity
+  }));
+  mapped.sort((a, b) => query.sortOrder === 'asc' ? a.min - b.min : b.min - a.min);
+  return mapped.slice(skip, skip + take).map(p => p.id);
+}
+
+async function fetchBaseProperties(query: GetPropertiesQuery, skip: number, take: number) {
+  const isPrice = query.sortBy === 'price';
+  const ids = isPrice ? await getPagedIdsByPrice(query, skip, take) : undefined;
+  
+  const props = await prisma.property.findMany({
+    where: isPrice ? { id: { in: ids } } : buildPropertyWhereClause(query),
+    skip: isPrice ? undefined : skip, take: isPrice ? undefined : take,
+    orderBy: isPrice ? undefined : { name: query.sortOrder },
     include: {
       category: true,
       rooms: { where: { capacity: { gte: query.guests }, deletedAt: null }, select: { id: true, basePrice: true } },
       images: { orderBy: { sortOrder: 'asc' }, take: 1 },
     },
   });
+
+  if (isPrice) props.sort((a, b) => ids!.indexOf(a.id) - ids!.indexOf(b.id));
+  return props;
 }
 
 type BaseProperty = Awaited<ReturnType<typeof fetchBaseProperties>>[number];
@@ -68,29 +89,22 @@ async function evaluatePricesForProperties(properties: BaseProperty[], checkIn?:
   return evaluatedProps;
 }
 
-function sortProperties(props: (BaseProperty & { cheapestPrice: number })[], sortBy: string, sortOrder: 'asc' | 'desc') {
-  return props.sort((a, b) => {
-    if (sortBy === 'price') {
-      return sortOrder === 'asc' ? a.cheapestPrice - b.cheapestPrice : b.cheapestPrice - a.cheapestPrice;
-    }
-    return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-  });
-}
-
 export async function searchProperties(query: GetPropertiesQuery) {
-  const rawProps = await fetchBaseProperties(query);
-  const evaluated = await evaluatePricesForProperties(rawProps, query.checkIn, query.checkOut);
-  const sorted = sortProperties(evaluated, query.sortBy, query.sortOrder);
-  
   const { skip, take } = toPrismaPageArgs({ page: query.page, limit: query.limit });
-  const paginated = sorted.slice(skip, skip + take);
+  
+  const [total, rawProps] = await Promise.all([
+    prisma.property.count({ where: buildPropertyWhereClause(query) }),
+    fetchBaseProperties(query, skip, take)
+  ]);
 
-  const items = paginated.map(p => ({
+  const evaluated = await evaluatePricesForProperties(rawProps, query.checkIn, query.checkOut);
+  
+  const items = evaluated.map(p => ({
     id: p.id, name: p.name, slug: p.slug, city: p.city, province: p.province,
     categoryName: p.category.name, imageUrl: p.images[0]?.url || null, cheapestPrice: p.cheapestPrice
   }));
 
-  return { items, meta: buildPaginationMeta(sorted.length, query.page, query.limit) };
+  return { items, meta: buildPaginationMeta(total, query.page, query.limit) };
 }
 
 export async function getPropertyBySlug(slug: string) {

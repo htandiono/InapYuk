@@ -49,8 +49,8 @@ export function PriceCalendar({
         `/properties/${slug}/calendar?roomId=${roomId}&month=${month}&year=${year}`,
       );
       setNights(data);
-    } catch (error) {
-      console.error('Failed to fetch calendar:', error);
+    } catch {
+      // Silent fail
     } finally {
       setIsLoading(false);
     }

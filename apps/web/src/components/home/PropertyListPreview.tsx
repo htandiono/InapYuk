@@ -12,8 +12,8 @@ async function fetchPreviewProperties() {
       cache: 'no-store'
     });
     return res.items || [];
-  } catch (err) {
-    console.error("fetch error:", err);
+  } catch {
+    // Silent fail
     return [];
   }
 }
