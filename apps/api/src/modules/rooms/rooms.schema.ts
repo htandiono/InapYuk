@@ -22,9 +22,6 @@ export const UpdateAvailabilitySchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   isAvailable: z.boolean(),
   availableUnits: z.coerce.number().min(0, 'Total unit minimal 0').max(100, 'Total unit maksimal 100').optional().nullable(),
-}).refine(data => data.startDate <= data.endDate, {
-  message: 'Tanggal akhir harus setelah atau sama dengan tanggal mulai',
-  path: ['endDate'],
 });
 
 export const CreatePeakSeasonSchema = z.object({
@@ -33,9 +30,6 @@ export const CreatePeakSeasonSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   adjustmentType: z.enum(['NOMINAL', 'PERCENTAGE']),
   adjustmentValue: z.coerce.number().min(1, 'Nilai minimal 1'),
-}).refine(data => data.startDate <= data.endDate, {
-  message: 'Tanggal akhir harus setelah atau sama dengan tanggal mulai',
-  path: ['endDate'],
 });
 
 export const UpdatePeakSeasonSchema = CreatePeakSeasonSchema.partial();
