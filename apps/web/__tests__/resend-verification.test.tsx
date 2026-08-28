@@ -50,7 +50,7 @@ describe('Resend Verification Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /kirim ulang/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/verify/resend', {
+      expect(api.post).toHaveBeenCalledWith('/auth/resend-verification', {
         email: 'user@example.com',
       });
       expect(screen.getByText(/berhasil terkirim/i)).toBeInTheDocument();

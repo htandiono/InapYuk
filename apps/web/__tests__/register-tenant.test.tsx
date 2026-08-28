@@ -68,7 +68,7 @@ describe('Tenant Registration Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/register/tenant', {
+      expect(api.post).toHaveBeenCalledWith('/auth/register/tenant', {
         name: 'Tenant Bali',
         email: 'bali@example.com',
         companyName: 'PT Bali Villas',
@@ -87,8 +87,8 @@ describe('Tenant Registration Page', () => {
     
     fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
-    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT' } });
-    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl' } });
+    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Bali' } });
+    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl Kuta No 1' } });
     
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     

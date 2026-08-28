@@ -36,7 +36,7 @@ describe('Logout Button', () => {
     expect(screen.getByRole('button', { name: /keluar/i })).toBeDisabled();
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/logout');
+      expect(api.post).toHaveBeenCalledWith('/auth/logout');
       expect(pushMock).toHaveBeenCalledWith('/');
     });
   });

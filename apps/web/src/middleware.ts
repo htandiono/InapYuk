@@ -10,7 +10,7 @@ interface JwtPayload {
   email: string;
 }
 
-const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/'];
+const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/', '/properties'];
 const authRoutes = ['/login', '/register', '/tenant/register', '/tenant/login'];
 
 export function middleware(request: NextRequest) {
