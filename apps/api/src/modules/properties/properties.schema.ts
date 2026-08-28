@@ -19,6 +19,23 @@ export const getPropertiesQuerySchema = z.object({
 }, {
   message: 'checkIn and checkOut must be provided together',
   path: ['checkIn'],
+}).refine((data) => {
+  if (data.checkIn) {
+    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    return data.checkIn >= todayStr;
+  }
+  return true;
+}, {
+  message: 'checkIn cannot be in the past',
+  path: ['checkIn'],
+}).refine((data) => {
+  if (data.checkIn && data.checkOut) {
+    return data.checkOut > data.checkIn;
+  }
+  return true;
+}, {
+  message: 'checkOut must be after checkIn',
+  path: ['checkOut'],
 });
 
 export type GetPropertiesQuery = z.infer<typeof getPropertiesQuerySchema>;

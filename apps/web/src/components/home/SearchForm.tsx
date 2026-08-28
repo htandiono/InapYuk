@@ -44,8 +44,8 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
       try {
         const data = await api.get<{ city: string; province: string }[]>('/properties/cities');
         setCities(data);
-      } catch (error) {
-        console.error('Failed to load cities:', error);
+      } catch {
+        // Silent fail
       } finally {
         setIsLoading(false);
       }

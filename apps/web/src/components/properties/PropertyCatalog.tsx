@@ -59,8 +59,8 @@ export function PropertyCatalog() {
       const res = await api.get<{ items: Property[]; meta: PaginationMeta }>(`/properties?${params.toString()}`);
       setProperties(res.items);
       setMeta(res.meta);
-    } catch (error) {
-      console.error('Failed to fetch properties:', error);
+    } catch {
+      // Silent fail
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +147,7 @@ export function PropertyCatalog() {
         </div>
       ) : properties.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border rounded-3xl bg-muted/30">
-          <p className="text-lg font-medium text-foreground">Yah, nggak ketemu 😢</p>
+          <p className="text-lg font-medium text-foreground">Tidak ada properti yang ditemukan</p>
           <p className="text-sm text-muted-foreground mt-2 max-w-md text-center">
             Coba ganti kata kunci pencarian, atau ubah filter tanggal dan kota di halaman utama.
           </p>
