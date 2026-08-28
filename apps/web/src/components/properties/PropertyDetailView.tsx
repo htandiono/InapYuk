@@ -180,7 +180,8 @@ export function PropertyDetailView({ property, initialDate }: PropertyDetailView
                 {/* Booking Widget Placeholder for Feature 2 */}
                 <BookingWidget 
                   selectedDate={selectedDate} 
-                  selectedNightData={selectedNightData} 
+                  selectedNightData={selectedNightData}
+                  roomId={selectedRoomId}
                 />
               </>
             ) : (

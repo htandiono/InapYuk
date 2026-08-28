@@ -3,6 +3,7 @@ import authRoutes from '../modules/auth/auth.routes';
 import usersRoutes from '../modules/users/users.routes';
 import categoriesRoutes from '../modules/categories/categories.routes';
 import roomsRoutes from '../modules/rooms/rooms.routes';
+import propertiesRoutes from '../modules/properties/properties.routes';
 import bookingsRoutes from '../modules/bookings/bookings.routes';
 import reviewsRoutes from '../modules/reviews/reviews.routes';
 import reportsRoutes from '../modules/reports/reports.routes';
@@ -21,6 +22,7 @@ router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/rooms', roomsRoutes);
+router.use('/properties', propertiesRoutes);
 
 // Feature 2 - htandiono
 router.use('/bookings', bookingsRoutes);
