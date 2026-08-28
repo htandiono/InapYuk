@@ -92,21 +92,21 @@ describe('Pricing Calendar Integration', () => {
       expect(nights).toBeInstanceOf(Array);
       
       // Dec 24: Holiday rate (+100k), available
-      const dec24 = nights.find((n: any) => n.date.startsWith('2026-12-24'));
+      const dec24 = nights.find((n: { date: string }) => n.date.startsWith('2026-12-24'));
       expect(dec24).toBeDefined();
       expect(dec24.basePrice).toBe(500000);
       expect(dec24.finalPrice).toBe(600000);
       expect(dec24.isAvailable).toBe(true);
 
       // Dec 25: Holiday rate, NOT available
-      const dec25 = nights.find((n: any) => n.date.startsWith('2026-12-25'));
+      const dec25 = nights.find((n: { date: string }) => n.date.startsWith('2026-12-25'));
       expect(dec25).toBeDefined();
       expect(dec25.basePrice).toBe(500000);
       expect(dec25.finalPrice).toBe(600000);
       expect(dec25.isAvailable).toBe(false); // blocked
 
       // Dec 27: Normal day
-      const dec27 = nights.find((n: any) => n.date.startsWith('2026-12-27'));
+      const dec27 = nights.find((n: { date: string }) => n.date.startsWith('2026-12-27'));
       expect(dec27).toBeDefined();
       expect(dec27.basePrice).toBe(500000);
       expect(dec27.finalPrice).toBe(500000);

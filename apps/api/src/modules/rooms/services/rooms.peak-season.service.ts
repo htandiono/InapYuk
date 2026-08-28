@@ -1,7 +1,7 @@
 import { prisma } from '../../../libs/prisma';
 import { badRequest, forbidden, notFound } from '../../../utils/app-error';
 import { toDateOnly } from '../../../utils/date';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 
 export async function getPeakSeasons(tenantId: string, roomId: string) {
   const room = await prisma.room.findFirst({
