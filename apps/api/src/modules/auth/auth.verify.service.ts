@@ -61,7 +61,7 @@ export async function resendVerification(input: ResendVerificationInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
   if (!user) return; // Silent return for non-existent users (enumeration defense)
   if (user.isVerified) {
-    throw badRequest('Akun ini sudah diverifikasi sebelumnya');
+    return; // Silent return for verified users (enumeration defense)
   }
 
   const { rawToken, tokenHash, expiresAt } = createTokenData();

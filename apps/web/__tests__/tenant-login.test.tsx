@@ -63,7 +63,7 @@ describe('Tenant Login Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
+      expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'user@example.com',
         password: 'password123',
         role: 'TENANT',
@@ -87,7 +87,7 @@ describe('Tenant Login Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
+      expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'tenant@example.com',
         password: 'password123',
         role: 'TENANT',
@@ -109,7 +109,7 @@ describe('Tenant Login Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/login', {
+      expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'wrong@example.com',
         password: 'wrongpass',
         role: 'TENANT',

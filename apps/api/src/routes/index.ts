@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import authRoutes from '../modules/auth/auth.routes';
 import usersRoutes from '../modules/users/users.routes';
-import propertiesRoutes from '../modules/properties/properties.routes';
 import categoriesRoutes from '../modules/categories/categories.routes';
 import roomsRoutes from '../modules/rooms/rooms.routes';
 import bookingsRoutes from '../modules/bookings/bookings.routes';
@@ -21,7 +20,6 @@ router.get('/health', (_req, res) => {
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/categories', categoriesRoutes);
-router.use('/properties', propertiesRoutes);
 router.use('/rooms', roomsRoutes);
 
 // Feature 2 - htandiono

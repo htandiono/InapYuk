@@ -61,7 +61,7 @@ describe('User Registration Page', () => {
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/api/auth/register/user', {
+      expect(api.post).toHaveBeenCalledWith('/auth/register/user', {
         name: 'Budi',
         email: 'budi@example.com',
       });
