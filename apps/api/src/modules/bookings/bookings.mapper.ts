@@ -28,7 +28,7 @@ export interface BookingRecord {
   id: string;
   orderNumber: string;
   userId: string;
-  status: string;
+  status: BookingStatus;
   checkIn: Date;
   checkOut: Date;
   guestCount: number;
@@ -64,7 +64,31 @@ export function toDetailDto(booking: BookingRecord, caller: JwtPayload): Booking
   };
 }
 
-export function toListItemDto(booking: BookingRecord): BookingListItemDto {
+export const bookingListInclude = {
+  room: { select: { name: true } },
+  property: {
+    select: {
+      name: true,
+      images: { orderBy: { sortOrder: 'asc' as const }, take: 1, select: { url: true } },
+    },
+  },
+};
+
+export type BookingListRecord = {
+  id: string;
+  orderNumber: string;
+  status: BookingStatus;
+  checkIn: Date;
+  checkOut: Date;
+  guestCount: number;
+  totalPrice: unknown;
+  paymentDeadline: Date | null;
+  createdAt: Date;
+  room: { name: string };
+  property: { name: string; images: Array<{ url: string }> };
+};
+
+export function toListItemDto(booking: BookingListRecord): BookingListItemDto {
   return {
     id: booking.id,
     orderNumber: booking.orderNumber,
@@ -76,7 +100,7 @@ export function toListItemDto(booking: BookingRecord): BookingListItemDto {
   };
 }
 
-function toStayFields(booking: BookingRecord) {
+function toStayFields(booking: BookingListRecord) {
   return {
     checkIn: formatDateKey(booking.checkIn),
     checkOut: formatDateKey(booking.checkOut),
@@ -86,7 +110,7 @@ function toStayFields(booking: BookingRecord) {
   };
 }
 
-function toListingFields(booking: BookingRecord) {
+function toListingFields(booking: BookingListRecord) {
   return {
     propertyName: booking.property.name,
     roomName: booking.room.name,
