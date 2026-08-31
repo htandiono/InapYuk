@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Store } from 'lucide-react';
 
 interface PropertyCardProps {
   id: string;
@@ -9,6 +10,7 @@ interface PropertyCardProps {
   categoryName: string;
   imageUrl: string | null;
   cheapestPrice: number;
+  tenantName?: string | null;
   queryString?: string;
 }
 
@@ -20,6 +22,7 @@ export function PropertyCard({
   categoryName,
   imageUrl,
   cheapestPrice,
+  tenantName,
   queryString,
 }: PropertyCardProps) {
   // Use Indonesian Rupiah format
@@ -64,6 +67,13 @@ export function PropertyCard({
         <h3 className="font-heading text-lg font-bold text-foreground truncate mt-1">
           {name}
         </h3>
+        
+        {tenantName && (
+          <div className="flex items-center gap-1 mt-1">
+            <Store className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">{tenantName}</span>
+          </div>
+        )}
         
         <div className="mt-3 flex items-baseline gap-1">
           <p className="text-lg font-bold text-primary">{formattedPrice}</p>
