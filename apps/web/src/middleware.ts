@@ -60,8 +60,11 @@ export function middleware(request: NextRequest) {
   if (role === 'TENANT' && !isTenantRoute) {
     // Tenants cannot access user-specific routes (e.g., /profile) or the consumer homepage (/).
     // They can only access /tenant/* routes.
-    // The ticket says: "Given a TENANT, When accessing user-only routes, Then redirected to /tenant/properties"
-    return NextResponse.redirect(new URL('/tenant/properties', request.url));
+    // Allow tenants to access global shared pages (help, privacy, terms)
+    const globalSharedRoutes = ['/bantuan', '/privasi', '/syarat'];
+    if (!globalSharedRoutes.includes(pathname)) {
+      return NextResponse.redirect(new URL('/tenant/properties', request.url));
+    }
   }
 
   return NextResponse.next();
@@ -76,6 +79,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|uploads|favicon.ico).*)',
   ],
 };

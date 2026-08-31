@@ -1,11 +1,11 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api-client';
 import { PropertyCard } from './PropertyCard';
 import { PaginationControls } from './PaginationControls';
 import type { PaginationMeta } from '@inapyuk/types';
+import { SearchForm } from '../home/SearchForm';
 
 interface Property {
   id: string;
@@ -16,153 +16,145 @@ interface Property {
   categoryName: string;
   imageUrl: string | null;
   cheapestPrice: number;
+  tenantName?: string | null;
 }
 
-import { SearchForm } from '../home/SearchForm';
+function useCatalogSearch(searchParams: URLSearchParams, router: ReturnType<typeof useRouter>) {
+  const [name, setName] = useState(searchParams.get('name') || '');
+  const [debouncedName, setDebouncedName] = useState(name);
 
-export function PropertyCatalog() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedName(name), 300);
+    return () => clearTimeout(handler);
+  }, [name]);
 
-  // State
+  const updateSearch = useCallback((newDebounced: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newDebounced) params.set('name', newDebounced); else params.delete('name');
+    if (searchParams.get('name') !== newDebounced && (newDebounced || searchParams.has('name'))) {
+      router.push(`/properties?${params.toString()}`);
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => { updateSearch(debouncedName); }, [debouncedName, updateSearch]);
+  return { name, setName, debouncedName };
+}
+
+function useCatalogData(searchParams: URLSearchParams, debouncedName: string) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Form State
-  const [name, setName] = useState(searchParams.get('name') || '');
-  const [debouncedName, setDebouncedName] = useState(name);
-
-  // Debounce the name search (300ms)
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedName(name);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [name]);
+    let isMounted = true;
+    const fetchProps = async () => {
+      await Promise.resolve();
+      if (!isMounted) return;
+      setIsLoading(true);
+      try {
+        const res = await api.get<{ items: Property[]; meta: PaginationMeta }>(`/properties?${searchParams.toString()}`);
+        if (isMounted) { setProperties(res.items); setMeta(res.meta); }
+      } catch { /* Silent fail */ } 
+      finally { if (isMounted) setIsLoading(false); }
+    };
+    fetchProps();
+    return () => { isMounted = false; };
+  }, [searchParams, debouncedName]);
 
-  // Sync state to URL and fetch
-  const fetchProperties = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams(searchParams.toString());
-      if (debouncedName) {
-        params.set('name', debouncedName);
-      } else {
-        params.delete('name');
-      }
+  return { properties, meta, isLoading };
+}
 
-      if (searchParams.get('name') !== debouncedName && (debouncedName || searchParams.has('name'))) {
+function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
+  return (
+    <div>
+      <h1 className="font-heading text-3xl font-bold text-foreground">Katalog Penginapan</h1>
+      <p className="text-sm text-muted-foreground mt-1">{meta?.total || 0} properti ditemukan</p>
+    </div>
+  );
+}
+
+function CategorySelect({ searchParams, router }: { searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+  return (
+    <select
+      className="w-full sm:w-auto rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+      onChange={(e) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (e.target.value) params.set('category', e.target.value); else params.delete('category');
+        params.set('page', '1'); router.push(`/properties?${params.toString()}`);
+      }}
+      value={searchParams.get('category') || ''}
+    >
+      <option value="">Semua Kategori</option>
+      <option value="hotel">Hotel</option><option value="villa">Villa</option>
+      <option value="apartemen">Apartemen</option><option value="guest-house">Guest House</option>
+      <option value="homestay">Homestay</option>
+    </select>
+  );
+}
+
+function SortSelect({ searchParams, router }: { searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+  return (
+    <select
+      className="w-full sm:w-auto rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+      onChange={(e) => {
+        const [sortBy, sortOrder] = e.target.value.split('-');
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('sortBy', sortBy); params.set('sortOrder', sortOrder); params.set('page', '1');
         router.push(`/properties?${params.toString()}`);
-      }
+      }}
+      value={`${searchParams.get('sortBy') || 'name'}-${searchParams.get('sortOrder') || 'asc'}`}
+    >
+      <option value="name-asc">Nama (A-Z)</option><option value="name-desc">Nama (Z-A)</option>
+      <option value="price-asc">Harga (Termurah)</option><option value="price-desc">Harga (Termahal)</option>
+    </select>
+  );
+}
 
-      const res = await api.get<{ items: Property[]; meta: PaginationMeta }>(`/properties?${params.toString()}`);
-      setProperties(res.items);
-      setMeta(res.meta);
-    } catch {
-      // Silent fail
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchParams, debouncedName, router]);
+function CatalogFilters({ name, setName, searchParams, router }: { name: string, setName: (v: string) => void, searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <input type="text" placeholder="Cari nama properti..." value={name} onChange={(e) => setName(e.target.value)}
+        className="w-full sm:w-64 rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
+      <CategorySelect searchParams={searchParams} router={router} />
+      <SortSelect searchParams={searchParams} router={router} />
+    </div>
+  );
+}
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProperties();
-  }, [fetchProperties]);
+function CatalogGrid({ properties, searchParams }: { properties: Property[], searchParams: URLSearchParams }) {
+  if (properties.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-3xl bg-muted/30">
+      <p className="text-lg font-medium">Tidak ada properti yang ditemukan</p>
+      <p className="text-sm text-muted-foreground mt-2 max-w-md text-center">Coba ganti kata kunci pencarian, atau ubah filter tanggal dan kota di halaman utama.</p>
+    </div>
+  );
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {properties.map((prop) => <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />)}
+    </div>
+  );
+}
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const [sortBy, sortOrder] = e.target.value.split('-');
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sortBy', sortBy);
-    params.set('sortOrder', sortOrder);
-    params.set('page', '1');
-    router.push(`/properties?${params.toString()}`);
-  };
+export function PropertyCatalog() {
+  const router = useRouter(); const searchParams = useSearchParams();
+  const { name, setName, debouncedName } = useCatalogSearch(searchParams, router);
+  const { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString());
-    router.push(`/properties?${params.toString()}`);
+    params.set('page', page.toString()); router.push(`/properties?${params.toString()}`);
   };
 
   return (
     <div className="w-full">
-      <div className="mb-10 w-full max-w-5xl mx-auto">
-        <SearchForm compact />
-      </div>
-
+      <div className="mb-10 w-full max-w-5xl mx-auto"><SearchForm compact /></div>
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">Katalog Penginapan</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {meta?.total || 0} properti ditemukan
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Cari nama properti..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full sm:w-64 rounded-xl border border-border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
-          />
-          
-          <select
-            className="w-full sm:w-auto rounded-xl border border-border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
-            onChange={(e) => {
-              const params = new URLSearchParams(searchParams.toString());
-              if (e.target.value) params.set('category', e.target.value);
-              else params.delete('category');
-              params.set('page', '1');
-              router.push(`/properties?${params.toString()}`);
-            }}
-            value={searchParams.get('category') || ''}
-          >
-            <option value="">Semua Kategori</option>
-            <option value="hotel">Hotel</option>
-            <option value="villa">Villa</option>
-            <option value="apartemen">Apartemen</option>
-            <option value="guest-house">Guest House</option>
-            <option value="homestay">Homestay</option>
-          </select>
-
-          <select
-            className="w-full sm:w-auto rounded-xl border border-border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
-            onChange={handleSortChange}
-            value={`${searchParams.get('sortBy') || 'name'}-${searchParams.get('sortOrder') || 'asc'}`}
-          >
-            <option value="name-asc">Nama (A-Z)</option>
-            <option value="name-desc">Nama (Z-A)</option>
-            <option value="price-asc">Harga (Termurah)</option>
-            <option value="price-desc">Harga (Termahal)</option>
-          </select>
-        </div>
+        <CatalogHeader meta={meta} />
+        <CatalogFilters name={name} setName={setName} searchParams={searchParams} router={router} />
       </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-20">
-          <p className="text-muted-foreground text-sm animate-pulse">Mencari penginapan...</p>
-        </div>
-      ) : properties.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border rounded-3xl bg-muted/30">
-          <p className="text-lg font-medium text-foreground">Tidak ada properti yang ditemukan</p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-md text-center">
-            Coba ganti kata kunci pencarian, atau ubah filter tanggal dan kota di halaman utama.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {properties.map((prop) => (
-              <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />
-            ))}
-          </div>
-          
-          {meta && <PaginationControls meta={meta} onPageChange={handlePageChange} />}
-        </>
-      )}
+      {isLoading ? <div className="flex justify-center py-20"><p className="text-muted-foreground text-sm animate-pulse">Mencari penginapan...</p></div> : 
+        <><CatalogGrid properties={properties} searchParams={searchParams} />{meta && <PaginationControls meta={meta} onPageChange={handlePageChange} />}</>
+      }
     </div>
   );
 }
