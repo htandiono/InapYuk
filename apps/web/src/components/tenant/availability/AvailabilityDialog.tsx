@@ -4,10 +4,11 @@ import { AvailabilityForm } from './AvailabilityForm';
 
 type AvailabilityDialogProps = {
   roomId: string | null;
+  totalUnits?: number;
   onClose: () => void;
 };
 
-export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps) {
+export function AvailabilityDialog({ roomId, totalUnits, onClose }: AvailabilityDialogProps) {
   const { loading, updateAvailability } = useAvailability(roomId, onClose);
 
   return (
@@ -18,6 +19,7 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
         </DialogHeader>
         <AvailabilityForm
           loading={loading}
+          totalUnits={totalUnits}
           onSubmit={updateAvailability}
           onCancel={onClose}
         />

@@ -181,7 +181,7 @@ export default function RoomList({ propertyId }: { propertyId: string }) {
       <PaginationControls page={page} totalPages={totalPages} setPage={(p: number | ((prev: number) => number)) => set([typeof p === 'function' ? p(page) : p, isCreate, edit])} loading={loading} />
       <EditRoomDialog r={edit} setR={(e) => set([page, isCreate, e])} propertyId={propertyId} onDone={() => { set([page, isCreate, null]); fetchRooms(page); }} />
       <DeleteRoomDialog {...acts} />
-      <AvailabilityDialog roomId={availabilityRoomId} onClose={() => setAvailabilityRoomId(null)} />
+      <AvailabilityDialog roomId={availabilityRoomId} totalUnits={rooms.find(r => r.id === availabilityRoomId)?.totalUnits} onClose={() => setAvailabilityRoomId(null)} />
       <PeakSeasonDialog roomId={peakSeasonRoomId} onClose={() => setPeakSeasonRoomId(null)} />
     </div>
   );

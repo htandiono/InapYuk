@@ -61,8 +61,8 @@ function RoomActions({ r, onEdit, onDelete, onManageAvailability, onManagePeakSe
   return (
     <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManageAvailability?.(r.id)}>Kalender</Button>
-        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManagePeakSeason?.(r.id)}>Musiman</Button>
+        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManageAvailability?.(r.id)}>Ketersediaan</Button>
+        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManagePeakSeason?.(r.id)}>Harga Musiman</Button>
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onEdit(r)}><Edit className="h-3.5 w-3.5 mr-2" />Edit</Button>

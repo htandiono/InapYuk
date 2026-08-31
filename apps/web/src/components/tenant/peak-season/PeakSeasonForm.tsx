@@ -68,6 +68,8 @@ export function PeakSeasonForm({ rates, loading, onSubmit }: PeakSeasonFormProps
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/20">
       <h4 className="font-semibold mb-2 text-sm">Tambah Harga Baru</h4>
@@ -86,6 +88,7 @@ export function PeakSeasonForm({ rates, loading, onSubmit }: PeakSeasonFormProps
           <Input
             type="date"
             required
+            min={today}
             value={formData.startDate}
             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
           />
@@ -97,7 +100,7 @@ export function PeakSeasonForm({ rates, loading, onSubmit }: PeakSeasonFormProps
             required
             value={formData.endDate}
             onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            min={formData.startDate}
+            min={formData.startDate || today}
           />
         </div>
       </div>

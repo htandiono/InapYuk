@@ -8,11 +8,12 @@ import { AvailabilityData } from './useAvailability';
 
 type AvailabilityFormProps = {
   loading: boolean;
+  totalUnits?: number;
   onSubmit: (data: AvailabilityData) => void;
   onCancel: () => void;
 };
 
-export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFormProps) {
+export function AvailabilityForm({ loading, totalUnits, onSubmit, onCancel }: AvailabilityFormProps) {
   const [formData, setFormData] = useState<AvailabilityData>({
     startDate: '',
     endDate: '',
@@ -29,6 +30,8 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
     onSubmit(formData);
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
       <div className="grid grid-cols-2 gap-4">
@@ -37,6 +40,7 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
           <Input
             type="date"
             required
+            min={today}
             value={formData.startDate}
             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
           />
@@ -48,7 +52,7 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
             required
             value={formData.endDate}
             onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            min={formData.startDate}
+            min={formData.startDate || today}
           />
         </div>
       </div>
@@ -60,7 +64,9 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
         </div>
         <Switch
           checked={formData.isAvailable}
-          onCheckedChange={(c: boolean) => setFormData({ ...formData, isAvailable: c })}
+          onCheckedChange={(c: boolean) => {
+            setFormData({ ...formData, isAvailable: c, availableUnits: c ? formData.availableUnits : '' });
+          }}
         />
       </div>
 
@@ -68,12 +74,16 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
         <Label>Override Total Unit (Opsional)</Label>
         <Input
           type="number"
-          min="0"
-          placeholder="Biarkan kosong untuk default kamar"
+          min="1"
+          max={totalUnits}
+          placeholder={`Biarkan kosong untuk default kamar`}
           value={formData.availableUnits}
           onChange={(e) => setFormData({ ...formData, availableUnits: e.target.value })}
           disabled={!formData.isAvailable}
         />
+        <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+          Tentukan batas maksimal unit yang bisa dipesan (sudah termasuk yang terpesan). Maksimal: <strong>{totalUnits} unit</strong>.
+        </p>
       </div>
 
       <div className="flex justify-end gap-3 mt-6">

@@ -16,6 +16,12 @@ vi.mock('../../../src/libs/cloudinary', () => {
   };
 });
 
+vi.mock('../../../src/libs/opencage', () => {
+  return {
+    geocodeAddress: vi.fn().mockResolvedValue({ lat: -8.409518, lng: 115.188919 })
+  };
+});
+
 describe('Properties CRUD', () => {
   const app = createApp();
   let tenantToken: string;
@@ -55,15 +61,7 @@ describe('Properties CRUD', () => {
 
   describe('POST /api/properties/tenant/properties', () => {
     it('should create a property with images', async () => {
-      // Mock geocoding
-      process.env.OPENCAGE_API_KEY = 'mock_key';
-      // Vitest mock fetch for OpenCage
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          results: [{ geometry: { lat: -8.409518, lng: 115.188919 } }]
-        })
-      }) as Mock;
+      // Mock geocoding is handled via vi.mock at the top of the file
 
       const res = await request(app)
         .post('/api/properties/tenant/properties')
