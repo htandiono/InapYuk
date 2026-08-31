@@ -587,22 +587,20 @@ export default function PropertyForm({
             </span>
           </div>
 
-          {selectedGeo && (
-            <div className="mt-3">
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
-                Peta Lokasi
-              </label>
-              <div className="space-y-3 pt-4 border-t border-border">
-                <PropertyMap 
-                  lat={selectedGeo.lat} 
-                  lng={selectedGeo.lng} 
-                  name="Lokasi Pilihan" 
-                  draggable={true}
-                  onLocationChange={handleMarkerDrag}
-                />
-              </div>
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
+              Peta Lokasi
+            </label>
+            <div className="space-y-3 pt-4 border-t border-border">
+              <PropertyMap 
+                lat={selectedGeo?.lat ?? -6.2088} 
+                lng={selectedGeo?.lng ?? 106.8456} 
+                name={selectedGeo ? "Lokasi Pilihan" : "Geser pin ke lokasi Anda"} 
+                draggable={true}
+                onLocationChange={handleMarkerDrag}
+              />
             </div>
-          )}
+          </div>
         </div>
       </div>
 

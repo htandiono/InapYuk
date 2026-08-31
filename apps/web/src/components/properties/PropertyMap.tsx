@@ -74,7 +74,7 @@ export default function PropertyMap({ lat, lng, name, address, draggable = false
         href={mapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-4 right-4 z-400 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+        className="absolute bottom-4 right-4 z-[400] flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0">
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#EA4335"/>
