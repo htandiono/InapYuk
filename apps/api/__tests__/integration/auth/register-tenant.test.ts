@@ -22,7 +22,7 @@ describe('POST /api/auth/register/tenant', () => {
 
     const res = await app
       .post('/api/auth/register/tenant')
-      .send({ email: 'tenant@example.com', name: 'Tenant Owner', companyName: 'InapYuk Hotels' });
+      .send({ email: 'tenant@example.com', name: 'Tenant Owner', companyName: 'InapYuk Hotels', companyAddress: 'Jalan Kenangan 1' });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
@@ -62,7 +62,7 @@ describe('POST /api/auth/register/tenant', () => {
 
     await app
       .post('/api/auth/register/tenant')
-      .send({ email: 'mail-tenant@example.com', name: 'Mail Test', companyName: 'Mails R Us' });
+      .send({ email: 'mail-tenant@example.com', name: 'Mail Test', companyName: 'Mails R Us', companyAddress: 'Jalan Kenangan 1' });
 
     expect(sendMail).toHaveBeenCalledOnce();
     expect(sendMail).toHaveBeenCalledWith(
@@ -81,14 +81,15 @@ describe('POST /api/auth/register/tenant', () => {
       data: {
         email: 'dup-tenant@example.com',
         name: 'First',
-        role: 'USER',
+        role: 'TENANT',
+        isVerified: true,
       }
     });
 
     // Duplicate registration as tenant
     const res = await app
       .post('/api/auth/register/tenant')
-      .send({ email: 'dup-tenant@example.com', name: 'Second', companyName: 'Dup Inc' });
+      .send({ email: 'dup-tenant@example.com', name: 'Second', companyName: 'Dup Inc', companyAddress: 'Jalan Kenangan 1' });
 
     expect(res.status).toBe(409);
     expect(res.body.success).toBe(false);

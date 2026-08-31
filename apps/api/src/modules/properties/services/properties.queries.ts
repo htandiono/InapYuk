@@ -4,7 +4,6 @@ import { GetPropertiesQuery } from '../properties.schema';
 import {
   fetchBaseProperties,
   evaluatePricesForProperties,
-  sortProperties,
   mapToPropertyItem,
 } from './properties.helpers';
 

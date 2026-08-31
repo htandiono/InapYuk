@@ -87,8 +87,8 @@ describe('Tenant Registration Page', () => {
     
     fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
-    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Bali' } });
-    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl Kuta No 1' } });
+    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Test' } });
+    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl Test' } });
     
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
     
