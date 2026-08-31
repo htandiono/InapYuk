@@ -13,14 +13,25 @@ export interface AddressSuggestion {
 }
 
 export async function geocodeAddress(address: string, city: string, state: string, country: string): Promise<GeocodeResult | null> {
+  const query = encodeURIComponent(`${address}, ${city}, ${state}, ${country}`);
+
   if (!env.OPENCAGE_API_KEY) {
-    logger.warn('OPENCAGE_API_KEY is not set. Skipping geocoding.');
-    return null;
+    logger.info('OPENCAGE_API_KEY is not set. Using Nominatim fallback for geocoding.');
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'InapYukApp/1.0' } });
+      const data = await res.json() as any[];
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+      return null;
+    } catch (error) {
+      logger.error('Nominatim geocoding failed', error);
+      return null;
+    }
   }
 
-  const query = encodeURIComponent(`${address}, ${city}, ${state}, ${country}`);
   const url = `https://api.opencagedata.com/geocode/v1/json?q=${query}&key=${env.OPENCAGE_API_KEY}`;
-
   try {
     const res = await fetch(url);
     const data = (await res.json()) as { results?: { geometry: { lat: number; lng: number } }[] };
@@ -31,20 +42,34 @@ export async function geocodeAddress(address: string, city: string, state: strin
     return null;
   } catch (error) {
     logger.error('OpenCage geocoding failed', error);
-    return null; // Fallback without lat/lng
+    return null;
   }
 }
 
 export async function searchAddress(query: string, province?: string, city?: string): Promise<AddressSuggestion[]> {
+  const contextualQuery = [query, city, province, 'Indonesia'].filter(Boolean).join(', ');
+
   if (!env.OPENCAGE_API_KEY) {
-    logger.warn('OPENCAGE_API_KEY is not set. Skipping geosearch.');
-    return [];
+    logger.info('OPENCAGE_API_KEY is not set. Using Nominatim fallback for geosearch.');
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(contextualQuery)}&limit=5&countrycodes=id`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'InapYukApp/1.0' } });
+      const data = await res.json() as any[];
+      if (data && data.length > 0) {
+        return data.map((r: any) => ({
+          formatted: r.display_name,
+          lat: parseFloat(r.lat),
+          lng: parseFloat(r.lon),
+        }));
+      }
+      return [];
+    } catch (error) {
+      logger.error('Nominatim geosearch failed', error);
+      return [];
+    }
   }
 
-  // If province/city are provided, we bias the search by appending them to the query
-  const contextualQuery = [query, city, province, 'Indonesia'].filter(Boolean).join(', ');
   const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(contextualQuery)}&key=${env.OPENCAGE_API_KEY}&limit=5&countrycode=id`;
-
   try {
     const res = await fetch(url);
     const data = (await res.json()) as { results?: { formatted: string; geometry: { lat: number; lng: number } }[] };
@@ -65,12 +90,22 @@ export async function searchAddress(query: string, province?: string, city?: str
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   if (!env.OPENCAGE_API_KEY) {
-    logger.warn('OPENCAGE_API_KEY is not set. Skipping reverse geocoding.');
-    return null;
+    logger.info('OPENCAGE_API_KEY is not set. Using Nominatim fallback for reverse geocoding.');
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'InapYukApp/1.0' } });
+      const data = await res.json() as any;
+      if (data && data.display_name) {
+        return data.display_name;
+      }
+      return null;
+    } catch (error) {
+      logger.error('Nominatim reverse geocoding failed', error);
+      return null;
+    }
   }
 
   const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${env.OPENCAGE_API_KEY}`;
-
   try {
     const res = await fetch(url);
     const data = (await res.json()) as { results?: { formatted: string }[] };
