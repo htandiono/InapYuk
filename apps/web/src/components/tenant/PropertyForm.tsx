@@ -1,8 +1,8 @@
 'use client';
-import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PROVINCES, getCitiesByProvinceId, getProvinceIdByName } from '@/data/indonesia-regions';
+import { api } from '@/lib/api-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, MapPin, Plus, Search, Star, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -61,8 +61,17 @@ type Category = { id: string; name: string };
 function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
-    api.get<Category[]>('/categories/tenant/categories?limit=100')
-      .then((data) => setCategories(data as any || []))
+    api
+      .get<{ items: Category[] } | Category[]>('/categories/tenant/categories?limit=100')
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else if (data && 'items' in data) {
+          setCategories(data.items);
+        } else {
+          setCategories([]);
+        }
+      })
       .catch(() => toast.error('Gagal memuat kategori'));
   }, []);
   return categories;
@@ -257,10 +266,10 @@ export default function PropertyForm({
         if (watchedCity) searchParams.append('city', watchedCity);
 
         const data = await api.get<{ formatted: string; lat: number; lng: number }[]>(
-          `/geo/autocomplete?${searchParams.toString()}`
+          `/geo/autocomplete?${searchParams.toString()}`,
         );
         if (data) {
-          setSuggestions(data as any);
+          setSuggestions(data);
           setShowSuggestions(true);
         }
       } catch (err) {
@@ -290,9 +299,9 @@ export default function PropertyForm({
     try {
       const searchParams = new URLSearchParams({ lat: lat.toString(), lng: lng.toString() });
       const data = await api.get<string>(`/geo/reverse?${searchParams.toString()}`);
-      
+
       if (data) {
-        setValue('address', data as any, { shouldValidate: true });
+        setValue('address', data, { shouldValidate: true });
       }
     } catch (err) {
       console.error('Failed to reverse geocode', err);
@@ -316,7 +325,7 @@ export default function PropertyForm({
       const url = initialData
         ? `/properties/tenant/properties/${initialData.id}`
         : '/properties/tenant/properties';
-        
+
       if (initialData) {
         await api.patch(url, data);
       } else {
@@ -348,7 +357,9 @@ export default function PropertyForm({
               <span>⚠</span> {errors.name.message}
             </span>
           ) : (
-            <span className="text-muted-foreground">Minimal 3 karakter, tanpa karakter khusus.</span>
+            <span className="text-muted-foreground">
+              Minimal 3 karakter, tanpa karakter khusus.
+            </span>
           )}
           <span
             className={`text-muted-foreground ${nameValue.length > 100 ? 'text-destructive font-medium' : ''}`}
@@ -591,10 +602,10 @@ export default function PropertyForm({
               Peta Lokasi
             </label>
             <div className="space-y-3 pt-4 border-t border-border">
-              <PropertyMap 
-                lat={selectedGeo?.lat ?? -6.2088} 
-                lng={selectedGeo?.lng ?? 106.8456} 
-                name={selectedGeo ? "Lokasi Pilihan" : "Geser pin ke lokasi Anda"} 
+              <PropertyMap
+                lat={selectedGeo?.lat ?? -6.2088}
+                lng={selectedGeo?.lng ?? 106.8456}
+                name={selectedGeo ? 'Lokasi Pilihan' : 'Geser pin ke lokasi Anda'}
                 draggable={true}
                 onLocationChange={handleMarkerDrag}
               />
