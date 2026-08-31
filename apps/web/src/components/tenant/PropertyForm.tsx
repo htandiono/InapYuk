@@ -1,4 +1,5 @@
 'use client';
+import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PROVINCES, getCitiesByProvinceId, getProvinceIdByName } from '@/data/indonesia-regions';
@@ -60,9 +61,8 @@ type Category = { id: string; name: string };
 function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
-    fetch('/api/categories/tenant/categories?limit=100')
-      .then((res) => res.json())
-      .then((json) => setCategories(json.data?.items || json.data || []))
+    api.get<Category[]>('/categories/tenant/categories?limit=100')
+      .then((data) => setCategories(data as any || []))
       .catch(() => toast.error('Gagal memuat kategori'));
   }, []);
   return categories;
@@ -252,15 +252,15 @@ export default function PropertyForm({
       setIsSearching(true);
       try {
         const province = PROVINCES.find((p) => p.id === selectedProvinceId)?.name || '';
-        const url = new URL('/api/geo/autocomplete', window.location.origin);
-        url.searchParams.append('q', searchQuery);
-        if (province) url.searchParams.append('province', province);
-        if (watchedCity) url.searchParams.append('city', watchedCity);
+        const searchParams = new URLSearchParams({ q: searchQuery });
+        if (province) searchParams.append('province', province);
+        if (watchedCity) searchParams.append('city', watchedCity);
 
-        const res = await fetch(url.toString());
-        const json = await res.json();
-        if (json.success) {
-          setSuggestions(json.data);
+        const data = await api.get<{ formatted: string; lat: number; lng: number }[]>(
+          `/geo/autocomplete?${searchParams.toString()}`
+        );
+        if (data) {
+          setSuggestions(data as any);
           setShowSuggestions(true);
         }
       } catch (err) {
@@ -288,14 +288,11 @@ export default function PropertyForm({
     setSelectedGeo({ lat, lng });
 
     try {
-      const url = new URL('/api/geo/reverse', window.location.origin);
-      url.searchParams.append('lat', lat.toString());
-      url.searchParams.append('lng', lng.toString());
+      const searchParams = new URLSearchParams({ lat: lat.toString(), lng: lng.toString() });
+      const data = await api.get<string>(`/geo/reverse?${searchParams.toString()}`);
       
-      const res = await fetch(url.toString());
-      const json = await res.json();
-      if (json.success && json.data) {
-        setValue('address', json.data, { shouldValidate: true });
+      if (data) {
+        setValue('address', data as any, { shouldValidate: true });
       }
     } catch (err) {
       console.error('Failed to reverse geocode', err);
@@ -317,12 +314,14 @@ export default function PropertyForm({
       if (mainImageIndex !== null) data.append('mainImageIndex', mainImageIndex.toString());
 
       const url = initialData
-        ? `/api/properties/tenant/properties/${initialData.id}`
-        : '/api/properties/tenant/properties';
-      const res = await fetch(url, { method: initialData ? 'PATCH' : 'POST', body: data });
-      const json = await res.json();
-
-      if (!res.ok) throw new Error(json.message || 'Terjadi kesalahan');
+        ? `/properties/tenant/properties/${initialData.id}`
+        : '/properties/tenant/properties';
+        
+      if (initialData) {
+        await api.patch(url, data);
+      } else {
+        await api.post(url, data);
+      }
 
       toast.success(initialData ? 'Properti diperbarui' : 'Properti ditambahkan');
       if (onSuccess) onSuccess();
