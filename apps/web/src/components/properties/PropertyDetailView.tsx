@@ -1,22 +1,32 @@
 'use client';
-import { useState } from 'react';
-import Image from 'next/image';
-import { RoomSelector, type Room } from './RoomSelector';
-import { PriceCalendar } from './PriceCalendar';
-import { BookingWidget } from './BookingWidget';
 import { BackButton } from '@/components/ui/BackButton';
+import Image from 'next/image';
+import { useState } from 'react';
+import { BookingWidget } from './BookingWidget';
 import { ImageLightbox } from './ImageLightbox';
+import { PriceCalendar } from './PriceCalendar';
 import { PropertyLocation } from './PropertyLocation';
+import { RoomSelector, type Room } from './RoomSelector';
 
 export interface Property {
-  id: string; slug: string; name: string; description: string;
-  city: string; province: string; address: string;
-  latitude?: number | null; longitude?: number | null;
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  city: string;
+  province: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   category: { name: string };
   tenant?: { id: string; companyName: string; logoUrl?: string | null } | null;
-  images: { url: string }[]; rooms: Room[];
+  images: { url: string }[];
+  rooms: Room[];
 }
-export interface PropertyDetailViewProps { property: Property; initialDate?: string; }
+export interface PropertyDetailViewProps {
+  property: Property;
+  initialDate?: string;
+}
 
 // prettier-ignore
 function Gallery({ imgs, name }: { imgs: { url: string }[], name: string }) {
@@ -41,52 +51,6 @@ function PropertyHeader({ property }: { property: Property }) {
   );
 }
 
-<<<<<<< HEAD
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <span className="uppercase tracking-wider font-semibold text-accent">
-            {property.category.name}
-          </span>
-          <span>&bull;</span>
-          <span>{property.city}, {property.province}</span>
-        </div>
-        <h1 className="font-heading text-4xl sm:text-5xl font-bold text-foreground">
-          {property.name}
-        </h1>
-        <p className="text-muted-foreground mt-2">{property.address}</p>
-      </div>
-
-      {/* Gallery */}
-      {/* Gallery */}
-      <div className="mb-12">
-        {property.images.length === 0 && (
-          <div className="w-full aspect-21/9 sm:aspect-video md:aspect-21/9 rounded-3xl bg-muted flex items-center justify-center text-muted-foreground">
-            Belum ada foto
-          </div>
-        )}
-
-        {property.images.length === 1 && (
-          <div className="w-full aspect-21/9 sm:aspect-video md:aspect-21/9 rounded-3xl overflow-hidden bg-muted relative">
-            <Image src={property.images[0].url} alt={property.name} fill sizes="100vw" className="object-cover" />
-          </div>
-        )}
-
-        {property.images.length === 2 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">
-            <div className="relative w-full h-full rounded-3xl overflow-hidden bg-muted">
-              <Image src={property.images[0].url} alt={property.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-            </div>
-            <div className="hidden md:block relative w-full h-full rounded-3xl overflow-hidden bg-muted">
-              <Image src={property.images[1].url} alt={property.name} fill sizes="50vw" className="object-cover" />
-            </div>
-          </div>
-        )}
-
-        {property.images.length === 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">
-            <div className="relative w-full h-full rounded-3xl overflow-hidden bg-muted">
-              <Image src={property.images[0].url} alt={property.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
 // prettier-ignore
 function PropertyDesc({ text, isExpanded, onToggle }: { text: string, isExpanded: boolean, onToggle: () => void }) {
   return (
