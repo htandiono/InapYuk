@@ -1,7 +1,7 @@
+import { v2 as cloudinary } from 'cloudinary';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import { v2 as cloudinary } from 'cloudinary';
 import { env, hasCloudinary } from '../config/env';
 import { logger } from './logger';
 
@@ -31,6 +31,18 @@ function uploadToCloudinary(buffer: Buffer, folder: UploadFolder): Promise<strin
   });
 }
 
+function deleteFromCloudinary(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const match = url.match(/\/upload\/(?:v\d+\/)?(inapyuk\/.+?)\.\w+$/);
+    if (!match) return resolve(); // Not a recognizable cloudinary URL
+
+    cloudinary.uploader.destroy(match[1], (error) => {
+      if (error) return reject(error);
+      resolve();
+    });
+  });
+}
+
 async function uploadToDisk(
   buffer: Buffer,
   folder: UploadFolder,
@@ -41,6 +53,16 @@ async function uploadToDisk(
   const filename = `${crypto.randomUUID()}${path.extname(originalName).toLowerCase()}`;
   await fs.writeFile(path.join(dir, filename), buffer);
   return `/uploads/${folder}/${filename}`;
+}
+
+async function deleteFromDisk(url: string): Promise<void> {
+  if (!url.startsWith('/uploads/')) return;
+  const filePath = path.join(process.cwd(), url.replace(/^\//, ''));
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
 }
 
 /**
@@ -55,4 +77,13 @@ export async function uploadImage(
   if (hasCloudinary) return uploadToCloudinary(file.buffer, folder);
   logger.debug(`Cloudinary not configured - storing ${folder} upload on disk`);
   return uploadToDisk(file.buffer, folder, file.originalname);
+}
+
+export async function deleteImage(url: string): Promise<void> {
+  if (!url) return;
+  if (hasCloudinary && url.includes('cloudinary.com')) {
+    await deleteFromCloudinary(url);
+  } else if (url.startsWith('/uploads/')) {
+    await deleteFromDisk(url);
+  }
 }
