@@ -1,3 +1,4 @@
+import { Prisma } from '../../generated/prisma/client';
 import { uploadImage } from '../../libs/cloudinary';
 import { prisma } from '../../libs/prisma';
 import { badRequest, forbidden } from '../../utils/app-error';
@@ -57,7 +58,7 @@ export async function updateRoom(tenantId: string, roomId: string, data: UpdateR
   });
 }
 
-async function handleDeleteImages(tx: any, roomId: string, deletedStr?: string) {
+async function handleDeleteImages(tx: Prisma.TransactionClient, roomId: string, deletedStr?: string) {
   if (!deletedStr) return;
   try {
     const deletedIds: string[] = JSON.parse(deletedStr);
@@ -65,7 +66,7 @@ async function handleDeleteImages(tx: any, roomId: string, deletedStr?: string) 
   } catch { /* ignore */ }
 }
 
-async function handleNewImages(tx: any, roomId: string, files: Express.Multer.File[], mainIdx?: number) {
+async function handleNewImages(tx: Prisma.TransactionClient, roomId: string, files: Express.Multer.File[], mainIdx?: number) {
   if (!files || files.length === 0) return;
   const imageUrls = await Promise.all(files.map((f) => uploadImage(f, 'rooms')));
   const uploadData = imageUrls.map((url, i) => ({ url, sortOrder: i, roomId }));
@@ -80,7 +81,7 @@ async function handleNewImages(tx: any, roomId: string, files: Express.Multer.Fi
   await tx.roomImage.createMany({ data: uploadData });
 }
 
-async function handleSetMainImage(tx: any, roomId: string, mainId?: string) {
+async function handleSetMainImage(tx: Prisma.TransactionClient, roomId: string, mainId?: string) {
   if (!mainId) return;
   const allImages = await tx.roomImage.findMany({ where: { roomId }, orderBy: { sortOrder: 'asc' } });
   let currentOrder = 1;

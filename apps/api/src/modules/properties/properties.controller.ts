@@ -72,7 +72,6 @@ import { getTenantProperties } from './services/properties.queries';
 import { createProperty, updateProperty, deleteProperty } from './services/properties.mutations';
 import { CreatePropertySchema, UpdatePropertySchema } from './properties.schema';
 import { forbidden, badRequest } from '../../utils/app-error';
-import { prisma } from '../../libs/prisma';
 
 export class TenantPropertiesController {
   static async getTenantPropertiesList(req: Request, res: Response, next: NextFunction) {

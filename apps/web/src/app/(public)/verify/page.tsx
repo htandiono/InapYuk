@@ -1,17 +1,24 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { PasswordInput } from '@/components/ui/password-input';
+import { api, ApiError } from '@/lib/api-client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import * as z from 'zod';
 
 const passwordSchema = z
   .string()
@@ -37,7 +44,7 @@ function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(!!token);
@@ -89,7 +96,8 @@ function VerifyForm() {
           <CardDescription>
             {isAlreadyVerified
               ? 'User telah berhasil diverifikasi sebelumnya. Silakan menuju halaman login.'
-              : checkError || 'Link verifikasi tidak valid atau tidak lengkap. Silakan periksa kembali email kamu.'}
+              : checkError ||
+                'Link verifikasi tidak valid atau tidak lengkap. Silakan periksa kembali email kamu.'}
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
@@ -141,7 +149,9 @@ function VerifyForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold font-heading text-primary">Verifikasi Akun</CardTitle>
+        <CardTitle className="text-2xl font-bold font-heading text-primary">
+          Verifikasi Akun
+        </CardTitle>
         <CardDescription>Buat password untuk menyelesaikan pendaftaran kamu</CardDescription>
       </CardHeader>
       <CardContent>
@@ -154,9 +164,8 @@ function VerifyForm() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password Baru</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               placeholder="Minimal 8 karakter"
               {...register('password')}
               disabled={isSubmitting}
@@ -168,9 +177,8 @@ function VerifyForm() {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               placeholder="Ketik ulang password"
               {...register('confirmPassword')}
               disabled={isSubmitting}
