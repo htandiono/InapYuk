@@ -47,3 +47,23 @@ export const getPropertyPricingSchema = z.object({
 });
 
 export type GetPropertyPricingQuery = z.infer<typeof getPropertyPricingSchema>;
+
+export const CreatePropertySchema = z.object({
+  name: z.string().min(3, 'Nama properti harus terdiri dari minimal 3 karakter.').max(100, 'Nama properti tidak boleh lebih dari 100 karakter.').regex(/^[a-zA-Z0-9\s.,&'-]+$/, 'Nama properti hanya boleh mengandung huruf, angka, spasi, koma, titik, ampersand (&), dan tanda hubung (-).'),
+  categoryId: z.string().min(1, 'Silakan pilih kategori properti terlebih dahulu.'),
+  description: z.string().min(10, 'Deskripsi properti harus terdiri dari minimal 10 karakter.').max(1000, 'Deskripsi properti tidak boleh lebih dari 1000 karakter.'),
+  address: z.string().min(5, 'Alamat lengkap harus terdiri dari minimal 5 karakter.').max(150, 'Alamat lengkap tidak boleh lebih dari 150 karakter.'),
+  city: z.string().min(3, 'Nama kota harus terdiri dari minimal 3 karakter.').max(150, 'Nama kota tidak boleh lebih dari 150 karakter.'),
+  state: z.string().min(3, 'Nama provinsi harus terdiri dari minimal 3 karakter.').max(150, 'Nama provinsi tidak boleh lebih dari 150 karakter.'),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
+  mainImageIndex: z.coerce.number().optional()
+});
+
+export const UpdatePropertySchema = CreatePropertySchema.partial().extend({
+  deletedImages: z.string().optional(), // JSON array of IDs
+  mainImageId: z.string().optional(),
+});
+
+export type CreatePropertyInput = z.infer<typeof CreatePropertySchema>;
+export type UpdatePropertyInput = z.infer<typeof UpdatePropertySchema>;

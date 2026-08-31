@@ -222,7 +222,7 @@ model Room {
   basePrice   Decimal   @db.Decimal(12, 2)
   capacity    Int       @default(2)
   totalUnits  Int       @default(1)
-  imageUrl    String?
+  images      RoomImage[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -235,6 +235,19 @@ model Room {
   @@index([propertyId])
   @@index([deletedAt])
   @@map("rooms")
+}
+
+model RoomImage {
+  id        String   @id @default(uuid())
+  roomId    String
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@map("room_images")
 }
 
 /// One row per room per calendar date. Absence of a row means "bookable at
