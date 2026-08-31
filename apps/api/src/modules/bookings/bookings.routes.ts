@@ -37,8 +37,8 @@ import {
  *
  * Later:
  *   GET    /tenant/bookings
- *   PATCH  /tenant/bookings/:id/confirm
- *   PATCH  /tenant/bookings/:id/cancel
+ *   PATCH  /tenant/bookings/:orderNumber/confirm
+ *   PATCH  /tenant/bookings/:orderNumber/cancel
  */
 const router = Router();
 

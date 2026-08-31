@@ -44,6 +44,7 @@ export const listQuerySchema = z.object({
   dateFrom: isoDate.optional(),
   dateTo: isoDate.optional(),
   propertyId: z.string().uuid().optional(),
+  guestName: z.string().min(1).optional(),
   sortBy: z.enum(['createdAt', 'checkIn', 'totalPrice']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
@@ -52,10 +53,24 @@ export const cancelSchema = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
-export const confirmSchema = z.object({
-  accept: z.boolean(),
-  rejectionReason: z.string().trim().max(500).optional(),
-});
+export const confirmSchema = z
+  .object({
+    accept: z.boolean(),
+    rejectionReason: z.string().trim().max(500).optional(),
+  })
+  .superRefine(requireRejectReason);
+
+function requireRejectReason(
+  value: { accept: boolean; rejectionReason?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (value.accept || value.rejectionReason) return;
+  ctx.addIssue({
+    code: 'custom',
+    message: 'Isi alasan penolakan',
+    path: ['rejectionReason'],
+  });
+}
 
 export const orderNumberParamsSchema = z.object({
   orderNumber: z.string().regex(/^INP-\d{8}-\d{4}$/, 'Invalid order number'),

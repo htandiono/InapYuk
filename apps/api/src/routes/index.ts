@@ -5,6 +5,7 @@ import categoriesRoutes from '../modules/categories/categories.routes';
 import roomsRoutes from '../modules/rooms/rooms.routes';
 import propertiesRoutes from '../modules/properties/properties.routes';
 import bookingsRoutes from '../modules/bookings/bookings.routes';
+import tenantBookingsRoutes from '../modules/bookings/bookings.tenant.routes';
 import reviewsRoutes from '../modules/reviews/reviews.routes';
 import reportsRoutes from '../modules/reports/reports.routes';
 import notificationsRoutes from '../modules/notifications/notifications.routes';
@@ -26,6 +27,7 @@ router.use('/properties', propertiesRoutes);
 
 // Feature 2 - htandiono
 router.use('/bookings', bookingsRoutes);
+router.use('/tenant/bookings', tenantBookingsRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/notifications', notificationsRoutes);
