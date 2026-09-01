@@ -23,22 +23,22 @@ export function useGeocodingEffects({
   setValue,
 }: Props) {
   const lastGeocodedAddressRef = useRef<string>('');
-  const lastProvinceIdRef = useRef<string>('');
-  const lastCityRef = useRef<string>('');
+  const lastProvinceCityRef = useRef<string>('');
+  const isReverseGeocodingRef = useRef(false);
 
-  // On mount / init: sync map from initial data if lat/lng are available
+  // Track province+city as a single key to detect changes
+  const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
+
   useEffect(() => {
-    if (selectedProvinceId && !lastProvinceIdRef.current) {
-      lastProvinceIdRef.current = selectedProvinceId;
-      lastCityRef.current = watchedCity;
-      if (addressValue && addressValue.length >= 5) {
-        lastGeocodedAddressRef.current = addressValue;
-      }
+    if (provinceCityKey !== lastProvinceCityRef.current) {
+      lastProvinceCityRef.current = provinceCityKey;
+      // Clear address cache when province or city changes
+      lastGeocodedAddressRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [provinceCityKey]);
 
-  // Reverse-geocode when address changes (typing or programmatic)
+  // Geocode address when it changes
   useAddressGeocoder({
     addressValue,
     selectedProvinceId,
@@ -48,17 +48,14 @@ export function useGeocodingEffects({
     lastGeocodedAddressRef,
   });
 
-  // Sync province + city from selectedProvinceId / watchedCity when they change
+  // Geocode province+city independently (even without address)
   useProvinceCityGeocoder({
     selectedProvinceId,
     watchedCity,
-    addressValue,
     setValue,
     setSelectedGeo,
     lastGeocodedAddressRef,
-    lastProvinceIdRef,
-    lastCityRef,
-    setSelectedProvinceId,
+    lastProvinceCityRef,
   });
 
   return {
@@ -72,33 +69,47 @@ export function useGeocodingEffects({
         lastGeocodedAddressRef.current = suggestedAddress;
       }
 
+      // Prevent cascade: mark that we're in reverse geocode mode
+      isReverseGeocodingRef.current = true;
+
       void reverseGeocode(lat, lng)
         .then(async (data) => {
           if (!data) return;
+
+          // Only update address if no suggested address was provided
           if (!suggestedAddress) {
             setValue('address', data.formatted, { shouldValidate: true });
             lastGeocodedAddressRef.current = data.formatted;
           }
+
           if (data.province) {
             const matchedId = findProvinceId(data.province);
-            if (matchedId) {
+            if (matchedId && matchedId !== selectedProvinceId) {
               setSelectedProvinceId(matchedId);
               const provinceName = PROVINCES.find((p) => p.id === matchedId)?.name;
               setValue('state', provinceName || '', { shouldValidate: true });
-              if (data.city) {
-                const matchedCity = matchCity(matchedId, data.city);
-                if (matchedCity) setValue('city', matchedCity, { shouldValidate: true });
+            }
+            if (data.city) {
+              const matchedCity = matchCity(selectedProvinceId, data.city);
+              if (matchedCity && matchedCity !== watchedCity) {
+                setValue('city', matchedCity, { shouldValidate: true });
               }
             }
           }
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          // Reset after a tick to allow the cascade to complete
+          setTimeout(() => {
+            isReverseGeocodingRef.current = false;
+          }, 100);
+        });
     },
     lastGeocodedAddressRef,
   };
 }
 
-// Reverse-geocodes addressValue → updates lat/lng + geo on the map
+// Geocodes when the typed address changes
 function useAddressGeocoder({
   addressValue,
   selectedProvinceId,
@@ -136,43 +147,31 @@ function useAddressGeocoder({
   }, [addressValue, selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }
 
-// Syncs the map when province or city is changed via dropdown
-// Derives approximate center from province + city and updates the pin
+// Geocodes when province or city dropdown changes — independent of address
 function useProvinceCityGeocoder({
   selectedProvinceId,
   watchedCity,
-  addressValue,
   setValue,
   setSelectedGeo,
   lastGeocodedAddressRef,
-  lastProvinceIdRef,
-  lastCityRef,
-  setSelectedProvinceId,
+  lastProvinceCityRef,
 }: {
   selectedProvinceId: string;
   watchedCity: string;
-  addressValue: string;
   setValue: UseFormSetValue<PropertyFormValues>;
   setSelectedGeo: (g: { lat: number; lng: number } | null) => void;
   lastGeocodedAddressRef: React.MutableRefObject<string>;
-  lastProvinceIdRef: React.MutableRefObject<string>;
-  lastCityRef: React.MutableRefObject<string>;
-  setSelectedProvinceId: (id: string) => void;
+  lastProvinceCityRef: React.MutableRefObject<string>;
 }) {
   useEffect(() => {
-    const provChanged = selectedProvinceId !== lastProvinceIdRef.current;
-    const cityChanged = watchedCity !== lastCityRef.current;
-    if (!provChanged && !cityChanged) return;
-
-    lastProvinceIdRef.current = selectedProvinceId;
-    lastCityRef.current = watchedCity;
-
-    // If address was previously geocoded, keep it — don't override
-    if (!addressValue || addressValue.length < 5) return;
+    const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
+    if (provinceCityKey === lastProvinceCityRef.current) return;
+    lastProvinceCityRef.current = provinceCityKey;
 
     const timer = setTimeout(async () => {
       try {
         const province = PROVINCES.find((p) => p.id === selectedProvinceId)?.name;
+        // Build query from province + city, even if address is empty
         const query = watchedCity
           ? `${watchedCity}, ${province}, Indonesia`
           : `${province}, Indonesia`;
@@ -182,10 +181,12 @@ function useProvinceCityGeocoder({
           setValue('latitude', first.lat);
           setValue('longitude', first.lng);
           setSelectedGeo({ lat: first.lat, lng: first.lng });
-          // Update address to match the province/city context
-          const formatted = `${watchedCity || province}, ${province}, Indonesia`;
-          setValue('address', formatted, { shouldValidate: true });
-          lastGeocodedAddressRef.current = formatted;
+          // Only update address if we haven't already geocoded one
+          if (!lastGeocodedAddressRef.current) {
+            const formatted = `${watchedCity || province}, ${province}, Indonesia`;
+            setValue('address', formatted, { shouldValidate: true });
+            lastGeocodedAddressRef.current = formatted;
+          }
         }
       } catch (err) {
         console.error('Failed to geocode province/city change', err);
@@ -193,5 +194,5 @@ function useProvinceCityGeocoder({
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProvinceId, watchedCity, addressValue, setValue, setSelectedGeo]);
+  }, [selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }

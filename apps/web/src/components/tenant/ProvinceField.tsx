@@ -36,8 +36,7 @@ export function ProvinceField({
               const province = PROVINCES.find((p) => p.id === id);
               field.onChange(province?.name ?? '');
               setValue('city', '');
-              // Also clear the address since province changed
-              setValue('address', '');
+              // Don't clear address here — let useProvinceCityGeocoder handle it
             }}
           />
         )}
