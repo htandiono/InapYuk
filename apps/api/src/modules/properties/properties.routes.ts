@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { getCities, getProperties, getPropertyDetail, getPropertyCalendar, TenantPropertiesController } from './properties.controller';
+import {
+  getCities,
+  getProperties,
+  getPropertyDetail,
+  getPropertyCalendar,
+  TenantPropertiesController,
+} from './properties.controller';
 import { authenticate, requireTenant, requireVerified } from '../../middlewares/auth.middleware';
 import { uploadPropertyImages } from '../../middlewares/upload.middleware';
 
@@ -18,7 +24,11 @@ tenantRouter.use(authenticate, requireVerified, requireTenant);
 tenantRouter.get('/', TenantPropertiesController.getTenantPropertiesList);
 tenantRouter.get('/:id', TenantPropertiesController.getById);
 tenantRouter.post('/', uploadPropertyImages.array('images', 10), TenantPropertiesController.create);
-tenantRouter.patch('/:id', uploadPropertyImages.array('images', 10), TenantPropertiesController.update);
+tenantRouter.patch(
+  '/:id',
+  uploadPropertyImages.array('images', 10),
+  TenantPropertiesController.update,
+);
 tenantRouter.delete('/:id', TenantPropertiesController.softDelete);
 
 router.use('/tenant/properties', tenantRouter);

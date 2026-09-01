@@ -28,15 +28,21 @@ function useCatalogSearch(searchParams: URLSearchParams, router: ReturnType<type
     return () => clearTimeout(handler);
   }, [name]);
 
-  const updateSearch = useCallback((newDebounced: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (newDebounced) params.set('name', newDebounced); else params.delete('name');
-    if (searchParams.get('name') !== newDebounced && (newDebounced || searchParams.has('name'))) {
-      router.push(`/properties?${params.toString()}`);
-    }
-  }, [searchParams, router]);
+  const updateSearch = useCallback(
+    (newDebounced: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (newDebounced) params.set('name', newDebounced);
+      else params.delete('name');
+      if (searchParams.get('name') !== newDebounced && (newDebounced || searchParams.has('name'))) {
+        router.push(`/properties?${params.toString()}`);
+      }
+    },
+    [searchParams, router],
+  );
 
-  useEffect(() => { updateSearch(debouncedName); }, [debouncedName, updateSearch]);
+  useEffect(() => {
+    updateSearch(debouncedName);
+  }, [debouncedName, updateSearch]);
   return { name, setName, debouncedName };
 }
 
@@ -52,13 +58,23 @@ function useCatalogData(searchParams: URLSearchParams, debouncedName: string) {
       if (!isMounted) return;
       setIsLoading(true);
       try {
-        const res = await api.get<{ items: Property[]; meta: PaginationMeta }>(`/properties?${searchParams.toString()}`);
-        if (isMounted) { setProperties(res.items); setMeta(res.meta); }
-      } catch { /* Silent fail */ } 
-      finally { if (isMounted) setIsLoading(false); }
+        const res = await api.get<{ items: Property[]; meta: PaginationMeta }>(
+          `/properties?${searchParams.toString()}`,
+        );
+        if (isMounted) {
+          setProperties(res.items);
+          setMeta(res.meta);
+        }
+      } catch {
+        /* Silent fail */
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
     fetchProps();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [searchParams, debouncedName]);
 
   return { properties, meta, isLoading };
@@ -73,88 +89,145 @@ function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
   );
 }
 
-function CategorySelect({ searchParams, router }: { searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+function CategorySelect({
+  searchParams,
+  router,
+}: {
+  searchParams: URLSearchParams;
+  router: ReturnType<typeof useRouter>;
+}) {
   return (
     <select
       className="w-full sm:w-auto rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
       onChange={(e) => {
         const params = new URLSearchParams(searchParams.toString());
-        if (e.target.value) params.set('category', e.target.value); else params.delete('category');
-        params.set('page', '1'); router.push(`/properties?${params.toString()}`);
+        if (e.target.value) params.set('category', e.target.value);
+        else params.delete('category');
+        params.set('page', '1');
+        router.push(`/properties?${params.toString()}`);
       }}
       value={searchParams.get('category') || ''}
     >
       <option value="">Semua Kategori</option>
-      <option value="hotel">Hotel</option><option value="villa">Villa</option>
-      <option value="apartemen">Apartemen</option><option value="guest-house">Guest House</option>
+      <option value="hotel">Hotel</option>
+      <option value="villa">Villa</option>
+      <option value="apartemen">Apartemen</option>
+      <option value="guest-house">Guest House</option>
       <option value="homestay">Homestay</option>
     </select>
   );
 }
 
-function SortSelect({ searchParams, router }: { searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+function SortSelect({
+  searchParams,
+  router,
+}: {
+  searchParams: URLSearchParams;
+  router: ReturnType<typeof useRouter>;
+}) {
   return (
     <select
       className="w-full sm:w-auto rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
       onChange={(e) => {
         const [sortBy, sortOrder] = e.target.value.split('-');
         const params = new URLSearchParams(searchParams.toString());
-        params.set('sortBy', sortBy); params.set('sortOrder', sortOrder); params.set('page', '1');
+        params.set('sortBy', sortBy);
+        params.set('sortOrder', sortOrder);
+        params.set('page', '1');
         router.push(`/properties?${params.toString()}`);
       }}
       value={`${searchParams.get('sortBy') || 'name'}-${searchParams.get('sortOrder') || 'asc'}`}
     >
-      <option value="name-asc">Nama (A-Z)</option><option value="name-desc">Nama (Z-A)</option>
-      <option value="price-asc">Harga (Termurah)</option><option value="price-desc">Harga (Termahal)</option>
+      <option value="name-asc">Nama (A-Z)</option>
+      <option value="name-desc">Nama (Z-A)</option>
+      <option value="price-asc">Harga (Termurah)</option>
+      <option value="price-desc">Harga (Termahal)</option>
     </select>
   );
 }
 
-function CatalogFilters({ name, setName, searchParams, router }: { name: string, setName: (v: string) => void, searchParams: URLSearchParams, router: ReturnType<typeof useRouter> }) {
+function CatalogFilters({
+  name,
+  setName,
+  searchParams,
+  router,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  searchParams: URLSearchParams;
+  router: ReturnType<typeof useRouter>;
+}) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-      <input type="text" placeholder="Cari nama properti..." value={name} onChange={(e) => setName(e.target.value)}
-        className="w-full sm:w-64 rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
+      <input
+        type="text"
+        placeholder="Cari nama properti..."
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full sm:w-64 rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+      />
       <CategorySelect searchParams={searchParams} router={router} />
       <SortSelect searchParams={searchParams} router={router} />
     </div>
   );
 }
 
-function CatalogGrid({ properties, searchParams }: { properties: Property[], searchParams: URLSearchParams }) {
-  if (properties.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-3xl bg-muted/30">
-      <p className="text-lg font-medium">Tidak ada properti yang ditemukan</p>
-      <p className="text-sm text-muted-foreground mt-2 max-w-md text-center">Coba ganti kata kunci pencarian, atau ubah filter tanggal dan kota di halaman utama.</p>
-    </div>
-  );
+function CatalogGrid({
+  properties,
+  searchParams,
+}: {
+  properties: Property[];
+  searchParams: URLSearchParams;
+}) {
+  if (properties.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-3xl bg-muted/30">
+        <p className="text-lg font-medium">Tidak ada properti yang ditemukan</p>
+        <p className="text-sm text-muted-foreground mt-2 max-w-md text-center">
+          Coba ganti kata kunci pencarian, atau ubah filter tanggal dan kota di halaman utama.
+        </p>
+      </div>
+    );
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {properties.map((prop) => <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />)}
+      {properties.map((prop) => (
+        <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />
+      ))}
     </div>
   );
 }
 
 export function PropertyCatalog() {
-  const router = useRouter(); const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { name, setName, debouncedName } = useCatalogSearch(searchParams, router);
   const { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString()); router.push(`/properties?${params.toString()}`);
+    params.set('page', page.toString());
+    router.push(`/properties?${params.toString()}`);
   };
 
   return (
     <div className="w-full">
-      <div className="mb-10 w-full max-w-5xl mx-auto"><SearchForm compact /></div>
+      <div className="mb-10 w-full max-w-5xl mx-auto">
+        <SearchForm compact />
+      </div>
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
         <CatalogHeader meta={meta} />
         <CatalogFilters name={name} setName={setName} searchParams={searchParams} router={router} />
       </div>
-      {isLoading ? <div className="flex justify-center py-20"><p className="text-muted-foreground text-sm animate-pulse">Mencari penginapan...</p></div> : 
-        <><CatalogGrid properties={properties} searchParams={searchParams} />{meta && <PaginationControls meta={meta} onPageChange={handlePageChange} />}</>
-      }
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <p className="text-muted-foreground text-sm animate-pulse">Mencari penginapan...</p>
+        </div>
+      ) : (
+        <>
+          <CatalogGrid properties={properties} searchParams={searchParams} />
+          {meta && <PaginationControls meta={meta} onPageChange={handlePageChange} />}
+        </>
+      )}
     </div>
   );
 }

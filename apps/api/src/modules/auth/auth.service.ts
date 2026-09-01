@@ -28,7 +28,7 @@ import type { Prisma } from '../../generated/prisma/client';
 async function createUserAndToken(
   tx: Prisma.TransactionClient,
   data: Prisma.UserCreateInput,
-  tokenData: { tokenHash: string; expiresAt: Date }
+  tokenData: { tokenHash: string; expiresAt: Date },
 ) {
   const user = await tx.user.create({ data });
   const token = await tx.verificationToken.create({

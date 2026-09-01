@@ -24,7 +24,11 @@ tenantRouter.use(authenticate, requireVerified, requireTenant);
 
 // Rooms nested under property
 tenantRouter.get('/properties/:propertyId/rooms', RoomsController.getList);
-tenantRouter.post('/properties/:propertyId/rooms', uploadPropertyImages.array('images', 5), RoomsController.create);
+tenantRouter.post(
+  '/properties/:propertyId/rooms',
+  uploadPropertyImages.array('images', 5),
+  RoomsController.create,
+);
 
 // Rooms direct
 tenantRouter.patch('/rooms/:id', uploadPropertyImages.array('images', 5), RoomsController.update);

@@ -28,7 +28,9 @@ export class RoomsController {
       if (files.length > 5) throw badRequest('Maksimal 5 foto kamar');
       const room = await createRoom(req.tenantId, req.params.propertyId as string, data, files);
       sendSuccess(res, room, 'Kamar berhasil dibuat', 201);
-    } catch (e) { next(e); }
+    } catch (e) {
+      next(e);
+    }
   }
 
   static async update(req: Request, res: Response, next: NextFunction) {
@@ -39,7 +41,9 @@ export class RoomsController {
       if (files.length > 5) throw badRequest('Maksimal 5 foto kamar');
       const room = await updateRoom(req.tenantId, req.params.id as string, data, files);
       sendSuccess(res, room, 'Kamar berhasil diperbarui');
-    } catch (e) { next(e); }
+    } catch (e) {
+      next(e);
+    }
   }
 
   static async softDelete(req: Request, res: Response, next: NextFunction) {

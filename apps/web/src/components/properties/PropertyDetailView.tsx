@@ -1,7 +1,7 @@
 'use client';
 import { BackButton } from '@/components/ui/BackButton';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { BookingWidget } from './BookingWidget';
 import { ImageLightbox } from './ImageLightbox';
 import { PriceCalendar } from './PriceCalendar';
@@ -79,12 +79,18 @@ function PropertySidebar({ slug, room, date, setDate, night, setNight }: { slug:
 export function PropertyDetailView({ property, initialDate }: PropertyDetailViewProps) {
   const cheapestRoomId = [...property.rooms].sort((a, b) => Number(a.basePrice) - Number(b.basePrice))[0]?.id || '';
   const [[roomId, night, date, isExp], set] = useState<[string, { date?: string, price: number, isAvailable: boolean } | null, string | null, boolean]>([cheapestRoomId, null, initialDate || null, false]);
+
+  const setNight = useCallback(
+    (n: { date?: string; price: number; isAvailable: boolean } | null) => set([roomId, n, date, isExp]),
+    [roomId, date, isExp],
+  );
+
   return (
     <div className="w-full">
       <div className="mb-6"><BackButton fallbackHref="/properties" /></div><PropertyHeader property={property} /><div className="mb-12"><Gallery imgs={property.images} name={property.name} /></div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2"><PropertyDesc text={property.description} isExpanded={isExp} onToggle={() => set([roomId, night, date, !isExp])} /><hr className="my-10 border-border/60" /><RoomSelector rooms={property.rooms} selectedRoomId={roomId} onSelectRoom={(r: string) => set([r, night, date, isExp])} selectedNight={night} /><PropertyLocation lat={property.latitude} lng={property.longitude} name={property.name} address={property.address} city={property.city} province={property.province} /></div>
-        <PropertySidebar slug={property.slug} room={roomId} date={date} setDate={(d: string | null) => set([roomId, night, d, isExp])} night={night} setNight={(n: { date?: string, price: number, isAvailable: boolean } | null) => set([roomId, n, date, isExp])} />
+        <PropertySidebar slug={property.slug} room={roomId} date={date} setDate={(d: string | null) => set([roomId, night, d, isExp])} night={night} setNight={setNight} />
       </div>
     </div>
   );

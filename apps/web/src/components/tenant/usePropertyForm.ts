@@ -56,6 +56,12 @@ export function usePropertyForm(initialData?: PropertyFormInitData) {
     defaultValue: initialData?.city || '',
   });
 
+  // Debug log state
+  const [debugLog, setDebugLog] = useState<{ time: string; msg: string }[]>([]);
+  const addDebugLog = (msg: string) => {
+    setDebugLog((prev) => [...prev.slice(-49), { time: new Date().toLocaleTimeString(), msg }]);
+  };
+
   const search = useAddressSearch({ selectedProvinceId, watchedCity });
   const geo = useGeocodingEffects({
     addressValue,
@@ -64,6 +70,7 @@ export function usePropertyForm(initialData?: PropertyFormInitData) {
     watchedCity,
     setSelectedGeo,
     setValue: form.setValue,
+    addDebugLog,
   });
 
   const handleSuggestionSelect = (s: { formatted: string; lat: number; lng: number }) => {
@@ -121,6 +128,8 @@ export function usePropertyForm(initialData?: PropertyFormInitData) {
     ...geo,
     handleSuggestionSelect,
     onSubmit,
+    debugLog,
+    addDebugLog,
   };
 }
 

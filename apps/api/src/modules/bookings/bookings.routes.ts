@@ -1,11 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
 import { uploadPaymentProof } from '../../middlewares/upload.middleware';
-import {
-  validateBody,
-  validateParams,
-  validateQuery,
-} from '../../middlewares/validate.middleware';
+import { validateBody, validateParams, validateQuery } from '../../middlewares/validate.middleware';
 import {
   cancelBooking,
   createBooking,
@@ -51,13 +47,7 @@ router.post(
   validateBody(createSchema),
   createBooking,
 );
-router.get(
-  '/',
-  authenticate,
-  requireRole('USER'),
-  validateQuery(listQuerySchema),
-  listBookings,
-);
+router.get('/', authenticate, requireRole('USER'), validateQuery(listQuerySchema), listBookings);
 router.get('/:orderNumber', authenticate, validateParams(orderNumberParamsSchema), getBooking);
 router.post(
   '/:orderNumber/payment-proof',

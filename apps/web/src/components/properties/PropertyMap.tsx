@@ -2,9 +2,8 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useMemo, useRef } from 'react';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { useMap, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
-// Fix missing marker icons in Next.js
 const icon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -15,6 +14,12 @@ const icon = L.icon({
   tooltipAnchor: [16, -28],
   shadowSize: [41, 41],
 });
+
+function ChangeView({ center }: { center: [number, number] }) {
+  const map = useMap();
+  map.flyTo(center, 15);
+  return null;
+}
 
 interface PropertyMapProps {
   lat: number;
@@ -35,19 +40,7 @@ export default function PropertyMap({
 }: PropertyMapProps) {
   const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
   const markerRef = useRef<L.Marker>(null);
-
-  const eventHandlers = useMemo(
-    () => ({
-      dragend() {
-        const marker = markerRef.current;
-        if (marker != null) {
-          const latLng = marker.getLatLng();
-          onLocationChange?.(latLng.lat, latLng.lng);
-        }
-      },
-    }),
-    [onLocationChange],
-  );
+  const eventHandlers = useMarkerEvents(onLocationChange);
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-border shadow-sm">
@@ -57,6 +50,7 @@ export default function PropertyMap({
         scrollWheelZoom={false}
         style={{ height: '380px', width: '100%', zIndex: 0 }}
       >
+        <ChangeView center={[lat, lng]} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -69,32 +63,72 @@ export default function PropertyMap({
           ref={markerRef}
         >
           <Popup>
-            <div className="text-sm">
-              <p className="font-semibold">{name}</p>
-              {address && <p className="text-gray-500 mt-0.5">{address}</p>}
-              {draggable && (
-                <p className="text-xs text-primary mt-1 font-medium">
-                  Geser pin untuk mengubah lokasi
-                </p>
-              )}
-            </div>
+            <PopupContent name={name} address={address} draggable={draggable} />
           </Popup>
         </Marker>
       </MapContainer>
-      <a
-        href={mapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-4 right-4 z-400 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0">
-          <path
-            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-            fill="#EA4335"
-          />
-        </svg>
-        Buka di Google Maps
-      </a>
+      <GoogleMapsLink mapsUrl={mapsUrl} />
     </div>
+  );
+}
+
+function useMarkerEvents(onLocationChange: ((lat: number, lng: number) => void) | undefined) {
+  const ref = useRef<{ getLatLng: () => { lat: number; lng: number } } | null>(null);
+  return useMemo(
+    () => ({
+      dragend() {
+        const marker = ref.current;
+        if (marker != null) {
+          const latLng = marker.getLatLng();
+          onLocationChange?.(latLng.lat, latLng.lng);
+        }
+      },
+    }),
+    [onLocationChange],
+  );
+}
+
+function PopupContent({
+  name,
+  address,
+  draggable,
+}: {
+  name: string;
+  address?: string;
+  draggable: boolean;
+}) {
+  return (
+    <div className="text-sm">
+      <p className="font-semibold">{name}</p>
+      {address && <p className="text-gray-500 mt-0.5">{address}</p>}
+      {draggable && (
+        <p className="text-xs text-primary mt-1 font-medium">Geser pin untuk mengubah lokasi</p>
+      )}
+    </div>
+  );
+}
+
+function GoogleMapsLink({ mapsUrl }: { mapsUrl: string }) {
+  return (
+    <a
+      href={mapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="absolute bottom-4 right-4 z-400 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+    >
+      <MapsIcon />
+      Buka di Google Maps
+    </a>
+  );
+}
+
+function MapsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0">
+      <path
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+        fill="#EA4335"
+      />
+    </svg>
   );
 }

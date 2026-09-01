@@ -21,7 +21,10 @@ async function getValidPropertyForUpdate(tenantId: string, propertyId: string) {
   return property;
 }
 
-async function resolveGeocodeForUpdate(data: UpdatePropertyInput, property: { address: string; city: string; province: string }) {
+async function resolveGeocodeForUpdate(
+  data: UpdatePropertyInput,
+  property: { address: string; city: string; province: string },
+) {
   if (data.latitude !== undefined && data.longitude !== undefined) {
     return { lat: data.latitude, lng: data.longitude };
   }
@@ -44,20 +47,34 @@ function extractDeletedImageIds(data: UpdatePropertyInput): string[] {
 }
 
 async function executeCreatePropertyQuery(
-  tenantId: string, data: CreatePropertyInput, slug: string, geo: { lat: number; lng: number } | null | undefined, imageUploads: { url: string; sortOrder: number }[],
+  tenantId: string,
+  data: CreatePropertyInput,
+  slug: string,
+  geo: { lat: number; lng: number } | null | undefined,
+  imageUploads: { url: string; sortOrder: number }[],
 ) {
   return prisma.property.create({
     data: {
-      tenantId, categoryId: data.categoryId, name: data.name, slug, description: data.description,
-      address: data.address, city: data.city, province: data.state,
-      latitude: geo?.lat, longitude: geo?.lng,
+      tenantId,
+      categoryId: data.categoryId,
+      name: data.name,
+      slug,
+      description: data.description,
+      address: data.address,
+      city: data.city,
+      province: data.state,
+      latitude: geo?.lat,
+      longitude: geo?.lng,
       images: { create: imageUploads },
     },
     include: { images: true },
   });
 }
 
-function buildUpdateData(data: UpdatePropertyInput, geo: { lat: number; lng: number } | null | undefined) {
+function buildUpdateData(
+  data: UpdatePropertyInput,
+  geo: { lat: number; lng: number } | null | undefined,
+) {
   return {
     ...(data.categoryId && { categoryId: data.categoryId }),
     ...(data.name && { name: data.name }),
@@ -70,7 +87,11 @@ function buildUpdateData(data: UpdatePropertyInput, geo: { lat: number; lng: num
 }
 
 async function executeUpdatePropertyQuery(
-  propertyId: string, data: UpdatePropertyInput, geo: { lat: number; lng: number } | null | undefined, deletedIds: string[], newUploads: { url: string; sortOrder: number }[],
+  propertyId: string,
+  data: UpdatePropertyInput,
+  geo: { lat: number; lng: number } | null | undefined,
+  deletedIds: string[],
+  newUploads: { url: string; sortOrder: number }[],
 ) {
   return prisma.$transaction(async (tx) => {
     if (deletedIds.length > 0) {
@@ -79,7 +100,7 @@ async function executeUpdatePropertyQuery(
     if (data.mainImageIndex !== undefined && newUploads[data.mainImageIndex]) {
       await tx.propertyImage.updateMany({
         where: { propertyId },
-        data: { sortOrder: { increment: 1 } }
+        data: { sortOrder: { increment: 1 } },
       });
       const mainImg = newUploads[data.mainImageIndex];
       newUploads.splice(data.mainImageIndex, 1);
@@ -90,7 +111,7 @@ async function executeUpdatePropertyQuery(
       }
     }
     if (newUploads.length > 0) {
-      await tx.propertyImage.createMany({ data: newUploads.map(i => ({ ...i, propertyId })) });
+      await tx.propertyImage.createMany({ data: newUploads.map((i) => ({ ...i, propertyId })) });
     }
     if (data.mainImageId) {
       // Re-order images: main image gets 0, others get incremented
@@ -120,47 +141,62 @@ export async function createProperty(
   files: Express.Multer.File[],
 ) {
   const existingProp = await prisma.property.findFirst({
-    where: { tenantId, name: { equals: data.name, mode: 'insensitive' }, deletedAt: null }
+    where: { tenantId, name: { equals: data.name, mode: 'insensitive' }, deletedAt: null },
   });
   if (existingProp) throw badRequest('Anda sudah memiliki properti dengan nama ini');
 
   await verifyCategoryOwnership(data.categoryId, tenantId);
   const slug = await generateUniqueSlug(data.name);
-  const geo = data.latitude !== undefined && data.longitude !== undefined 
-    ? { lat: data.latitude, lng: data.longitude }
-    : await geocodeAddress(data.address, data.city, data.state, 'Indonesia');
+  const geo =
+    data.latitude !== undefined && data.longitude !== undefined
+      ? { lat: data.latitude, lng: data.longitude }
+      : await geocodeAddress(data.address, data.city, data.state, 'Indonesia');
   const imageUploads = await uploadPropertyImages(files);
   if (data.mainImageIndex !== undefined && imageUploads[data.mainImageIndex]) {
     const mainImg = imageUploads[data.mainImageIndex];
     imageUploads.splice(data.mainImageIndex, 1);
     imageUploads.unshift(mainImg);
-    imageUploads.forEach((img, i) => { img.sortOrder = i; });
+    imageUploads.forEach((img, i) => {
+      img.sortOrder = i;
+    });
   }
   return executeCreatePropertyQuery(tenantId, data, slug, geo, imageUploads);
 }
 
 export async function updateProperty(
-  tenantId: string, propertyId: string, data: UpdatePropertyInput, newFiles: Express.Multer.File[],
+  tenantId: string,
+  propertyId: string,
+  data: UpdatePropertyInput,
+  newFiles: Express.Multer.File[],
 ) {
   const property = await getValidPropertyForUpdate(tenantId, propertyId);
 
   if (data.name && data.name.toLowerCase() !== property.name.toLowerCase()) {
     const existingProp = await prisma.property.findFirst({
-      where: { tenantId, name: { equals: data.name, mode: 'insensitive' }, deletedAt: null, id: { not: propertyId } }
+      where: {
+        tenantId,
+        name: { equals: data.name, mode: 'insensitive' },
+        deletedAt: null,
+        id: { not: propertyId },
+      },
     });
     if (existingProp) throw badRequest('Anda sudah memiliki properti dengan nama ini');
   }
 
   if (data.categoryId) await verifyCategoryOwnership(data.categoryId, tenantId);
   const geo = await resolveGeocodeForUpdate(data, property);
-  
+
   const deletedIds = extractDeletedImageIds(data);
   const deletedImagesData = property.images.filter((img) => deletedIds.includes(img.id));
   const remainingCount = property.images.length - deletedImagesData.length;
   const newImageUploads = await uploadPropertyImages(newFiles, remainingCount);
 
   const updatedProperty = await executeUpdatePropertyQuery(
-    propertyId, data, geo, deletedIds, newImageUploads
+    propertyId,
+    data,
+    geo,
+    deletedIds,
+    newImageUploads,
   );
 
   if (deletedImagesData.length > 0) {
