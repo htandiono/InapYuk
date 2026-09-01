@@ -2,10 +2,12 @@ import type { BookingDetailDto, JwtPayload } from '@inapyuk/types';
 import { prisma } from '../../libs/prisma';
 import { uploadImage } from '../../libs/cloudinary';
 import { badRequest, conflict } from '../../utils/app-error';
+import { notifyUser } from '../notifications/notify';
 import { computeActions } from './bookings.actions';
 import { getByOrderNumber } from './bookings.detail';
 import { loadGuestBooking } from './bookings.owned';
 import { assertTransition } from './status-machine';
+import type { BookingRecord } from './bookings.mapper';
 
 export async function uploadPaymentProof(
   orderNumber: string,
@@ -17,6 +19,7 @@ export async function uploadPaymentProof(
   assertCanUpload(booking, caller);
   const proofUrl = await uploadImage(file, 'payment-proofs');
   await markProofUploaded(booking.id, proofUrl);
+  await notifyTenantOfProof(booking);
   return getByOrderNumber(orderNumber, caller);
 }
 
@@ -40,5 +43,20 @@ async function markProofUploaded(bookingId: string, paymentProofUrl: string) {
       paymentProofUrl,
       paymentProofUploadedAt: now,
     },
+  });
+}
+
+async function notifyTenantOfProof(booking: BookingRecord) {
+  const tenant = await prisma.tenantProfile.findUnique({
+    where: { id: booking.property.tenantId },
+    select: { userId: true },
+  });
+  if (!tenant) return;
+  await notifyUser({
+    userId: tenant.userId,
+    type: 'PAYMENT_UPLOADED',
+    title: 'Ada bukti transfer baru',
+    body: `Tamu mengunggah bukti untuk ${booking.orderNumber}. Cek dan konfirmasi ya.`,
+    bookingId: booking.id,
   });
 }
