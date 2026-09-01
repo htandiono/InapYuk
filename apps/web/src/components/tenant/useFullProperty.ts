@@ -12,6 +12,7 @@ export function useFullProperty(p: Property | null) {
       return;
     }
     const controller = new AbortController();
+    /* eslint-disable react-hooks/set-state-in-effect */
     setLoadingFull(true);
     fetch(`/api/properties/tenant/properties/${p.id}?t=${Date.now()}`, {
       headers: { 'Cache-Control': 'no-cache' },

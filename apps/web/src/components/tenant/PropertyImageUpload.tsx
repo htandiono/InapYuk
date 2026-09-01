@@ -14,7 +14,6 @@ interface Props {
   files: File[];
   setFiles: (files: File[]) => void;
   deletedImages: string[];
-  setDeletedImages: (ids: string[]) => void;
   mainImageId: string | null;
   setMainImageId: (id: string | null) => void;
   mainImageIndex: number | null;
@@ -186,7 +185,6 @@ async function handleFilesSelected(
   deletedImages: string[],
   files: File[],
   setFiles: (files: File[]) => void,
-  setDeletedImages: (ids: string[]) => void,
 ) {
   const validFiles = filterValidFiles(newFiles);
   if (validFiles.length === 0) return;

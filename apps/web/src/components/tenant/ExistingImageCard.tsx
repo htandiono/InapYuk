@@ -1,7 +1,5 @@
 'use client';
 import { Star, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-
 interface ExistingImage {
   id: string;
   url: string;

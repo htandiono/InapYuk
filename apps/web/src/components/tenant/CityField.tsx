@@ -97,7 +97,7 @@ function CitySelect({
     onChange: (v: string) => void;
     onBlur: () => void;
     name: string;
-    ref: React.Ref<any>;
+    ref: React.Ref<HTMLSelectElement>;
   };
   loading: boolean;
   selectedProvinceId: string;

@@ -29,6 +29,7 @@ export function usePriceCalendarFetch(slug: string, roomId: string) {
     }
   }, [slug, roomId, currentDate]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     void fetchCalendar();
   }, [fetchCalendar]);

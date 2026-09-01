@@ -28,7 +28,6 @@ export function AddressSearchField({
       <SearchLabel />
       <SearchInput
         value={searchQuery}
-        onQueryChange={setSearchQuery}
         onFocus={
           showSuggestions && suggestions.length > 0 ? () => setShowSuggestions(true) : undefined
         }
@@ -61,14 +60,12 @@ function SearchLabel() {
 
 function SearchInput({
   value,
-  onQueryChange,
   onFocus,
   isSearching,
   disabled,
   onQueryChangeCombined,
 }: {
   value: string;
-  onQueryChange: (q: string) => void;
   onFocus?: () => void;
   isSearching: boolean;
   disabled: boolean;

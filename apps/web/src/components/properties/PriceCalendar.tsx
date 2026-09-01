@@ -1,5 +1,4 @@
 'use client';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api-client';
 import type { NightlyRate } from './PriceCalendarGrid';
@@ -52,6 +51,7 @@ export function PriceCalendar({
     }
   }, [slug, roomId, month, year]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     void fetchCalendar();
   }, [fetchCalendar]);

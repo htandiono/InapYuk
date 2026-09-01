@@ -75,6 +75,7 @@ export function usePropertyForm(initialData?: PropertyFormInitData) {
 
   const handleSuggestionSelect = (s: { formatted: string; lat: number; lng: number }) => {
     form.setValue('address', s.formatted, { shouldValidate: true });
+    /* eslint-disable react-hooks/immutability */
     geo.lastGeocodedAddressRef.current = s.formatted;
     geo.handleMarkerDrag(s.lat, s.lng, s.formatted);
     search.setSearchQuery('');

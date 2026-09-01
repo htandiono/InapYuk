@@ -40,7 +40,7 @@ function StreetAddressLabel() {
   );
 }
 
-function StreetAddressFooter({ errors, addressValue }: { errors: any; addressValue: string }) {
+function StreetAddressFooter({ errors, addressValue }: { errors: FieldErrors<PropertyFormValues>; addressValue: string }) {
   return (
     <div className="flex justify-between text-xs mt-1">
       {errors.address ? (

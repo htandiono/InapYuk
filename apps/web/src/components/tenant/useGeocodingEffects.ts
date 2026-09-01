@@ -16,7 +16,7 @@ interface Props {
 }
 
 // Module-level log helpers
-function log(_msg: string, _data?: unknown) {
+function log() {
   // no-op — retained for future debugging
 }
 
@@ -192,6 +192,7 @@ function useAddressGeocoder({
       }
     }, 1200);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addressValue, selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }
 

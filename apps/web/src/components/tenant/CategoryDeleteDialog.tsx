@@ -10,7 +10,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function CategoryDeleteDialog({ open, deletingId, isDeleting, onConfirm, onCancel }: Props) {
+export function CategoryDeleteDialog({ open, isDeleting, onConfirm, onCancel }: Props) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isDeleting && onCancel()}>
       <DialogContent className="sm:max-w-md">
