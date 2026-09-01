@@ -14,6 +14,7 @@ interface Props {
   files: File[];
   setFiles: (files: File[]) => void;
   deletedImages: string[];
+  setDeletedImages: (ids: string[]) => void;
   mainImageId: string | null;
   setMainImageId: (id: string | null) => void;
   mainImageIndex: number | null;
@@ -65,14 +66,7 @@ export function PropertyImageUpload({
         {canAddMore && (
           <UploadSlot
             onFilesSelected={(f) =>
-              void handleFilesSelected(
-                f,
-                existingImages,
-                deletedImages,
-                files,
-                setFiles,
-                setDeletedImages,
-              )
+              void handleFilesSelected(f, existingImages, deletedImages, files, setFiles)
             }
             loading={loading}
           />

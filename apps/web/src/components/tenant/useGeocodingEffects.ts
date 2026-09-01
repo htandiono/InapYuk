@@ -16,7 +16,7 @@ interface Props {
 }
 
 // Module-level log helpers
-function log() {
+function log(_msg: string, _data?: unknown) {
   // no-op — retained for future debugging
 }
 
