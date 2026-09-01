@@ -12,70 +12,73 @@ interface JwtPayload {
 
 const publicRoutes = ['/login', '/register', '/verify', '/resend-verification', '/tenant/register', '/tenant/login', '/', '/properties', '/bantuan', '/privasi', '/syarat'];
 const authRoutes = ['/login', '/register', '/tenant/register', '/tenant/login'];
+const globalSharedRoutes = ['/bantuan', '/privasi', '/syarat'];
+
+function decodeToken(token: string): JwtPayload | null {
+  try {
+    return decodeJwt(token) as unknown as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.includes(pathname) || pathname.startsWith('/properties');
+}
+
+function isAuthRoute(pathname: string): boolean {
+  return authRoutes.includes(pathname);
+}
+
+function isTenantRoute(pathname: string): boolean {
+  return pathname.startsWith('/tenant');
+}
+
+function isGlobalSharedRoute(pathname: string): boolean {
+  return globalSharedRoutes.includes(pathname);
+}
+
+function redirectUnauthenticatedUser(request: NextRequest): NextResponse {
+  return NextResponse.redirect(new URL('/login', request.url));
+}
+
+function redirectAuthenticatedUser(request: NextRequest, role: UserRole): NextResponse {
+  if (role === 'TENANT') {
+    return NextResponse.redirect(new URL('/tenant/properties', request.url));
+  }
+  return NextResponse.redirect(new URL('/', request.url));
+}
+
+function handleRoleSeparation(request: NextRequest, role: UserRole): NextResponse | null {
+  const { pathname } = request.nextUrl;
+
+  if (role === 'USER' && isTenantRoute(pathname)) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (role === 'TENANT' && !isTenantRoute(pathname) && !isGlobalSharedRoute(pathname)) {
+    return NextResponse.redirect(new URL('/tenant/properties', request.url));
+  }
+
+  return null;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('accessToken')?.value;
+  const payload = token ? decodeToken(token) : null;
 
-  // 1. Decode token if present
-  let payload: JwtPayload | null = null;
-  if (token) {
-    try {
-      payload = decodeJwt(token) as unknown as JwtPayload;
-    } catch {
-      // Invalid token, ignore
-    }
-  }
-
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/properties');
-  const isAuthRoute = authRoutes.includes(pathname);
-
-  // 2. Unauthenticated User Logic
   if (!payload) {
-    if (!isPublicRoute) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return NextResponse.next();
+    return isPublicRoute(pathname) ? NextResponse.next() : redirectUnauthenticatedUser(request);
   }
 
-  // 3. Authenticated User Logic
-  const role = payload.role;
-
-  // Prevent authenticated users from visiting login/register pages
-  if (isAuthRoute) {
-    if (role === 'TENANT') {
-      return NextResponse.redirect(new URL('/tenant/properties', request.url));
-    }
-    return NextResponse.redirect(new URL('/', request.url));
+  if (isAuthRoute(pathname)) {
+    return redirectAuthenticatedUser(request, payload.role);
   }
 
-  // 4. Role Separation Logic
-  const isTenantRoute = pathname.startsWith('/tenant');
-
-  if (role === 'USER' && isTenantRoute) {
-    // Users cannot access tenant routes
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  if (role === 'TENANT' && !isTenantRoute) {
-    // Tenants cannot access user-specific routes (e.g., /profile) or the consumer homepage (/).
-    // They can only access /tenant/* routes.
-    // The ticket says: "Given a TENANT, When accessing user-only routes, Then redirected to /tenant/properties"
-    return NextResponse.redirect(new URL('/tenant/properties', request.url));
-  }
-
-  return NextResponse.next();
+  return handleRoleSeparation(request, payload.role) || NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|uploads|favicon.ico).*)'],
 };

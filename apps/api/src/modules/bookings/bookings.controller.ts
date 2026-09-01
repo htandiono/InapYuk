@@ -36,11 +36,7 @@ export const listBookings = asyncHandler(async (req, res) => {
 
 export const uploadProof = asyncHandler(async (req, res) => {
   if (!req.user) throw unauthorized();
-  const booking = await uploadPaymentProof(
-    String(req.params.orderNumber),
-    req.user,
-    req.file,
-  );
+  const booking = await uploadPaymentProof(String(req.params.orderNumber), req.user, req.file);
   sendSuccess(res, booking, 'Bukti transfer sudah kami terima');
 });
 

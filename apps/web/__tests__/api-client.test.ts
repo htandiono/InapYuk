@@ -3,6 +3,7 @@ import { apiFetch, ApiError } from '../src/lib/api-client';
 
 describe('apiFetch', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.restoreAllMocks();
   });
 

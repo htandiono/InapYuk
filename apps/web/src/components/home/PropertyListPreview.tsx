@@ -4,6 +4,7 @@ import { api } from '@/lib/api-client';
 type PropertyPreview = {
   id: string; name: string; slug: string; city: string; province: string;
   categoryName: string; imageUrl: string | null; cheapestPrice: number;
+  tenantName?: string | null;
 };
 
 async function fetchPreviewProperties() {
@@ -34,6 +35,9 @@ function PropertyCard({ p }: { p: PropertyPreview }) {
           <span className="text-xs text-white/80">{p.city}</span>
         </div>
         <h3 className="text-xl font-heading text-white mt-1 line-clamp-1">{p.name}</h3>
+        {p.tenantName && (
+          <p className="text-xs text-white/60 mt-0.5">{p.tenantName}</p>
+        )}
         <p className="text-sm font-medium text-white mt-2">Mulai dari <span className="text-accent font-bold">Rp {p.cheapestPrice.toLocaleString('id-ID')}</span></p>
       </div>
     </Link>
