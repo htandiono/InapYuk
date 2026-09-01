@@ -64,7 +64,7 @@ async function geocodeCity(
   provinceId: string,
   cityVal: string,
   setSelectedGeo: (g: { lat: number; lng: number } | null) => void,
-  setValue: import('react-hook-form').UseFormSetValue<PropertyFormValues>,
+  setValue: UseFormSetValue<PropertyFormValues>,
 ) {
   const provinceName = PROVINCES.find((p) => p.id === provinceId)?.name;
   if (!provinceName) return;
