@@ -35,7 +35,7 @@ export function useGeocodingEffects({
       // Clear address cache when province or city changes
       lastGeocodedAddressRef.current = '';
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinceCityKey]);
 
   // Geocode address when it changes
@@ -56,6 +56,7 @@ export function useGeocodingEffects({
     setSelectedGeo,
     lastGeocodedAddressRef,
     lastProvinceCityRef,
+    isReverseGeocodingRef,
   });
 
   return {
@@ -155,6 +156,7 @@ function useProvinceCityGeocoder({
   setSelectedGeo,
   lastGeocodedAddressRef,
   lastProvinceCityRef,
+  isReverseGeocodingRef,
 }: {
   selectedProvinceId: string;
   watchedCity: string;
@@ -162,8 +164,12 @@ function useProvinceCityGeocoder({
   setSelectedGeo: (g: { lat: number; lng: number } | null) => void;
   lastGeocodedAddressRef: React.MutableRefObject<string>;
   lastProvinceCityRef: React.MutableRefObject<string>;
+  isReverseGeocodingRef: React.MutableRefObject<boolean>;
 }) {
   useEffect(() => {
+    // Skip if we're currently in reverse geocode mode (map drag)
+    if (isReverseGeocodingRef.current) return;
+
     const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
     if (provinceCityKey === lastProvinceCityRef.current) return;
     lastProvinceCityRef.current = provinceCityKey;
@@ -193,6 +199,6 @@ function useProvinceCityGeocoder({
       }
     }, 800);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }
