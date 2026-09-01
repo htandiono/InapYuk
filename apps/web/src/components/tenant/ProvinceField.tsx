@@ -62,7 +62,7 @@ function ProvinceSelect({
 }: {
   value: string;
   disabled: boolean;
-  errors: any;
+  errors: FieldErrors<PropertyFormValues>;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -82,7 +82,7 @@ function ProvinceSelect({
   );
 }
 
-function ProvinceError({ errors }: { errors: any }) {
+function ProvinceError({ errors }: { errors: FieldErrors<PropertyFormValues> }) {
   if (!errors?.state) return null;
   return (
     <p className="flex items-center gap-1 text-destructive text-xs mt-1.5">
