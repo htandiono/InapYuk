@@ -16,19 +16,6 @@ function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
     </div>
   );
 }
-
-interface Property {
-  id: string;
-  slug: string;
-  name: string;
-  city: string;
-  province: string;
-  categoryName: string;
-  imageUrl: string | null;
-  cheapestPrice: number;
-  tenantName?: string | null;
-}
-
 function CatalogGrid({
   properties,
   searchParams,
@@ -59,13 +46,11 @@ export function PropertyCatalog() {
   const searchParams = useSearchParams();
   const { name, setName, debouncedName } = useCatalogSearch(searchParams, router);
   const { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
-
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
     router.push(`/properties?${params.toString()}`);
   };
-
   return (
     <div className="w-full">
       <div className="mb-10 w-full max-w-5xl mx-auto">
