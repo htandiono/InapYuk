@@ -12,7 +12,7 @@ export function useCategoryDelete(fetchCategories: (p: number) => void, page: nu
       if (!res.ok) throw new Error((await res.json()).message);
       toast.success('Kategori berhasil dihapus');
       setDeletingId(null); fetchCategories(page);
-    } catch (err: any) { toast.error(err.message || String(err)); } finally { setIsDeleting(false); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)); } finally { setIsDeleting(false); }
   };
   return { deletingId, setDeletingId, isDeleting, confirmDelete };
 }

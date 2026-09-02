@@ -1,3 +1,4 @@
+import type { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../../libs/prisma';
 import { deleteImage } from '../../../libs/cloudinary';
 import { geocodeAddress } from '../../../libs/opencage';
@@ -83,11 +84,20 @@ async function executeUpdatePropertyQuery(
   });
 }
 
-async function handleDeleteImages(tx: any, propertyId: string, deletedIds: string[]) {
+async function handleDeleteImages(
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  deletedIds: string[],
+) {
   if (deletedIds.length > 0) await tx.propertyImage.deleteMany({ where: { id: { in: deletedIds }, propertyId } });
 }
 
-async function handleMainImageIndexForNewUploads(tx: any, propertyId: string, data: UpdatePropertyInput, newUploads: any[]) {
+async function handleMainImageIndexForNewUploads(
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  data: UpdatePropertyInput,
+  newUploads: { url: string; sortOrder: number }[],
+) {
   if (data.mainImageIndex !== undefined && newUploads[data.mainImageIndex]) {
     await tx.propertyImage.updateMany({ where: { propertyId }, data: { sortOrder: { increment: 1 } } });
     const mainImg = newUploads[data.mainImageIndex];
@@ -98,11 +108,19 @@ async function handleMainImageIndexForNewUploads(tx: any, propertyId: string, da
   }
 }
 
-async function handleNewUploadsCreation(tx: any, propertyId: string, newUploads: any[]) {
-  if (newUploads.length > 0) await tx.propertyImage.createMany({ data: newUploads.map((i: any) => ({ ...i, propertyId })) });
+async function handleNewUploadsCreation(
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  newUploads: { url: string; sortOrder: number }[],
+) {
+  if (newUploads.length > 0) await tx.propertyImage.createMany({ data: newUploads.map((i) => ({ ...i, propertyId })) });
 }
 
-async function handleExistingMainImageReorder(tx: any, propertyId: string, mainImageId: string) {
+async function handleExistingMainImageReorder(
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  mainImageId: string,
+) {
   const allImages = await tx.propertyImage.findMany({ where: { propertyId }, orderBy: { sortOrder: 'asc' } });
   let currentOrder = 1;
   for (const img of allImages) {
