@@ -23,7 +23,7 @@ function useFullProperty(p: Property | null) {
   const [fullProp, setFullProp] = useState<Property | null>(null);
   const [loadingFull, setLoadingFull] = useState(false);
   useEffect(() => {
-    if (!p) return;
+    if (!p) return setFullProp(null);
     const c = new AbortController();
     (async () => {
       await Promise.resolve(); setLoadingFull(true);
