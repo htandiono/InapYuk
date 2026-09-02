@@ -39,10 +39,10 @@ export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePe
       <CardHeader className="pb-3 pt-4 px-5 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-0.5">
-            <CardTitle className="font-semibold text-base leading-tight line-clamp-1 break-words">
+            <CardTitle className="font-semibold text-base leading-tight line-clamp-1 wrap-break-word">
               {r.name}
             </CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2 break-words leading-relaxed">
+            <p className="text-sm text-muted-foreground line-clamp-2 wrap-break-word leading-relaxed">
               {r.description}
             </p>
           </div>
@@ -53,7 +53,7 @@ export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePe
       </CardHeader>
 
       {/* Price & Metrics Section */}
-      <CardContent className="px-5 pb-4 flex-grow">
+      <CardContent className="px-5 pb-4 grow">
         <div className="bg-muted/40 rounded-lg p-3 mb-3 space-y-2">
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

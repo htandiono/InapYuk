@@ -73,106 +73,80 @@ async function executeUpdatePropertyQuery(
   propertyId: string, data: UpdatePropertyInput, geo: { lat: number; lng: number } | null | undefined, deletedIds: string[], newUploads: { url: string; sortOrder: number }[],
 ) {
   return prisma.$transaction(async (tx) => {
-    if (deletedIds.length > 0) {
-      await tx.propertyImage.deleteMany({ where: { id: { in: deletedIds }, propertyId } });
-    }
-    if (data.mainImageIndex !== undefined && newUploads[data.mainImageIndex]) {
-      await tx.propertyImage.updateMany({
-        where: { propertyId },
-        data: { sortOrder: { increment: 1 } }
-      });
-      const mainImg = newUploads[data.mainImageIndex];
-      newUploads.splice(data.mainImageIndex, 1);
-      mainImg.sortOrder = 0;
-      newUploads.unshift(mainImg);
-      for (let i = 1; i < newUploads.length; i++) {
-        newUploads[i].sortOrder++;
-      }
-    }
-    if (newUploads.length > 0) {
-      await tx.propertyImage.createMany({ data: newUploads.map(i => ({ ...i, propertyId })) });
-    }
-    if (data.mainImageId) {
-      // Re-order images: main image gets 0, others get incremented
-      const allImages = await tx.propertyImage.findMany({
-        where: { propertyId },
-        orderBy: { sortOrder: 'asc' },
-      });
-      let currentOrder = 1;
-      for (const img of allImages) {
-        const order = img.id === data.mainImageId ? 0 : currentOrder++;
-        if (img.sortOrder !== order) {
-          await tx.propertyImage.update({ where: { id: img.id }, data: { sortOrder: order } });
-        }
-      }
-    }
+    await handleDeleteImages(tx, propertyId, deletedIds);
+    await handleMainImageIndexForNewUploads(tx, propertyId, data, newUploads);
+    await handleNewUploadsCreation(tx, propertyId, newUploads);
+    if (data.mainImageId) await handleExistingMainImageReorder(tx, propertyId, data.mainImageId);
     return tx.property.update({
-      where: { id: propertyId },
-      data: buildUpdateData(data, geo),
-      include: { images: true },
+      where: { id: propertyId }, data: buildUpdateData(data, geo), include: { images: true },
     });
   });
 }
 
-export async function createProperty(
-  tenantId: string,
-  data: CreatePropertyInput,
-  files: Express.Multer.File[],
-) {
+async function handleDeleteImages(tx: any, propertyId: string, deletedIds: string[]) {
+  if (deletedIds.length > 0) await tx.propertyImage.deleteMany({ where: { id: { in: deletedIds }, propertyId } });
+}
+
+async function handleMainImageIndexForNewUploads(tx: any, propertyId: string, data: UpdatePropertyInput, newUploads: any[]) {
+  if (data.mainImageIndex !== undefined && newUploads[data.mainImageIndex]) {
+    await tx.propertyImage.updateMany({ where: { propertyId }, data: { sortOrder: { increment: 1 } } });
+    const mainImg = newUploads[data.mainImageIndex];
+    newUploads.splice(data.mainImageIndex, 1);
+    mainImg.sortOrder = 0;
+    newUploads.unshift(mainImg);
+    for (let i = 1; i < newUploads.length; i++) newUploads[i].sortOrder++;
+  }
+}
+
+async function handleNewUploadsCreation(tx: any, propertyId: string, newUploads: any[]) {
+  if (newUploads.length > 0) await tx.propertyImage.createMany({ data: newUploads.map((i: any) => ({ ...i, propertyId })) });
+}
+
+async function handleExistingMainImageReorder(tx: any, propertyId: string, mainImageId: string) {
+  const allImages = await tx.propertyImage.findMany({ where: { propertyId }, orderBy: { sortOrder: 'asc' } });
+  let currentOrder = 1;
+  for (const img of allImages) {
+    const order = img.id === mainImageId ? 0 : currentOrder++;
+    if (img.sortOrder !== order) await tx.propertyImage.update({ where: { id: img.id }, data: { sortOrder: order } });
+  }
+}
+
+async function checkDuplicateName(tenantId: string, name: string, excludeId?: string) {
   const existingProp = await prisma.property.findFirst({
-    where: { tenantId, name: { equals: data.name, mode: 'insensitive' }, deletedAt: null }
+    where: { tenantId, name: { equals: name, mode: 'insensitive' }, deletedAt: null, ...(excludeId && { id: { not: excludeId } }) }
   });
   if (existingProp) throw badRequest('Anda sudah memiliki properti dengan nama ini');
+}
 
+export async function createProperty(tenantId: string, data: CreatePropertyInput, files: Express.Multer.File[]) {
+  await checkDuplicateName(tenantId, data.name);
   await verifyCategoryOwnership(data.categoryId, tenantId);
   const slug = await generateUniqueSlug(data.name);
   const geo = data.latitude !== undefined && data.longitude !== undefined 
-    ? { lat: data.latitude, lng: data.longitude }
-    : await geocodeAddress(data.address, data.city, data.state, 'Indonesia');
+    ? { lat: data.latitude, lng: data.longitude } : await geocodeAddress(data.address, data.city, data.state, 'Indonesia');
   const imageUploads = await uploadPropertyImages(files);
   if (data.mainImageIndex !== undefined && imageUploads[data.mainImageIndex]) {
     const mainImg = imageUploads[data.mainImageIndex];
-    imageUploads.splice(data.mainImageIndex, 1);
-    imageUploads.unshift(mainImg);
+    imageUploads.splice(data.mainImageIndex, 1); imageUploads.unshift(mainImg);
     imageUploads.forEach((img, i) => { img.sortOrder = i; });
   }
   return executeCreatePropertyQuery(tenantId, data, slug, geo, imageUploads);
 }
 
-export async function updateProperty(
-  tenantId: string, propertyId: string, data: UpdatePropertyInput, newFiles: Express.Multer.File[],
-) {
+export async function updateProperty(tenantId: string, propertyId: string, data: UpdatePropertyInput, newFiles: Express.Multer.File[]) {
   const property = await getValidPropertyForUpdate(tenantId, propertyId);
-
-  if (data.name && data.name.toLowerCase() !== property.name.toLowerCase()) {
-    const existingProp = await prisma.property.findFirst({
-      where: { tenantId, name: { equals: data.name, mode: 'insensitive' }, deletedAt: null, id: { not: propertyId } }
-    });
-    if (existingProp) throw badRequest('Anda sudah memiliki properti dengan nama ini');
-  }
-
+  if (data.name && data.name.toLowerCase() !== property.name.toLowerCase()) await checkDuplicateName(tenantId, data.name, propertyId);
   if (data.categoryId) await verifyCategoryOwnership(data.categoryId, tenantId);
   const geo = await resolveGeocodeForUpdate(data, property);
-  
   const deletedIds = extractDeletedImageIds(data);
   const deletedImagesData = property.images.filter((img) => deletedIds.includes(img.id));
-  const remainingCount = property.images.length - deletedImagesData.length;
-  const newImageUploads = await uploadPropertyImages(newFiles, remainingCount);
-
-  const updatedProperty = await executeUpdatePropertyQuery(
-    propertyId, data, geo, deletedIds, newImageUploads
-  );
-
-  if (deletedImagesData.length > 0) {
-    Promise.all(deletedImagesData.map((img) => deleteImage(img.url))).catch(console.error);
-  }
+  const newImageUploads = await uploadPropertyImages(newFiles, property.images.length - deletedImagesData.length);
+  const updatedProperty = await executeUpdatePropertyQuery(propertyId, data, geo, deletedIds, newImageUploads);
+  if (deletedImagesData.length > 0) Promise.all(deletedImagesData.map((img) => deleteImage(img.url))).catch(console.error);
   return updatedProperty;
 }
 
 export async function deleteProperty(tenantId: string, propertyId: string) {
   await getValidPropertyForUpdate(tenantId, propertyId);
-  return prisma.property.update({
-    where: { id: propertyId },
-    data: { deletedAt: new Date() },
-  });
+  return prisma.property.update({ where: { id: propertyId }, data: { deletedAt: new Date() } });
 }
