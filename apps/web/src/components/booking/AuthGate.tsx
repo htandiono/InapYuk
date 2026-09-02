@@ -35,3 +35,14 @@ export function NeedLogin() {
     />
   );
 }
+
+export function NeedTenantLogin() {
+  return (
+    <AuthGate
+      title="Masuk dulu ya"
+      body="Halaman ini khusus pemilik. Masuk dengan akun tenant dulu."
+      href="/tenant/login"
+      action="Masuk"
+    />
+  );
+}
