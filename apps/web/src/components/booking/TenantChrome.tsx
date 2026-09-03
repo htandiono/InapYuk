@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from './NotificationBell';
 
 const LINKS = [
   { href: '/tenant/transactions', label: 'Transaksi' },
@@ -34,6 +35,7 @@ export function TenantChrome({
               {link.label}
             </Link>
           ))}
+          <NotificationBell />
         </nav>
       </header>
       <main className="mx-auto w-full max-w-3xl min-w-0 flex-1 px-5 pb-16 sm:px-8">{children}</main>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from './NotificationBell';
 
 export function BookingChrome({
   children,
@@ -14,17 +15,18 @@ export function BookingChrome({
         <Link href="/" className="font-heading text-2xl tracking-tight text-primary">
           InapYuk
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex min-w-0 items-center gap-3 overflow-x-auto text-sm sm:gap-4">
           <Link href="/orders" className="text-foreground hover:text-primary">
             Pesanan saya
           </Link>
           <Link href="/" className="text-muted-foreground hover:text-primary">
             Cari penginapan
           </Link>
+          <NotificationBell />
         </nav>
       </header>
       <main
-        className={cn('mx-auto w-full flex-1 px-5 pb-16 sm:px-8', wide ? 'max-w-2xl' : 'max-w-lg')}
+        className={cn('mx-auto w-full min-w-0 flex-1 px-5 pb-16 sm:px-8', wide ? 'max-w-2xl' : 'max-w-lg')}
       >
         {children}
       </main>

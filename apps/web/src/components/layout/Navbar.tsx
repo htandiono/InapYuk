@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LogoutButton } from '../LogoutButton';
+import { NotificationBell } from '../booking/NotificationBell';
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -21,7 +22,10 @@ export function Navbar({ isAuthenticated }: NavbarProps) {
         </Link>
         
         {isAuthenticated ? (
-          <LogoutButton />
+          <>
+            <NotificationBell />
+            <LogoutButton />
+          </>
         ) : (
           <>
             <Link 
