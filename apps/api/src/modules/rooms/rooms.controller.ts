@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendPaginated, sendSuccess } from '../../utils/api-response';
 import { getRooms, createRoom, updateRoom, deleteRoom } from './rooms.service';
-import { CreateRoomSchema, UpdateRoomSchema } from './rooms.schema';
+import { CreateRoomSchema, UpdateRoomSchema, UpdateAvailabilitySchema, CreatePeakSeasonSchema, UpdatePeakSeasonSchema } from './rooms.schema';
 import { forbidden, badRequest } from '../../utils/app-error';
-
+import { upsertAvailability } from './services/rooms.availability.service';
+import { getPeakSeasons, createPeakSeason, updatePeakSeason, deletePeakSeason } from './services/rooms.peak-season.service';
 export class RoomsController {
   static async getList(req: Request, res: Response, next: NextFunction) {
     try {
@@ -51,5 +52,48 @@ export class RoomsController {
     } catch (error) {
       next(error);
     }
+  }
+
+  static async updateAvailability(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.tenantId) throw forbidden('Akses ditolak');
+      const data = UpdateAvailabilitySchema.parse(req.body);
+      const result = await upsertAvailability(req.tenantId, req.params.id as string, data);
+      sendSuccess(res, null, result.message);
+    } catch (e) { next(e); }
+  }
+
+  static async getPeakSeasons(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.tenantId) throw forbidden('Akses ditolak');
+      const rates = await getPeakSeasons(req.tenantId, req.params.id as string);
+      sendSuccess(res, rates, 'Berhasil mengambil harga musiman');
+    } catch (e) { next(e); }
+  }
+
+  static async createPeakSeason(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.tenantId) throw forbidden('Akses ditolak');
+      const data = CreatePeakSeasonSchema.parse(req.body);
+      const rate = await createPeakSeason(req.tenantId, req.params.id as string, data);
+      sendSuccess(res, rate, 'Harga musiman berhasil dibuat', 201);
+    } catch (e) { next(e); }
+  }
+
+  static async updatePeakSeason(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.tenantId) throw forbidden('Akses ditolak');
+      const data = UpdatePeakSeasonSchema.parse(req.body);
+      const rate = await updatePeakSeason(req.tenantId, req.params.id as string, data);
+      sendSuccess(res, rate, 'Harga musiman berhasil diperbarui');
+    } catch (e) { next(e); }
+  }
+
+  static async deletePeakSeason(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.tenantId) throw forbidden('Akses ditolak');
+      const result = await deletePeakSeason(req.tenantId, req.params.id as string);
+      sendSuccess(res, null, result.message);
+    } catch (e) { next(e); }
   }
 }

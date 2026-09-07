@@ -30,6 +30,13 @@ tenantRouter.post('/properties/:propertyId/rooms', uploadPropertyImages.array('i
 tenantRouter.patch('/rooms/:id', uploadPropertyImages.array('images', 5), RoomsController.update);
 tenantRouter.delete('/rooms/:id', RoomsController.softDelete);
 
+// Availability & Peak Season
+tenantRouter.put('/rooms/:id/availability', RoomsController.updateAvailability);
+tenantRouter.get('/rooms/:id/peak-season', RoomsController.getPeakSeasons);
+tenantRouter.post('/rooms/:id/peak-season', RoomsController.createPeakSeason);
+tenantRouter.patch('/peak-season/:id', RoomsController.updatePeakSeason);
+tenantRouter.delete('/peak-season/:id', RoomsController.deletePeakSeason);
+
 router.use('/tenant', tenantRouter);
 
 export default router;
