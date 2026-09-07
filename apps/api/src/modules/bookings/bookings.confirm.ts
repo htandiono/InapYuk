@@ -4,6 +4,7 @@ import { prisma } from '../../libs/prisma';
 import { addMinutes } from '../../utils/date';
 import { conflict } from '../../utils/app-error';
 import { notifyUser } from '../notifications/notify';
+import { sendBookingConfirmedMail } from './bookings.mail';
 import { computeActions } from './bookings.actions';
 import { getByOrderNumber } from './bookings.detail';
 import { loadTenantBooking } from './bookings.owned';
@@ -21,6 +22,7 @@ export async function confirmPayment(
   if (input.accept) await acceptProof(booking.id);
   else await rejectProof(booking.id, input.rejectionReason);
   await notifyGuestOfDecision(booking, input);
+  if (input.accept) await sendBookingConfirmedMail(booking);
   return getByOrderNumber(orderNumber, caller);
 }
 
