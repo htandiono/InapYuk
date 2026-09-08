@@ -5,16 +5,22 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export interface Room { id: string; name: string; description: string; basePrice: number; capacity: number; totalUnits: number; images?: { id: string; url: string }[]; }
 
-type RoomCardProps = { r: Room; onEdit: (r: Room) => void; onDelete: (id: string) => void; };
+type RoomCardProps = {
+  r: Room;
+  onEdit: (r: Room) => void;
+  onDelete: (id: string) => void;
+  onManageAvailability?: (id: string) => void;
+  onManagePeakSeason?: (id: string) => void;
+};
 
-export function RoomCard({ r, onEdit, onDelete }: RoomCardProps) {
+export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePeakSeason }: RoomCardProps) {
   return (
     <Card className="overflow-hidden bg-card transition-all hover:shadow-md border-border/40 group flex flex-col h-full pt-0 gap-0">
       <RoomImage r={r} />
       <CardContent className="p-5 flex flex-col grow mt-4">
         <RoomHeader r={r} />
         <RoomMetrics r={r} />
-        <RoomActions r={r} onEdit={onEdit} onDelete={onDelete} />
+        <RoomActions r={r} onEdit={onEdit} onDelete={onDelete} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />
       </CardContent>
     </Card>
   );
@@ -51,11 +57,17 @@ function RoomMetrics({ r }: { r: Room }) {
   );
 }
 
-function RoomActions({ r, onEdit, onDelete }: RoomCardProps) {
+function RoomActions({ r, onEdit, onDelete, onManageAvailability, onManagePeakSeason }: RoomCardProps) {
   return (
-    <div className="flex gap-2 pt-4 border-t border-border/50">
-      <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onEdit(r)}><Edit className="h-3.5 w-3.5 mr-2" />Edit</Button>
-      <Button variant="destructive" size="sm" className="flex-none px-3 rounded-full shadow-sm" onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+    <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManageAvailability?.(r.id)}>Kalender</Button>
+        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onManagePeakSeason?.(r.id)}>Musiman</Button>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 hover:bg-muted/50" onClick={() => onEdit(r)}><Edit className="h-3.5 w-3.5 mr-2" />Edit</Button>
+        <Button variant="destructive" size="sm" className="flex-none px-3 rounded-full shadow-sm" onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+      </div>
     </div>
   );
 }
