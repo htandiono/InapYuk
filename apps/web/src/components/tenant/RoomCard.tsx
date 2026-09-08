@@ -1,14 +1,8 @@
+'use client';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Edit,
-  Trash2,
-  Users,
-  CalendarDays,
-  CalendarClock,
-  Image as ImageIcon,
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CalendarClock, CalendarDays, Edit, ImageIcon, LayoutGrid, Trash2, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 
 export interface Room {
@@ -67,6 +61,10 @@ export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePe
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
               <span className="font-medium">{r.capacity} Orang</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <LayoutGrid className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className="font-medium">{r.totalUnits} Unit</span>
             </div>
           </div>
         </div>
