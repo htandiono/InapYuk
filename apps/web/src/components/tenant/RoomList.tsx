@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Room, RoomCard } from './RoomCard';
 import RoomForm from './RoomForm';
+import { AvailabilityDialog } from './AvailabilityDialog';
+import { PeakSeasonDialog } from './PeakSeasonDialog';
 
 type PaginationProps = {
   page: number;
@@ -30,6 +32,8 @@ type GridProps = {
   rooms: Room[];
   setEditing: (r: Room) => void;
   handleDelete: (id: string) => void;
+  onManageAvailability: (id: string) => void;
+  onManagePeakSeason: (id: string) => void;
 };
 
 async function loadRooms(pid: string, p: number) {
@@ -90,7 +94,7 @@ function RoomListHeader({ setOpen }: { setOpen: (v: boolean) => void }) {
 }
 
 // prettier-ignore
-function RoomListGrid({ loading, rooms, setEditing, handleDelete }: GridProps) {
+function RoomListGrid({ loading, rooms, setEditing, handleDelete, onManageAvailability, onManagePeakSeason }: GridProps) {
   if (loading) return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-52.5 rounded-xl bg-muted/50 animate-pulse" />)}</div>;
   if (rooms.length === 0) return (
     <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl border-dashed bg-white">
@@ -99,7 +103,7 @@ function RoomListGrid({ loading, rooms, setEditing, handleDelete }: GridProps) {
       <p className="text-muted-foreground mt-1 max-w-sm text-sm">Tambahkan jenis kamar untuk properti ini agar dapat mulai disewakan.</p>
     </div>
   );
-  return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{rooms.map((r) => <RoomCard key={r.id} r={r} onEdit={setEditing} onDelete={handleDelete} />)}</div>;
+  return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{rooms.map((r) => <RoomCard key={r.id} r={r} onEdit={setEditing} onDelete={handleDelete} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />)}</div>;
 }
 
 // prettier-ignore
@@ -165,16 +169,20 @@ function DeleteRoomDialog({ deletingId, setDeletingId, isDeleting, confirmDelete
 // prettier-ignore
 export default function RoomList({ propertyId }: { propertyId: string }) {
   const [[page, isCreate, edit], set] = useState<[number, boolean, Room|null]>([1, false, null]);
+  const [availabilityRoomId, setAvailabilityRoomId] = useState<string | null>(null);
+  const [peakSeasonRoomId, setPeakSeasonRoomId] = useState<string | null>(null);
   const { rooms, totalPages, loading, fetchRooms } = useRooms(propertyId, page);
   const acts = useRoomActions(fetchRooms, page);
   return (
     <div className="space-y-6">
       <RoomListHeader setOpen={(c) => set([page, c, edit])} />
       <CreateRoomDialog open={isCreate} setOpen={(c) => set([page, c, edit])} propertyId={propertyId} onDone={() => { set([page, false, edit]); fetchRooms(page); }} />
-      <RoomListGrid loading={loading} rooms={rooms} setEditing={(e) => set([page, isCreate, e])} handleDelete={acts.setDeletingId} />
+      <RoomListGrid loading={loading} rooms={rooms} setEditing={(e) => set([page, isCreate, e])} handleDelete={acts.setDeletingId} onManageAvailability={setAvailabilityRoomId} onManagePeakSeason={setPeakSeasonRoomId} />
       <PaginationControls page={page} totalPages={totalPages} setPage={(p: number | ((prev: number) => number)) => set([typeof p === 'function' ? p(page) : p, isCreate, edit])} loading={loading} />
       <EditRoomDialog r={edit} setR={(e) => set([page, isCreate, e])} propertyId={propertyId} onDone={() => { set([page, isCreate, null]); fetchRooms(page); }} />
       <DeleteRoomDialog {...acts} />
+      <AvailabilityDialog roomId={availabilityRoomId} onClose={() => setAvailabilityRoomId(null)} />
+      <PeakSeasonDialog roomId={peakSeasonRoomId} onClose={() => setPeakSeasonRoomId(null)} />
     </div>
   );
 }
