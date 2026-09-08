@@ -1,4 +1,4 @@
-import type { PaginationQuery } from './api';
+import type { PaginationMeta, PaginationQuery } from './api';
 
 /** Owner: Feature 2 (htandiono). */
 
@@ -33,4 +33,11 @@ export interface ReplyReviewRequest {
 export interface ReviewListQuery extends PaginationQuery {
   propertyId?: string;
   hasReply?: boolean;
+}
+
+export interface ReviewListResponse {
+  items: ReviewDto[];
+  meta: PaginationMeta;
+  averageRating: number;
+  reviewCount: number;
 }
