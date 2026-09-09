@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { api } from '@/lib/api-client';
 import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 type PeakSeasonDialogProps = {
@@ -56,6 +56,7 @@ export function PeakSeasonDialog({ roomId, onClose }: PeakSeasonDialogProps) {
 
   useEffect(() => {
     if (roomId) {
+      // eslint-disable-next-line
       void fetchRates();
     }
   }, [roomId, fetchRates]);
@@ -163,7 +164,9 @@ export function PeakSeasonDialog({ roomId, onClose }: PeakSeasonDialogProps) {
               <Label>Tipe Penyesuaian</Label>
               <Select
                 value={formData.adjustmentType}
-                onValueChange={(v) => setFormData({ ...formData, adjustmentType: v as 'NOMINAL' | 'PERCENTAGE' })}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, adjustmentType: v as 'NOMINAL' | 'PERCENTAGE' })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
