@@ -49,6 +49,23 @@ export function PeakSeasonDialog({ roomId, onClose }: PeakSeasonDialogProps) {
     e.preventDefault();
     if (!roomId) return;
     
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      toast.error('Tanggal mulai harus lebih awal dari tanggal selesai');
+      return;
+    }
+
+    const overlappedRate = rates.find(rate => {
+      const rateStart = new Date(rate.startDate);
+      const rateEnd = new Date(rate.endDate);
+      const newStart = new Date(formData.startDate);
+      const newEnd = new Date(formData.endDate);
+      return newStart <= rateEnd && newEnd >= rateStart;
+    });
+
+    if (overlappedRate) {
+      toast.warning(`Tanggal ini tumpang tindih dengan '${overlappedRate.name}'. Harga yang baru ditambahkan akan digunakan.`);
+    }
+
     setLoading(true);
     try {
       await api.post(`/rooms/tenant/rooms/${roomId}/peak-season`, {
