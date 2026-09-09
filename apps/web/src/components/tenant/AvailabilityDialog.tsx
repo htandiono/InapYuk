@@ -25,6 +25,11 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
     e.preventDefault();
     if (!roomId) return;
     
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      toast.error('Tanggal mulai tidak boleh lebih dari selesai');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.put(`/rooms/tenant/rooms/${roomId}/availability`, {
