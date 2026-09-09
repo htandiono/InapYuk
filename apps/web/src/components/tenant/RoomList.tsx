@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Room, RoomCard } from './RoomCard';
 import RoomForm from './RoomForm';
-import { AvailabilityDialog } from './AvailabilityDialog';
-import { PeakSeasonDialog } from './PeakSeasonDialog';
+import { AvailabilityDialog } from './availability/AvailabilityDialog';
+import { PeakSeasonDialog } from './peak-season/PeakSeasonDialog';
 
 type PaginationProps = {
   page: number;
