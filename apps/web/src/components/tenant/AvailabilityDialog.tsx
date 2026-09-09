@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 type AvailabilityDialogProps = {
   roomId: string | null;
@@ -24,7 +24,7 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomId) return;
-    
+
     if (new Date(formData.startDate) > new Date(formData.endDate)) {
       toast.error('Tanggal mulai tidak boleh lebih dari selesai');
       return;
@@ -38,7 +38,7 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
         isAvailable: formData.isAvailable,
         availableUnits: formData.availableUnits ? parseInt(formData.availableUnits) : null,
       });
-      
+
       toast.success('Ketersediaan berhasil diperbarui');
       onClose();
     } catch (err: unknown) {
@@ -76,15 +76,17 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
               />
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
             <div className="space-y-0.5">
               <Label className="text-base">Kamar Tersedia</Label>
-              <p className="text-sm text-muted-foreground">Aktifkan untuk menerima pesanan pada tanggal ini</p>
+              <p className="text-sm text-muted-foreground">
+                Aktifkan untuk menerima pesanan pada tanggal ini
+              </p>
             </div>
             <Switch
               checked={formData.isAvailable}
-              onCheckedChange={(c) => setFormData({ ...formData, isAvailable: c })}
+              onCheckedChange={(c: boolean) => setFormData({ ...formData, isAvailable: c })}
             />
           </div>
 
