@@ -10,6 +10,7 @@ import { CancelOrderDialog } from './CancelOrderDialog';
 import { NightBreakdown } from './NightBreakdown';
 import { PaymentCountdown } from './PaymentCountdown';
 import { ProofUpload } from './ProofUpload';
+import { ReviewForm } from './ReviewForm';
 import { StatusBadge } from './StatusBadge';
 import { useSession } from './session';
 
@@ -96,6 +97,7 @@ function Actions({
       {booking.canBeCancelled ? (
         <CancelOrderDialog orderNumber={booking.orderNumber} onDone={onDone} />
       ) : null}
+      {booking.status === 'COMPLETED' ? <ReviewForm booking={booking} onDone={onDone} /> : null}
     </div>
   );
 }

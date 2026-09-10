@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { PropertyDetailView, type Property } from '@/components/properties/PropertyDetailView';
+import { PropertyReviews } from '@/components/booking/PropertyReviews';
 import { api } from '@/lib/api-client';
 
 export default async function PropertyDetailPage({ 
@@ -37,6 +38,7 @@ export default async function PropertyDetailPage({
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 pt-8 pb-16 sm:px-8">
         <PropertyDetailView property={property} initialDate={initialCheckIn} />
+        <PropertyReviews propertyId={property.id} />
       </main>
 
       <Footer />
