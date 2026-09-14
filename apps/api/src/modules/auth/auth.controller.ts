@@ -7,10 +7,13 @@ import type {
   RegisterUserInput,
   ResendVerificationInput,
   VerifyEmailInput,
+  ResetPasswordInput,
+  ConfirmResetPasswordInput,
 } from './auth.schema';
 import { registerTenant, registerUser } from './auth.service';
 import { resendVerification, verifyEmail, checkToken } from './auth.verify.service';
 import { login, logout, refreshAccessToken } from './auth.session.service';
+import { requestPasswordReset, confirmPasswordReset } from './auth.reset.service';
 
 const cookieOpts = { httpOnly: true, secure: isProduction, sameSite: 'strict' as const };
 
@@ -91,4 +94,15 @@ export async function handleLogout(req: Request, res: Response) {
   await logout(req.cookies.refreshToken);
   clearAuthCookies(res);
   sendSuccess(res, null, 'Berhasil logout');
+}
+
+export async function handleResetPasswordRequest(req: Request, res: Response) {
+  await requestPasswordReset(req.body as ResetPasswordInput);
+  sendSuccess(res, null, 'Jika email terdaftar, kami telah mengirimkan link reset');
+}
+
+export async function handleConfirmResetPassword(req: Request, res: Response) {
+  await confirmPasswordReset(req.body as ConfirmResetPasswordInput);
+  clearAuthCookies(res);
+  sendSuccess(res, null, 'Password berhasil diubah, silakan login');
 }

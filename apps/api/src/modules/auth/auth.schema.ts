@@ -47,8 +47,25 @@ export const loginSchema = z.object({
   role: z.enum(['USER', 'TENANT']).optional(),
 });
 
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+});
+
+export const confirmResetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Token tidak valid'),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Password tidak cocok',
+    path: ['confirmPassword'],
+  });
+
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type RegisterTenantInput = z.infer<typeof registerTenantSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ConfirmResetPasswordInput = z.infer<typeof confirmResetPasswordSchema>;

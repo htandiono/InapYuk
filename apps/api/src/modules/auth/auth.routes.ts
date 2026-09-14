@@ -24,6 +24,8 @@ import {
   verifyEmailSchema,
   resendVerificationSchema,
   loginSchema,
+  resetPasswordSchema,
+  confirmResetPasswordSchema,
 } from './auth.schema';
 import {
   handleRegisterUser,
@@ -34,6 +36,8 @@ import {
   handleLogin,
   handleRefreshToken,
   handleLogout,
+  handleResetPasswordRequest,
+  handleConfirmResetPassword,
 } from './auth.controller';
 
 const router = Router();
@@ -66,5 +70,7 @@ router.post(
 router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
 router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
+router.post('/password/reset', authRateLimiter, validateBody(resetPasswordSchema), asyncHandler(handleResetPasswordRequest));
+router.post('/password/confirm', authRateLimiter, validateBody(confirmResetPasswordSchema), asyncHandler(handleConfirmResetPassword));
 
 export default router;

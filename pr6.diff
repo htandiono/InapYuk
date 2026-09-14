@@ -1,0 +1,1679 @@
+diff --git a/apps/api/src/modules/bookings/bookings.cancel.ts b/apps/api/src/modules/bookings/bookings.cancel.ts
+new file mode 100644
+index 0000000..1c45163
+--- /dev/null
++++ b/apps/api/src/modules/bookings/bookings.cancel.ts
+@@ -0,0 +1,57 @@
++import type { BookingDetailDto, JwtPayload } from '@inapyuk/types';
++import { prisma } from '../../libs/prisma';
++import { conflict } from '../../utils/app-error';
++import { notifyUser } from '../notifications/notify';
++import { computeActions } from './bookings.actions';
++import { getByOrderNumber } from './bookings.detail';
++import { loadGuestBooking } from './bookings.owned';
++import { assertTransition } from './status-machine';
++
++export async function cancelGuestBooking(
++  orderNumber: string,
++  caller: JwtPayload,
++  reason?: string,
++): Promise<BookingDetailDto> {
++  const booking = await loadGuestBooking(orderNumber, caller);
++  assertCanCancel(booking, caller);
++  await markCancelled(booking.id, reason);
++  await notifyTenantOfCancel(booking.property.tenantId, booking.orderNumber, booking.id);
++  return getByOrderNumber(orderNumber, caller);
++}
++
++function assertCanCancel(
++  booking: Awaited<ReturnType<typeof loadGuestBooking>>,
++  caller: JwtPayload,
++): void {
++  if (!computeActions(booking, caller).canBeCancelled) {
++    throw conflict('Pesanan ini sudah tidak bisa dibatalkan');
++  }
++  assertTransition(booking.status, 'CANCELLED');
++}
++
++async function markCancelled(bookingId: string, reason?: string) {
++  await prisma.booking.update({
++    where: { id: bookingId },
++    data: {
++      status: 'CANCELLED',
++      cancelledBy: 'USER',
++      cancelledAt: new Date(),
++      cancelReason: reason ?? 'Dibatalkan oleh tamu',
++    },
++  });
++}
++
++async function notifyTenantOfCancel(tenantId: string, orderNumber: string, bookingId: string) {
++  const tenant = await prisma.tenantProfile.findUnique({
++    where: { id: tenantId },
++    select: { userId: true },
++  });
++  if (!tenant) return;
++  await notifyUser({
++    userId: tenant.userId,
++    type: 'BOOKING_CANCELLED',
++    title: 'Pesanan dibatalkan tamu',
++    body: `Tamu membatalkan pesanan ${orderNumber}. Kamarnya sudah tersedia lagi.`,
++    bookingId,
++  });
++}
+diff --git a/apps/api/src/modules/bookings/bookings.controller.ts b/apps/api/src/modules/bookings/bookings.controller.ts
+index cf6105d..3ee10d4 100644
+--- a/apps/api/src/modules/bookings/bookings.controller.ts
++++ b/apps/api/src/modules/bookings/bookings.controller.ts
+@@ -1,7 +1,15 @@
++import type { BookingListQuery, CancelBookingRequest } from '@inapyuk/types';
+ import { asyncHandler } from '../../utils/async-handler';
+-import { sendCreated, sendSuccess } from '../../utils/api-response';
++import { sendCreated, sendPaginated, sendSuccess } from '../../utils/api-response';
+ import { unauthorized } from '../../utils/app-error';
+-import { createReservation, getByOrderNumber, quoteStay } from './bookings.service';
++import {
++  cancelGuestBooking,
++  createReservation,
++  getByOrderNumber,
++  listGuestBookings,
++  quoteStay,
++  uploadPaymentProof,
++} from './bookings.service';
+ 
+ export const quoteBooking = asyncHandler(async (req, res) => {
+   const quote = await quoteStay(req.body);
+@@ -19,3 +27,26 @@ export const getBooking = asyncHandler(async (req, res) => {
+   const booking = await getByOrderNumber(String(req.params.orderNumber), req.user);
+   sendSuccess(res, booking, 'Booking retrieved');
+ });
++
++export const listBookings = asyncHandler(async (req, res) => {
++  if (!req.user) throw unauthorized();
++  const result = await listGuestBookings(req.user.sub, req.query as BookingListQuery);
++  sendPaginated(res, result.items, result.meta, 'Daftar pesanan kamu');
++});
++
++export const uploadProof = asyncHandler(async (req, res) => {
++  if (!req.user) throw unauthorized();
++  const booking = await uploadPaymentProof(
++    String(req.params.orderNumber),
++    req.user,
++    req.file,
++  );
++  sendSuccess(res, booking, 'Bukti transfer sudah kami terima');
++});
++
++export const cancelBooking = asyncHandler(async (req, res) => {
++  if (!req.user) throw unauthorized();
++  const body = req.body as CancelBookingRequest;
++  const booking = await cancelGuestBooking(String(req.params.orderNumber), req.user, body.reason);
++  sendSuccess(res, booking, 'Pesanan sudah dibatalkan');
++});
+diff --git a/apps/api/src/modules/bookings/bookings.list.ts b/apps/api/src/modules/bookings/bookings.list.ts
+new file mode 100644
+index 0000000..b930988
+--- /dev/null
++++ b/apps/api/src/modules/bookings/bookings.list.ts
+@@ -0,0 +1,54 @@
++import type { BookingListItemDto, BookingListQuery } from '@inapyuk/types';
++import { prisma } from '../../libs/prisma';
++import { toDateOnly } from '../../utils/date';
++import { buildPaginationMeta, toPrismaPageArgs } from '../../utils/pagination';
++import { bookingListInclude, toListItemDto } from './bookings.mapper';
++
++export async function listGuestBookings(userId: string, query: BookingListQuery) {
++  const pageArgs = toPrismaPageArgs(query);
++  const where = buildListWhere(userId, query);
++  const [rows, total] = await fetchGuestPage(where, query, pageArgs);
++  return {
++    items: rows.map((row) => toListItemDto(row)) as BookingListItemDto[],
++    meta: buildPaginationMeta(total, pageArgs.page, pageArgs.limit),
++  };
++}
++
++async function fetchGuestPage(
++  where: ReturnType<typeof buildListWhere>,
++  query: BookingListQuery,
++  pageArgs: ReturnType<typeof toPrismaPageArgs>,
++) {
++  const orderBy = { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' };
++  return Promise.all([
++    prisma.booking.findMany({
++      where,
++      include: bookingListInclude,
++      orderBy,
++      skip: pageArgs.skip,
++      take: pageArgs.take,
++    }),
++    prisma.booking.count({ where }),
++  ]);
++}
++
++function buildListWhere(userId: string, query: BookingListQuery) {
++  return {
++    userId,
++    ...(query.status ? { status: query.status } : {}),
++    ...(query.orderNumber
++      ? { orderNumber: { contains: query.orderNumber, mode: 'insensitive' as const } }
++      : {}),
++    ...dateFilter(query.dateFrom, query.dateTo),
++  };
++}
++
++function dateFilter(dateFrom?: string, dateTo?: string) {
++  if (!dateFrom && !dateTo) return {};
++  return {
++    checkIn: {
++      ...(dateFrom ? { gte: toDateOnly(dateFrom) } : {}),
++      ...(dateTo ? { lte: toDateOnly(dateTo) } : {}),
++    },
++  };
++}
+diff --git a/apps/api/src/modules/bookings/bookings.mapper.ts b/apps/api/src/modules/bookings/bookings.mapper.ts
+index b4107b5..20d066e 100644
+--- a/apps/api/src/modules/bookings/bookings.mapper.ts
++++ b/apps/api/src/modules/bookings/bookings.mapper.ts
+@@ -28,7 +28,7 @@ export interface BookingRecord {
+   id: string;
+   orderNumber: string;
+   userId: string;
+-  status: string;
++  status: BookingStatus;
+   checkIn: Date;
+   checkOut: Date;
+   guestCount: number;
+@@ -64,7 +64,31 @@ export function toDetailDto(booking: BookingRecord, caller: JwtPayload): Booking
+   };
+ }
+ 
+-export function toListItemDto(booking: BookingRecord): BookingListItemDto {
++export const bookingListInclude = {
++  room: { select: { name: true } },
++  property: {
++    select: {
++      name: true,
++      images: { orderBy: { sortOrder: 'asc' as const }, take: 1, select: { url: true } },
++    },
++  },
++};
++
++export type BookingListRecord = {
++  id: string;
++  orderNumber: string;
++  status: BookingStatus;
++  checkIn: Date;
++  checkOut: Date;
++  guestCount: number;
++  totalPrice: unknown;
++  paymentDeadline: Date | null;
++  createdAt: Date;
++  room: { name: string };
++  property: { name: string; images: Array<{ url: string }> };
++};
++
++export function toListItemDto(booking: BookingListRecord): BookingListItemDto {
+   return {
+     id: booking.id,
+     orderNumber: booking.orderNumber,
+@@ -76,7 +100,7 @@ export function toListItemDto(booking: BookingRecord): BookingListItemDto {
+   };
+ }
+ 
+-function toStayFields(booking: BookingRecord) {
++function toStayFields(booking: BookingListRecord) {
+   return {
+     checkIn: formatDateKey(booking.checkIn),
+     checkOut: formatDateKey(booking.checkOut),
+@@ -86,7 +110,7 @@ function toStayFields(booking: BookingRecord) {
+   };
+ }
+ 
+-function toListingFields(booking: BookingRecord) {
++function toListingFields(booking: BookingListRecord) {
+   return {
+     propertyName: booking.property.name,
+     roomName: booking.room.name,
+diff --git a/apps/api/src/modules/bookings/bookings.owned.ts b/apps/api/src/modules/bookings/bookings.owned.ts
+new file mode 100644
+index 0000000..71c48c5
+--- /dev/null
++++ b/apps/api/src/modules/bookings/bookings.owned.ts
+@@ -0,0 +1,18 @@
++import type { JwtPayload } from '@inapyuk/types';
++import { prisma } from '../../libs/prisma';
++import { notFound } from '../../utils/app-error';
++import { bookingDetailInclude, type BookingRecord } from './bookings.mapper';
++
++export async function loadGuestBooking(
++  orderNumber: string,
++  caller: JwtPayload,
++): Promise<BookingRecord> {
++  const booking = await prisma.booking.findUnique({
++    where: { orderNumber },
++    include: bookingDetailInclude,
++  });
++  if (!booking || booking.userId !== caller.sub) {
++    throw notFound('Pesanan tidak ditemukan');
++  }
++  return booking;
++}
+diff --git a/apps/api/src/modules/bookings/bookings.payment.ts b/apps/api/src/modules/bookings/bookings.payment.ts
+new file mode 100644
+index 0000000..2e82d76
+--- /dev/null
++++ b/apps/api/src/modules/bookings/bookings.payment.ts
+@@ -0,0 +1,44 @@
++import type { BookingDetailDto, JwtPayload } from '@inapyuk/types';
++import { prisma } from '../../libs/prisma';
++import { uploadImage } from '../../libs/cloudinary';
++import { badRequest, conflict } from '../../utils/app-error';
++import { computeActions } from './bookings.actions';
++import { getByOrderNumber } from './bookings.detail';
++import { loadGuestBooking } from './bookings.owned';
++import { assertTransition } from './status-machine';
++
++export async function uploadPaymentProof(
++  orderNumber: string,
++  caller: JwtPayload,
++  file: Express.Multer.File | undefined,
++): Promise<BookingDetailDto> {
++  if (!file) throw badRequest('Kirim foto bukti transfer (.jpg atau .png, max 1MB)');
++  const booking = await loadGuestBooking(orderNumber, caller);
++  assertCanUpload(booking, caller);
++  const proofUrl = await uploadImage(file, 'payment-proofs');
++  await markProofUploaded(booking.id, proofUrl);
++  return getByOrderNumber(orderNumber, caller);
++}
++
++function assertCanUpload(
++  booking: Awaited<ReturnType<typeof loadGuestBooking>>,
++  caller: JwtPayload,
++): void {
++  const actions = computeActions(booking, caller);
++  if (!actions.canUploadPaymentProof) {
++    throw conflict('Bukti transfer hanya bisa diunggah selama jendela pembayaran masih terbuka');
++  }
++  assertTransition(booking.status, 'WAITING_CONFIRMATION');
++}
++
++async function markProofUploaded(bookingId: string, paymentProofUrl: string) {
++  const now = new Date();
++  return prisma.booking.update({
++    where: { id: bookingId },
++    data: {
++      status: 'WAITING_CONFIRMATION',
++      paymentProofUrl,
++      paymentProofUploadedAt: now,
++    },
++  });
++}
+diff --git a/apps/api/src/modules/bookings/bookings.routes.ts b/apps/api/src/modules/bookings/bookings.routes.ts
+index 8ae728e..ce594f2 100644
+--- a/apps/api/src/modules/bookings/bookings.routes.ts
++++ b/apps/api/src/modules/bookings/bookings.routes.ts
+@@ -1,8 +1,26 @@
+ import { Router } from 'express';
+ import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
+-import { validateBody, validateParams } from '../../middlewares/validate.middleware';
+-import { createBooking, getBooking, quoteBooking } from './bookings.controller';
+-import { createSchema, orderNumberParamsSchema, quoteSchema } from './bookings.schema';
++import { uploadPaymentProof } from '../../middlewares/upload.middleware';
++import {
++  validateBody,
++  validateParams,
++  validateQuery,
++} from '../../middlewares/validate.middleware';
++import {
++  cancelBooking,
++  createBooking,
++  getBooking,
++  listBookings,
++  quoteBooking,
++  uploadProof,
++} from './bookings.controller';
++import {
++  cancelSchema,
++  createSchema,
++  listQuerySchema,
++  orderNumberParamsSchema,
++  quoteSchema,
++} from './bookings.schema';
+ 
+ /**
+  * Owner: Feature 2 - htandiono (Sprint 1, Sprint 2, Sprint 3)
+@@ -12,10 +30,12 @@ import { createSchema, orderNumberParamsSchema, quoteSchema } from './bookings.s
+  *   POST   /bookings
+  *   GET    /bookings/:orderNumber
+  *
+- * Later sprints:
++ * Sprint 2:
+  *   GET    /bookings
+- *   POST   /bookings/:id/payment-proof
+- *   PATCH  /bookings/:id/cancel
++ *   POST   /bookings/:orderNumber/payment-proof
++ *   PATCH  /bookings/:orderNumber/cancel
++ *
++ * Later:
+  *   GET    /tenant/bookings
+  *   PATCH  /tenant/bookings/:id/confirm
+  *   PATCH  /tenant/bookings/:id/cancel
+@@ -31,6 +51,31 @@ router.post(
+   validateBody(createSchema),
+   createBooking,
+ );
++router.get(
++  '/',
++  authenticate,
++  requireRole('USER'),
++  validateQuery(listQuerySchema),
++  listBookings,
++);
+ router.get('/:orderNumber', authenticate, validateParams(orderNumberParamsSchema), getBooking);
++router.post(
++  '/:orderNumber/payment-proof',
++  authenticate,
++  requireRole('USER'),
++  requireVerified,
++  validateParams(orderNumberParamsSchema),
++  uploadPaymentProof.single('proof'),
++  uploadProof,
++);
++router.patch(
++  '/:orderNumber/cancel',
++  authenticate,
++  requireRole('USER'),
++  requireVerified,
++  validateParams(orderNumberParamsSchema),
++  validateBody(cancelSchema),
++  cancelBooking,
++);
+ 
+ export default router;
+diff --git a/apps/api/src/modules/bookings/bookings.schema.ts b/apps/api/src/modules/bookings/bookings.schema.ts
+index 781091a..a5e94be 100644
+--- a/apps/api/src/modules/bookings/bookings.schema.ts
++++ b/apps/api/src/modules/bookings/bookings.schema.ts
+@@ -44,8 +44,8 @@ export const listQuerySchema = z.object({
+   dateFrom: isoDate.optional(),
+   dateTo: isoDate.optional(),
+   propertyId: z.string().uuid().optional(),
+-  sortBy: z.enum(['createdAt', 'checkIn', 'totalPrice']).optional(),
+-  sortOrder: z.enum(['asc', 'desc']).optional(),
++  sortBy: z.enum(['createdAt', 'checkIn', 'totalPrice']).optional().default('createdAt'),
++  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+ });
+ 
+ export const cancelSchema = z.object({
+diff --git a/apps/api/src/modules/bookings/bookings.service.ts b/apps/api/src/modules/bookings/bookings.service.ts
+index 4b14f2e..d19698e 100644
+--- a/apps/api/src/modules/bookings/bookings.service.ts
++++ b/apps/api/src/modules/bookings/bookings.service.ts
+@@ -1,3 +1,6 @@
+ export { quoteStay } from './bookings.quote';
+ export { createReservation } from './bookings.create';
+ export { getByOrderNumber } from './bookings.detail';
++export { listGuestBookings } from './bookings.list';
++export { uploadPaymentProof } from './bookings.payment';
++export { cancelGuestBooking } from './bookings.cancel';
+diff --git a/apps/api/src/modules/notifications/notify.ts b/apps/api/src/modules/notifications/notify.ts
+new file mode 100644
+index 0000000..b2e0c28
+--- /dev/null
++++ b/apps/api/src/modules/notifications/notify.ts
+@@ -0,0 +1,13 @@
++import type { NotificationType } from '@inapyuk/types';
++import { prisma } from '../../libs/prisma';
++
++/** Writes an in-app notice. Emails for the same events land in a later sprint. */
++export async function notifyUser(input: {
++  userId: string;
++  type: NotificationType;
++  title: string;
++  body: string;
++  bookingId?: string;
++}): Promise<void> {
++  await prisma.notification.create({ data: input });
++}
+diff --git a/apps/web/src/app/(user)/layout.tsx b/apps/web/src/app/(user)/layout.tsx
+new file mode 100644
+index 0000000..46df765
+--- /dev/null
++++ b/apps/web/src/app/(user)/layout.tsx
+@@ -0,0 +1,5 @@
++import { BookingChrome } from '@/components/booking/BookingChrome';
++
++export default function UserLayout({ children }: { children: React.ReactNode }) {
++  return <BookingChrome wide>{children}</BookingChrome>;
++}
+diff --git a/apps/web/src/app/(user)/orders/[orderNumber]/page.tsx b/apps/web/src/app/(user)/orders/[orderNumber]/page.tsx
+new file mode 100644
+index 0000000..c92e052
+--- /dev/null
++++ b/apps/web/src/app/(user)/orders/[orderNumber]/page.tsx
+@@ -0,0 +1,19 @@
++import { OrderDetailView } from '@/components/booking/OrderDetailView';
++
++export default async function OrderDetailPage({
++  params,
++}: {
++  params: Promise<{ orderNumber: string }>;
++}) {
++  const { orderNumber } = await params;
++  return (
++    <>
++      <p className="text-sm text-accent">Detail pesanan</p>
++      <h1 className="font-heading mt-2 text-3xl tracking-tight">{orderNumber}</h1>
++      <p className="mt-2 text-sm text-muted-foreground">
++        Cek harga per malam, unggah bukti transfer, atau batalin sebelum bayar.
++      </p>
++      <OrderDetailView orderNumber={orderNumber} />
++    </>
++  );
++}
+diff --git a/apps/web/src/app/(user)/orders/page.tsx b/apps/web/src/app/(user)/orders/page.tsx
+new file mode 100644
+index 0000000..4dbe509
+--- /dev/null
++++ b/apps/web/src/app/(user)/orders/page.tsx
+@@ -0,0 +1,18 @@
++import { Suspense } from 'react';
++import { OrderListView } from '@/components/booking/OrderListView';
++
++export default function OrdersPage() {
++  return (
++    <>
++      <p className="text-sm text-accent">Pesanan kamu</p>
++      <h1 className="font-heading mt-2 text-3xl tracking-tight">Cek status, unggah bukti, atau batalin.</h1>
++      <p className="mt-2 mb-8 text-sm text-muted-foreground">
++        Tab status, tanggal check-in, dan nomor pesanan semuanya nanya ke server — bukan filter di
++        layar aja.
++      </p>
++      <Suspense fallback={<p className="text-sm text-muted-foreground">Memuat pesanan...</p>}>
++        <OrderListView />
++      </Suspense>
++    </>
++  );
++}
+diff --git a/apps/web/src/app/checkout/page.tsx b/apps/web/src/app/checkout/page.tsx
+new file mode 100644
+index 0000000..ea78a84
+--- /dev/null
++++ b/apps/web/src/app/checkout/page.tsx
+@@ -0,0 +1,40 @@
++import { BookingChrome } from '@/components/booking/BookingChrome';
++import { CheckoutForm } from '@/components/booking/CheckoutForm';
++
++interface Search {
++  roomId?: string;
++  checkIn?: string;
++  checkOut?: string;
++  guests?: string;
++}
++
++export default async function CheckoutPage({
++  searchParams,
++}: {
++  searchParams: Promise<Search>;
++}) {
++  const query = await searchParams;
++  const stay = {
++    roomId: query.roomId ?? '',
++    checkIn: query.checkIn ?? '',
++    checkOut: query.checkOut ?? '',
++    guestCount: Number(query.guests) || 2,
++  };
++
++  return (
++    <BookingChrome>
++      <p className="text-sm text-accent">Satu langkah lagi</p>
++      <h1 className="font-heading mt-2 text-3xl tracking-tight">Cek harga, baru deh pesan.</h1>
++      <p className="mt-2 mb-8 text-sm text-muted-foreground">
++        Harga di bawah sudah termasuk naik-turun peak season, per malam.
++      </p>
++      {stay.roomId && stay.checkIn && stay.checkOut ? (
++        <CheckoutForm initialStay={stay} />
++      ) : (
++        <p className="text-sm text-muted-foreground">
++          Pilih kamar dan tanggal dari halaman properti dulu, baru ke sini.
++        </p>
++      )}
++    </BookingChrome>
++  );
++}
+diff --git a/apps/web/src/components/booking/AuthGate.tsx b/apps/web/src/components/booking/AuthGate.tsx
+new file mode 100644
+index 0000000..131e17c
+--- /dev/null
++++ b/apps/web/src/components/booking/AuthGate.tsx
+@@ -0,0 +1,37 @@
++import Link from 'next/link';
++
++export function AuthGate({
++  title,
++  body,
++  href,
++  action,
++}: {
++  title: string;
++  body: string;
++  href: string;
++  action: string;
++}) {
++  return (
++    <div className="rounded-2xl border border-border bg-card p-5">
++      <h2 className="font-heading text-xl text-primary">{title}</h2>
++      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
++      <Link
++        href={href}
++        className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
++      >
++        {action}
++      </Link>
++    </div>
++  );
++}
++
++export function NeedLogin() {
++  return (
++    <AuthGate
++      title="Masuk dulu ya"
++      body="Daftar pesanan cuma kelihatan setelah kamu login."
++      href="/login"
++      action="Masuk"
++    />
++  );
++}
+diff --git a/apps/web/src/components/booking/BookingChrome.tsx b/apps/web/src/components/booking/BookingChrome.tsx
+new file mode 100644
+index 0000000..6a5d33b
+--- /dev/null
++++ b/apps/web/src/components/booking/BookingChrome.tsx
+@@ -0,0 +1,33 @@
++import Link from 'next/link';
++import { cn } from '@/lib/utils';
++
++export function BookingChrome({
++  children,
++  wide = false,
++}: {
++  children: React.ReactNode;
++  wide?: boolean;
++}) {
++  return (
++    <div className="flex min-h-full flex-col">
++      <header className="flex items-center justify-between px-5 py-4 sm:px-8">
++        <Link href="/" className="font-heading text-2xl tracking-tight text-primary">
++          InapYuk
++        </Link>
++        <nav className="flex items-center gap-4 text-sm">
++          <Link href="/orders" className="text-foreground hover:text-primary">
++            Pesanan saya
++          </Link>
++          <Link href="/" className="text-muted-foreground hover:text-primary">
++            Cari penginapan
++          </Link>
++        </nav>
++      </header>
++      <main
++        className={cn('mx-auto w-full flex-1 px-5 pb-16 sm:px-8', wide ? 'max-w-2xl' : 'max-w-lg')}
++      >
++        {children}
++      </main>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/booking/CancelOrderDialog.tsx b/apps/web/src/components/booking/CancelOrderDialog.tsx
+new file mode 100644
+index 0000000..975f818
+--- /dev/null
++++ b/apps/web/src/components/booking/CancelOrderDialog.tsx
+@@ -0,0 +1,92 @@
++'use client';
++
++import { useState } from 'react';
++import type { BookingDetailDto } from '@inapyuk/types';
++import { Button } from '@/components/ui/button';
++import {
++  Dialog,
++  DialogContent,
++  DialogDescription,
++  DialogFooter,
++  DialogHeader,
++  DialogTitle,
++} from '@/components/ui/dialog';
++import { ApiError } from '@/lib/api-client';
++import { bookingPatch } from './booking-api';
++
++// Ask once more so a mis-tap does not cancel the stay.
++export function CancelOrderDialog({
++  orderNumber,
++  onDone,
++}: {
++  orderNumber: string;
++  onDone: (booking: BookingDetailDto) => void;
++}) {
++  const [open, setOpen] = useState(false);
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  return (
++    <Dialog open={open} onOpenChange={setOpen}>
++      <Button type="button" variant="destructive" className="w-full rounded-full" onClick={() => setOpen(true)}>
++        Batalkan pesanan
++      </Button>
++      <ConfirmBody
++        error={error}
++        busy={busy}
++        onClose={() => setOpen(false)}
++        onConfirm={() => void confirmCancel(orderNumber, setBusy, setError, setOpen, onDone)}
++      />
++    </Dialog>
++  );
++}
++
++function ConfirmBody({
++  error,
++  busy,
++  onClose,
++  onConfirm,
++}: {
++  error: string | null;
++  busy: boolean;
++  onClose: () => void;
++  onConfirm: () => void;
++}) {
++  return (
++    <DialogContent>
++      <DialogHeader>
++        <DialogTitle>Yakin batalin pesanan ini?</DialogTitle>
++        <DialogDescription>
++          Kamarnya dilepas lagi. Ini cuma bisa selama bukti transfer belum diunggah.
++        </DialogDescription>
++      </DialogHeader>
++      {error ? <p className="text-sm text-destructive">{error}</p> : null}
++      <DialogFooter>
++        <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
++          Tidak jadi
++        </Button>
++        <Button type="button" variant="destructive" disabled={busy} onClick={onConfirm}>
++          {busy ? 'Membatalkan...' : 'Ya, batalkan'}
++        </Button>
++      </DialogFooter>
++    </DialogContent>
++  );
++}
++
++async function confirmCancel(
++  orderNumber: string,
++  setBusy: (value: boolean) => void,
++  setError: (message: string | null) => void,
++  setOpen: (value: boolean) => void,
++  onDone: (booking: BookingDetailDto) => void,
++) {
++  setBusy(true);
++  try {
++    setError(null);
++    onDone(await bookingPatch<BookingDetailDto>(`/bookings/${orderNumber}/cancel`, {}));
++    setOpen(false);
++  } catch (error) {
++    setError(error instanceof ApiError ? error.message : 'Gagal membatalkan pesanan');
++  } finally {
++    setBusy(false);
++  }
++}
+diff --git a/apps/web/src/components/booking/CheckoutForm.tsx b/apps/web/src/components/booking/CheckoutForm.tsx
+new file mode 100644
+index 0000000..84adf41
+--- /dev/null
++++ b/apps/web/src/components/booking/CheckoutForm.tsx
+@@ -0,0 +1,187 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import Link from 'next/link';
++import { useRouter } from 'next/navigation';
++import type { BookingDetailDto, BookingQuoteResponse } from '@inapyuk/types';
++import { Button } from '@/components/ui/button';
++import { Input } from '@/components/ui/input';
++import { Label } from '@/components/ui/label';
++import { formatRupiah } from '@/lib/format';
++import { ApiError } from '@/lib/api-client';
++import { bookingPost } from './booking-api';
++import { NightBreakdown } from './NightBreakdown';
++import { useSession } from './session';
++
++interface Stay {
++  roomId: string;
++  checkIn: string;
++  checkOut: string;
++  guestCount: number;
++}
++
++export function CheckoutForm({ initialStay }: { initialStay: Stay }) {
++  const router = useRouter();
++  const session = useSession();
++  const [stay, setStay] = useState(initialStay);
++  const [quote, setQuote] = useState<BookingQuoteResponse | null>(null);
++  const [error, setError] = useState<string | null>(null);
++  const [busy, setBusy] = useState(false);
++
++  useEffect(() => {
++    void refreshQuote(stay, setQuote, setError);
++  }, [stay]);
++
++  if (!session) return <NeedLogin />;
++  if (!session.isVerified) return <NeedVerify />;
++
++  return (
++    <form className="space-y-6" onSubmit={(event) => void onSubmit(event, stay, setBusy, setError, router)}>
++      <StayFields stay={stay} onChange={setStay} />
++      {error ? <p className="text-sm text-destructive">{error}</p> : null}
++      {quote ? <QuoteCard quote={quote} /> : <p className="text-sm text-muted-foreground">Menghitung harga...</p>}
++      <Button type="submit" className="w-full rounded-full" disabled={busy || !quote?.isAvailable} size="lg">
++        {busy ? 'Memproses...' : 'Konfirmasi pesanan'}
++      </Button>
++    </form>
++  );
++}
++
++function StayFields({ stay, onChange }: { stay: Stay; onChange: (stay: Stay) => void }) {
++  return (
++    <div className="grid gap-4 sm:grid-cols-3">
++      <DateField label="Check-in" value={stay.checkIn} onChange={(checkIn) => onChange({ ...stay, checkIn })} />
++      <DateField label="Check-out" value={stay.checkOut} onChange={(checkOut) => onChange({ ...stay, checkOut })} />
++      <div className="space-y-2">
++        <Label htmlFor="guests">Jumlah tamu</Label>
++        <Input
++          id="guests"
++          type="number"
++          min={1}
++          value={stay.guestCount}
++          onChange={(event) => onChange({ ...stay, guestCount: Number(event.target.value) || 1 })}
++        />
++      </div>
++    </div>
++  );
++}
++
++function DateField({
++  label,
++  value,
++  onChange,
++}: {
++  label: string;
++  value: string;
++  onChange: (value: string) => void;
++}) {
++  return (
++    <div className="space-y-2">
++      <Label>{label}</Label>
++      <Input type="date" value={value} onChange={(event) => onChange(event.target.value)} />
++    </div>
++  );
++}
++
++function QuoteCard({ quote }: { quote: BookingQuoteResponse }) {
++  if (!quote.isAvailable) {
++    return (
++      <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
++        Tanggal itu sudah penuh. Coba geser check-in atau check-out.
++      </p>
++    );
++  }
++  return (
++    <div className="space-y-3">
++      <NightBreakdown nights={quote.nights} />
++      <p className="text-right font-heading text-xl text-primary">{formatRupiah(quote.totalPrice)}</p>
++    </div>
++  );
++}
++
++async function refreshQuote(
++  stay: Stay,
++  setQuote: (quote: BookingQuoteResponse | null) => void,
++  setError: (message: string | null) => void,
++) {
++  if (stay.checkOut <= stay.checkIn) {
++    setError('Check-out harus setelah check-in');
++    setQuote(null);
++    return;
++  }
++  try {
++    setError(null);
++    setQuote(await bookingPost<BookingQuoteResponse>('/bookings/quote', stay));
++  } catch (error) {
++    setQuote(null);
++    setError(error instanceof ApiError ? error.message : 'Gagal menghitung harga');
++  }
++}
++
++async function onSubmit(
++  event: React.FormEvent,
++  stay: Stay,
++  setBusy: (value: boolean) => void,
++  setError: (message: string | null) => void,
++  router: ReturnType<typeof useRouter>,
++) {
++  event.preventDefault();
++  setBusy(true);
++  try {
++    const booking = await bookingPost<BookingDetailDto>('/bookings', {
++      ...stay,
++      paymentMethod: 'MANUAL_TRANSFER',
++    });
++    router.push(`/orders/${booking.orderNumber}`);
++  } catch (error) {
++    setError(error instanceof ApiError ? error.message : 'Gagal membuat pesanan');
++    setBusy(false);
++  }
++}
++
++function NeedLogin() {
++  return (
++    <Gate
++      title="Masuk dulu ya"
++      body="Checkout butuh akun tamu yang sudah login."
++      href="/login"
++      action="Masuk"
++    />
++  );
++}
++
++function NeedVerify() {
++  return (
++    <Gate
++      title="Email kamu belum diverifikasi"
++      body="Kita belum bisa bikin pesanan sebelum emailnya dikonfirmasi."
++      href="/resend-verification"
++      action="Kirim ulang email"
++    />
++  );
++}
++
++function Gate({
++  title,
++  body,
++  href,
++  action,
++}: {
++  title: string;
++  body: string;
++  href: string;
++  action: string;
++}) {
++  return (
++    <div className="rounded-2xl border border-border bg-card p-5">
++      <h2 className="font-heading text-xl text-primary">{title}</h2>
++      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
++      <Link
++        href={href}
++        className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
++      >
++        {action}
++      </Link>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/booking/NightBreakdown.tsx b/apps/web/src/components/booking/NightBreakdown.tsx
+new file mode 100644
+index 0000000..dc88f8e
+--- /dev/null
++++ b/apps/web/src/components/booking/NightBreakdown.tsx
+@@ -0,0 +1,22 @@
++import type { BookingNightDto } from '@inapyuk/types';
++import { formatDate, formatRupiah } from '@/lib/format';
++
++export function NightBreakdown({ nights }: { nights: BookingNightDto[] }) {
++  return (
++    <ul className="divide-y divide-border rounded-xl border border-border bg-card">
++      {nights.map((night) => (
++        <li key={night.date} className="flex items-start justify-between gap-3 px-4 py-3">
++          <div>
++            <p className="text-sm font-medium">{formatDate(night.date)}</p>
++            {night.peakSeasonRateName ? (
++              <p className="text-xs text-accent">Peak: {night.peakSeasonRateName}</p>
++            ) : (
++              <p className="text-xs text-muted-foreground">Harga normal</p>
++            )}
++          </div>
++          <p className="text-sm font-medium">{formatRupiah(night.finalPrice)}</p>
++        </li>
++      ))}
++    </ul>
++  );
++}
+diff --git a/apps/web/src/components/booking/OrderCard.tsx b/apps/web/src/components/booking/OrderCard.tsx
+new file mode 100644
+index 0000000..80e38ce
+--- /dev/null
++++ b/apps/web/src/components/booking/OrderCard.tsx
+@@ -0,0 +1,36 @@
++import Link from 'next/link';
++import type { BookingListItemDto } from '@inapyuk/types';
++import { formatDateRange, formatRupiah } from '@/lib/format';
++import { StatusBadge } from './StatusBadge';
++
++export function OrderCard({ item }: { item: BookingListItemDto }) {
++  return (
++    <Link
++      href={`/orders/${item.orderNumber}`}
++      className="flex gap-3 rounded-2xl border border-border bg-card p-3"
++    >
++      <Cover url={item.coverImageUrl} />
++      <div className="min-w-0 flex-1">
++        <p className="truncate font-medium">{item.propertyName}</p>
++        <p className="text-xs text-muted-foreground">
++          {item.roomName} · {item.orderNumber}
++        </p>
++        <p className="text-xs text-muted-foreground">
++          {formatDateRange(item.checkIn, item.checkOut)}
++        </p>
++        <div className="mt-1 flex items-center justify-between gap-2">
++          <StatusBadge status={item.status} />
++          <span className="text-sm font-medium">{formatRupiah(item.totalPrice)}</span>
++        </div>
++      </div>
++    </Link>
++  );
++}
++
++function Cover({ url }: { url: string | null }) {
++  if (!url) return <div className="h-20 w-20 shrink-0 rounded-xl bg-muted" />;
++  return (
++    // eslint-disable-next-line @next/next/no-img-element
++    <img src={url} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />
++  );
++}
+diff --git a/apps/web/src/components/booking/OrderDetailView.tsx b/apps/web/src/components/booking/OrderDetailView.tsx
+new file mode 100644
+index 0000000..babd9db
+--- /dev/null
++++ b/apps/web/src/components/booking/OrderDetailView.tsx
+@@ -0,0 +1,124 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import type { BookingDetailDto } from '@inapyuk/types';
++import { formatDateRange, formatRupiah } from '@/lib/format';
++import { ApiError } from '@/lib/api-client';
++import { NeedLogin } from './AuthGate';
++import { bookingGet } from './booking-api';
++import { CancelOrderDialog } from './CancelOrderDialog';
++import { NightBreakdown } from './NightBreakdown';
++import { PaymentCountdown } from './PaymentCountdown';
++import { ProofUpload } from './ProofUpload';
++import { StatusBadge } from './StatusBadge';
++import { useSession } from './session';
++
++export function OrderDetailView({ orderNumber }: { orderNumber: string }) {
++  const session = useSession();
++  const [booking, setBooking] = useState<BookingDetailDto | null>(null);
++  const [error, setError] = useState<string | null>(null);
++
++  useEffect(() => {
++    if (!session) return;
++    void loadDetail(orderNumber, setBooking, setError);
++  }, [session, orderNumber]);
++
++  return (
++    <DetailBody session={session} booking={booking} error={error} onDone={setBooking} />
++  );
++}
++
++function DetailBody({
++  session,
++  booking,
++  error,
++  onDone,
++}: {
++  session: ReturnType<typeof useSession>;
++  booking: BookingDetailDto | null;
++  error: string | null;
++  onDone: (booking: BookingDetailDto) => void;
++}) {
++  if (!session) return <NeedLogin />;
++  if (error) return <p className="text-sm text-destructive">{error}</p>;
++  if (!booking) return <p className="text-sm text-muted-foreground">Memuat pesanan...</p>;
++  return <DetailCard booking={booking} onDone={onDone} />;
++}
++
++function DetailCard({
++  booking,
++  onDone,
++}: {
++  booking: BookingDetailDto;
++  onDone: (booking: BookingDetailDto) => void;
++}) {
++  return (
++    <div className="mt-8 space-y-6">
++      <Summary booking={booking} />
++      {booking.status === 'WAITING_PAYMENT' && booking.paymentDeadline ? (
++        <PaymentCountdown deadline={booking.paymentDeadline} />
++      ) : null}
++      <NightBreakdown nights={booking.nightBreakdown} />
++      <p className="text-right font-heading text-xl text-primary">{formatRupiah(booking.totalPrice)}</p>
++      <Actions booking={booking} onDone={onDone} />
++    </div>
++  );
++}
++
++function Summary({ booking }: { booking: BookingDetailDto }) {
++  return (
++    <header className="space-y-2">
++      <StatusBadge status={booking.status} />
++      <h2 className="font-heading text-2xl text-primary">{booking.propertyName}</h2>
++      <p className="text-sm text-muted-foreground">
++        {booking.roomName} · {booking.guestCount} tamu
++      </p>
++      <p className="text-sm text-muted-foreground">
++        {formatDateRange(booking.checkIn, booking.checkOut)}
++      </p>
++    </header>
++  );
++}
++
++function Actions({
++  booking,
++  onDone,
++}: {
++  booking: BookingDetailDto;
++  onDone: (booking: BookingDetailDto) => void;
++}) {
++  return (
++    <div className="space-y-4">
++      {booking.canUploadPaymentProof ? (
++        <ProofUpload orderNumber={booking.orderNumber} onDone={onDone} />
++      ) : null}
++      {booking.paymentProofUrl ? <ProofPreview url={booking.paymentProofUrl} /> : null}
++      {booking.canBeCancelled ? (
++        <CancelOrderDialog orderNumber={booking.orderNumber} onDone={onDone} />
++      ) : null}
++    </div>
++  );
++}
++
++function ProofPreview({ url }: { url: string }) {
++  return (
++    <div className="space-y-2">
++      <p className="text-sm font-medium">Bukti transfer yang sudah masuk</p>
++      {/* eslint-disable-next-line @next/next/no-img-element */}
++      <img src={url} alt="Bukti transfer" className="max-h-64 w-full rounded-xl object-contain bg-muted" />
++    </div>
++  );
++}
++
++async function loadDetail(
++  orderNumber: string,
++  setBooking: (booking: BookingDetailDto) => void,
++  setError: (message: string | null) => void,
++) {
++  try {
++    setError(null);
++    setBooking(await bookingGet<BookingDetailDto>(`/bookings/${orderNumber}`));
++  } catch (error) {
++    setError(error instanceof ApiError ? error.message : 'Gagal memuat pesanan');
++  }
++}
+diff --git a/apps/web/src/components/booking/OrderFilters.tsx b/apps/web/src/components/booking/OrderFilters.tsx
+new file mode 100644
+index 0000000..29d80fb
+--- /dev/null
++++ b/apps/web/src/components/booking/OrderFilters.tsx
+@@ -0,0 +1,138 @@
++'use client';
++
++import { useState } from 'react';
++import { BOOKING_STATUS_LABEL } from '@inapyuk/types';
++import { Button } from '@/components/ui/button';
++import { Input } from '@/components/ui/input';
++import { Label } from '@/components/ui/label';
++
++export interface OrderFiltersValue {
++  status: string;
++  orderNumber: string;
++  dateFrom: string;
++  dateTo: string;
++}
++
++const TABS = [
++  { value: '', label: 'Semua' },
++  { value: 'WAITING_PAYMENT', label: 'Bayar' },
++  { value: 'WAITING_CONFIRMATION', label: 'Cek bukti' },
++  { value: 'PROCESSED', label: BOOKING_STATUS_LABEL.PROCESSED },
++  { value: 'COMPLETED', label: BOOKING_STATUS_LABEL.COMPLETED },
++  { value: 'CANCELLED', label: 'Batal' },
++] as const;
++
++export function OrderFilters({
++  value,
++  onChange,
++}: {
++  value: OrderFiltersValue;
++  onChange: (patch: Partial<OrderFiltersValue>) => void;
++}) {
++  return (
++    <div className="space-y-4">
++      <StatusTabs current={value.status} onChange={(status) => onChange({ status })} />
++      <DateRange value={value} onChange={onChange} />
++      <OrderNumberSearch
++        key={value.orderNumber}
++        value={value.orderNumber}
++        onApply={(orderNumber) => onChange({ orderNumber })}
++      />
++    </div>
++  );
++}
++
++function StatusTabs({ current, onChange }: { current: string; onChange: (status: string) => void }) {
++  return (
++    <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
++      {TABS.map((tab) => (
++        <Button
++          key={tab.value || 'all'}
++          type="button"
++          size="sm"
++          variant={current === tab.value ? 'default' : 'outline'}
++          className="shrink-0 rounded-full"
++          onClick={() => onChange(tab.value)}
++        >
++          {tab.label}
++        </Button>
++      ))}
++    </div>
++  );
++}
++
++function DateRange({
++  value,
++  onChange,
++}: {
++  value: OrderFiltersValue;
++  onChange: (patch: Partial<OrderFiltersValue>) => void;
++}) {
++  return (
++    <div className="grid grid-cols-2 gap-3">
++      <DateInput
++        id="dateFrom"
++        label="Check-in dari"
++        value={value.dateFrom}
++        onChange={(dateFrom) => onChange({ dateFrom })}
++      />
++      <DateInput
++        id="dateTo"
++        label="Check-in sampai"
++        value={value.dateTo}
++        onChange={(dateTo) => onChange({ dateTo })}
++      />
++    </div>
++  );
++}
++
++function DateInput({
++  id,
++  label,
++  value,
++  onChange,
++}: {
++  id: string;
++  label: string;
++  value: string;
++  onChange: (value: string) => void;
++}) {
++  return (
++    <div className="space-y-2">
++      <Label htmlFor={id}>{label}</Label>
++      <Input id={id} type="date" value={value} onChange={(event) => onChange(event.target.value)} />
++    </div>
++  );
++}
++
++function OrderNumberSearch({
++  value,
++  onApply,
++}: {
++  value: string;
++  onApply: (value: string) => void;
++}) {
++  const [draft, setDraft] = useState(value);
++  return (
++    <form
++      className="space-y-2"
++      onSubmit={(event) => {
++        event.preventDefault();
++        onApply(draft.trim());
++      }}
++    >
++      <Label htmlFor="orderNumber">Nomor pesanan</Label>
++      <div className="flex gap-2">
++        <Input
++          id="orderNumber"
++          value={draft}
++          placeholder="INP-20260824-0001"
++          onChange={(event) => setDraft(event.target.value)}
++        />
++        <Button type="submit" variant="outline" className="rounded-full">
++          Cari
++        </Button>
++      </div>
++    </form>
++  );
++}
+diff --git a/apps/web/src/components/booking/OrderListView.tsx b/apps/web/src/components/booking/OrderListView.tsx
+new file mode 100644
+index 0000000..4b0ba97
+--- /dev/null
++++ b/apps/web/src/components/booking/OrderListView.tsx
+@@ -0,0 +1,114 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import { useRouter, useSearchParams } from 'next/navigation';
++import type { BookingListItemDto, Paginated, PaginationMeta } from '@inapyuk/types';
++import { ApiError } from '@/lib/api-client';
++import { NeedLogin } from './AuthGate';
++import { bookingGet, withQuery } from './booking-api';
++import { OrderCard } from './OrderCard';
++import { OrderFilters, type OrderFiltersValue } from './OrderFilters';
++import { OrderPager } from './OrderPager';
++import { useSession } from './session';
++
++export function OrderListView() {
++  const router = useRouter();
++  const params = useSearchParams();
++  const query = params.toString();
++  const filters = readFilters(params);
++  const session = useSession();
++  const [items, setItems] = useState<BookingListItemDto[] | null>(null);
++  const [meta, setMeta] = useState<PaginationMeta | null>(null);
++  const [error, setError] = useState<string | null>(null);
++
++  // Filters live in the URL so every change hits GET /bookings, not a local list.
++  useEffect(() => {
++    if (!session) return;
++    void fetchOrders(readFilters(new URLSearchParams(query)), setItems, setMeta, setError);
++  }, [session, query]);
++
++  if (!session) return <NeedLogin />;
++
++  return (
++    <div className="space-y-6">
++      <OrderFilters value={filters} onChange={(patch) => applyFilters(router, params, patch)} />
++      {error ? <p className="text-sm text-destructive">{error}</p> : null}
++      <OrderResults items={items} />
++      {meta ? (
++        <OrderPager meta={meta} onPage={(page) => applyFilters(router, params, { page: String(page) })} />
++      ) : null}
++    </div>
++  );
++}
++
++function OrderResults({ items }: { items: BookingListItemDto[] | null }) {
++  if (items === null) return <p className="text-sm text-muted-foreground">Memuat pesanan...</p>;
++  if (items.length === 0) {
++    return (
++      <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
++        Belum ada pesanan yang cocok. Coba ganti filter atau cari nomor lain.
++      </p>
++    );
++  }
++  return (
++    <ul className="space-y-3">
++      {items.map((item) => (
++        <li key={item.id}>
++          <OrderCard item={item} />
++        </li>
++      ))}
++    </ul>
++  );
++}
++
++function readFilters(params: URLSearchParams): OrderFiltersValue & { page: string } {
++  return {
++    status: params.get('status') ?? '',
++    orderNumber: params.get('orderNumber') ?? '',
++    dateFrom: params.get('dateFrom') ?? '',
++    dateTo: params.get('dateTo') ?? '',
++    page: params.get('page') ?? '1',
++  };
++}
++
++function applyFilters(
++  router: ReturnType<typeof useRouter>,
++  params: URLSearchParams,
++  patch: Record<string, string>,
++) {
++  const next = new URLSearchParams(params.toString());
++  for (const [key, value] of Object.entries(patch)) {
++    if (value) next.set(key, value);
++    else next.delete(key);
++  }
++  if (!('page' in patch)) next.delete('page');
++  const qs = next.toString();
++  router.replace(qs ? `/orders?${qs}` : '/orders');
++}
++
++async function fetchOrders(
++  filters: OrderFiltersValue & { page: string },
++  setItems: (items: BookingListItemDto[]) => void,
++  setMeta: (meta: PaginationMeta) => void,
++  setError: (message: string | null) => void,
++) {
++  try {
++    setError(null);
++    const data = await bookingGet<Paginated<BookingListItemDto>>(listPath(filters));
++    setItems(data.items);
++    setMeta(data.meta);
++  } catch (error) {
++    setItems([]);
++    setError(error instanceof ApiError ? error.message : 'Gagal memuat pesanan');
++  }
++}
++
++function listPath(filters: OrderFiltersValue & { page: string }) {
++  return withQuery('/bookings', {
++    status: filters.status,
++    orderNumber: filters.orderNumber,
++    dateFrom: filters.dateFrom,
++    dateTo: filters.dateTo,
++    page: filters.page,
++  });
++}
+diff --git a/apps/web/src/components/booking/OrderPager.tsx b/apps/web/src/components/booking/OrderPager.tsx
+new file mode 100644
+index 0000000..386b251
+--- /dev/null
++++ b/apps/web/src/components/booking/OrderPager.tsx
+@@ -0,0 +1,45 @@
++import type { PaginationMeta } from '@inapyuk/types';
++import { Button } from '@/components/ui/button';
++
++export function OrderPager({
++  meta,
++  onPage,
++}: {
++  meta: PaginationMeta;
++  onPage: (page: number) => void;
++}) {
++  if (meta.totalPages <= 1) return null;
++  return (
++    <div className="flex items-center justify-between gap-3 text-sm">
++      <PagerButton
++        label="Sebelumnya"
++        disabled={!meta.hasPreviousPage}
++        onClick={() => onPage(meta.page - 1)}
++      />
++      <span className="text-muted-foreground">
++        Hal {meta.page} dari {meta.totalPages}
++      </span>
++      <PagerButton
++        label="Berikutnya"
++        disabled={!meta.hasNextPage}
++        onClick={() => onPage(meta.page + 1)}
++      />
++    </div>
++  );
++}
++
++function PagerButton({
++  label,
++  disabled,
++  onClick,
++}: {
++  label: string;
++  disabled: boolean;
++  onClick: () => void;
++}) {
++  return (
++    <Button type="button" variant="outline" className="rounded-full" disabled={disabled} onClick={onClick}>
++      {label}
++    </Button>
++  );
++}
+diff --git a/apps/web/src/components/booking/PaymentCountdown.tsx b/apps/web/src/components/booking/PaymentCountdown.tsx
+new file mode 100644
+index 0000000..6ee3b0b
+--- /dev/null
++++ b/apps/web/src/components/booking/PaymentCountdown.tsx
+@@ -0,0 +1,26 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++
++// Counts down from the payment deadline the server sent, one second at a time.
++export function PaymentCountdown({ deadline }: { deadline: string }) {
++  const [label, setLabel] = useState(() => remaining(deadline));
++
++  useEffect(() => {
++    const id = window.setInterval(() => setLabel(remaining(deadline)), 1000);
++    return () => window.clearInterval(id);
++  }, [deadline]);
++
++  if (!label) return <p className="text-sm text-destructive">Waktu bayar sudah habis.</p>;
++  return <p className="text-sm text-accent">Sisa waktu bayar: {label}</p>;
++}
++
++function remaining(deadline: string): string | null {
++  const ms = new Date(deadline).getTime() - Date.now();
++  if (ms <= 0) return null;
++  const total = Math.floor(ms / 1000);
++  const hours = Math.floor(total / 3600);
++  const minutes = Math.floor((total % 3600) / 60);
++  const seconds = total % 60;
++  return `${hours} jam ${minutes} menit ${seconds} detik`;
++}
+diff --git a/apps/web/src/components/booking/ProofUpload.tsx b/apps/web/src/components/booking/ProofUpload.tsx
+new file mode 100644
+index 0000000..9491a81
+--- /dev/null
++++ b/apps/web/src/components/booking/ProofUpload.tsx
+@@ -0,0 +1,92 @@
++'use client';
++
++import { useState } from 'react';
++import type { BookingDetailDto } from '@inapyuk/types';
++import { Input } from '@/components/ui/input';
++import { Label } from '@/components/ui/label';
++import { ApiError } from '@/lib/api-client';
++import { bookingUpload } from './booking-api';
++
++const MAX_BYTES = 1024 * 1024;
++
++export function ProofUpload({
++  orderNumber,
++  onDone,
++}: {
++  orderNumber: string;
++  onDone: (booking: BookingDetailDto) => void;
++}) {
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  return <ProofField busy={busy} error={error} onPick={(file) => void pickFile(file, orderNumber, setBusy, setError, onDone)} />;
++}
++
++function ProofField({
++  busy,
++  error,
++  onPick,
++}: {
++  busy: boolean;
++  error: string | null;
++  onPick: (file: File | undefined) => void;
++}) {
++  return (
++    <div className="space-y-2 rounded-2xl border border-border bg-card p-4">
++      <Label htmlFor="proof">Unggah bukti transfer</Label>
++      <Input
++        id="proof"
++        type="file"
++        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
++        disabled={busy}
++        onChange={(event) => onPick(event.target.files?.[0])}
++      />
++      <p className="text-xs text-muted-foreground">.jpg atau .png, paling besar 1MB.</p>
++      {error ? <p className="text-sm text-destructive">{error}</p> : null}
++      {busy ? <p className="text-xs text-muted-foreground">Mengunggah...</p> : null}
++    </div>
++  );
++}
++
++// Reject a wrong file on the phone so the server never sees a huge PDF.
++function validateProof(file: File): string | null {
++  const name = file.name.toLowerCase();
++  const okName = name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
++  const okType = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === '';
++  if (!okName || !okType) return 'Cuma file .jpg atau .png yang diterima';
++  if (file.size > MAX_BYTES) return 'Ukurannya kebesaran. Max 1MB ya';
++  return null;
++}
++
++async function pickFile(
++  file: File | undefined,
++  orderNumber: string,
++  setBusy: (value: boolean) => void,
++  setError: (message: string | null) => void,
++  onDone: (booking: BookingDetailDto) => void,
++) {
++  if (!file) return;
++  const problem = validateProof(file);
++  if (problem) {
++    setError(problem);
++    return;
++  }
++  await sendProof(file, orderNumber, setBusy, setError, onDone);
++}
++
++async function sendProof(
++  file: File,
++  orderNumber: string,
++  setBusy: (value: boolean) => void,
++  setError: (message: string | null) => void,
++  onDone: (booking: BookingDetailDto) => void,
++) {
++  setBusy(true);
++  try {
++    setError(null);
++    onDone(await bookingUpload<BookingDetailDto>(`/bookings/${orderNumber}/payment-proof`, file));
++  } catch (error) {
++    setError(error instanceof ApiError ? error.message : 'Gagal mengunggah bukti');
++  } finally {
++    setBusy(false);
++  }
++}
+diff --git a/apps/web/src/components/booking/StatusBadge.tsx b/apps/web/src/components/booking/StatusBadge.tsx
+new file mode 100644
+index 0000000..d6e6140
+--- /dev/null
++++ b/apps/web/src/components/booking/StatusBadge.tsx
+@@ -0,0 +1,14 @@
++import { BOOKING_STATUS_LABEL, type BookingStatus } from '@inapyuk/types';
++import { Badge } from '@/components/ui/badge';
++
++const VARIANT: Record<BookingStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
++  WAITING_PAYMENT: 'default',
++  WAITING_CONFIRMATION: 'secondary',
++  PROCESSED: 'outline',
++  COMPLETED: 'secondary',
++  CANCELLED: 'destructive',
++};
++
++export function StatusBadge({ status }: { status: BookingStatus }) {
++  return <Badge variant={VARIANT[status]}>{BOOKING_STATUS_LABEL[status]}</Badge>;
++}
+diff --git a/apps/web/src/components/booking/booking-api.ts b/apps/web/src/components/booking/booking-api.ts
+new file mode 100644
+index 0000000..915aa77
+--- /dev/null
++++ b/apps/web/src/components/booking/booking-api.ts
+@@ -0,0 +1,38 @@
++import { api, type RequestOptions } from '@/lib/api-client';
++import { readAccessToken } from './session';
++
++function authOptions(extra?: RequestOptions): RequestOptions {
++  return { ...extra, token: readAccessToken(), credentials: 'include' };
++}
++
++/** Turns `{ status: 'PROCESSED' }` into `?status=PROCESSED`, skipping blanks. */
++export function withQuery(
++  path: string,
++  query: Record<string, string | number | undefined | null>,
++): string {
++  const params = new URLSearchParams();
++  for (const [key, value] of Object.entries(query)) {
++    if (value === undefined || value === null || value === '') continue;
++    params.set(key, String(value));
++  }
++  const qs = params.toString();
++  return qs ? `${path}?${qs}` : path;
++}
++
++export function bookingGet<T>(path: string) {
++  return api.get<T>(path, authOptions());
++}
++
++export function bookingPost<T>(path: string, body?: unknown) {
++  return api.post<T>(path, body, authOptions());
++}
++
++export function bookingPatch<T>(path: string, body?: unknown) {
++  return api.patch<T>(path, body, authOptions());
++}
++
++export function bookingUpload<T>(path: string, file: File) {
++  const body = new FormData();
++  body.append('proof', file);
++  return api.post<T>(path, body, authOptions());
++}
+diff --git a/apps/web/src/components/booking/session.ts b/apps/web/src/components/booking/session.ts
+new file mode 100644
+index 0000000..47ae14a
+--- /dev/null
++++ b/apps/web/src/components/booking/session.ts
+@@ -0,0 +1,48 @@
++'use client';
++
++import { useSyncExternalStore } from 'react';
++
++/** Reads the login token from the cookie or local storage. */
++export function readAccessToken(): string | undefined {
++  if (typeof window === 'undefined') return undefined;
++  const fromCookie = readCookie('accessToken');
++  return fromCookie || window.localStorage.getItem('inapyuk.accessToken') || undefined;
++}
++
++function readCookie(name: string): string | undefined {
++  const prefix = `${name}=`;
++  const hit = document.cookie.split('; ').find((part) => part.startsWith(prefix));
++  return hit ? decodeURIComponent(hit.slice(prefix.length)) : undefined;
++}
++
++export function readSession(): { isVerified: boolean; role: string } | null {
++  const token = readAccessToken();
++  if (!token) return null;
++  return decodeSession(token);
++}
++
++function decodeSession(token: string): { isVerified: boolean; role: string } | null {
++  try {
++    const raw = (token.split('.')[1] ?? '').replace(/-/g, '+').replace(/_/g, '/');
++    const payload = JSON.parse(atob(raw)) as { isVerified?: boolean; role?: string };
++    return { isVerified: Boolean(payload.isVerified), role: payload.role ?? 'USER' };
++  } catch {
++    return null;
++  }
++}
++
++function subscribeSession(onChange: () => void) {
++  window.addEventListener('storage', onChange);
++  return () => window.removeEventListener('storage', onChange);
++}
++
++/** Same on the server and during the first paint, then picks up the real token. */
++export function useSession() {
++  const token = useSyncExternalStore(
++    subscribeSession,
++    () => readAccessToken() ?? '',
++    () => '',
++  );
++  if (!token) return null;
++  return decodeSession(token);
++}
