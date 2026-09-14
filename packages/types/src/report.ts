@@ -56,4 +56,5 @@ export interface PropertyReportResponse {
   propertyName: string;
   month: string;
   rooms: PropertyReportRoom[];
+  availableProperties: Array<{ id: string; name: string }>;
 }

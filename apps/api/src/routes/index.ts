@@ -33,7 +33,7 @@ router.use('/bookings', bookingsRoutes);
 router.use('/tenant/bookings', tenantBookingsRoutes);
 router.use('/reviews', reviewsRoutes);
 router.use('/tenant/reviews', tenantReviewsRoutes);
-router.use('/reports', reportsRoutes);
+router.use('/tenant/reports', reportsRoutes);
 router.use('/notifications', notificationsRoutes);
 
 // Shared
