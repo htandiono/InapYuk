@@ -18,8 +18,8 @@ import { Router } from 'express';
 import { asyncHandler } from '../../utils/async-handler';
 import { validateBody } from '../../middlewares/validate.middleware';
 import { authRateLimiter, resendRateLimiter } from '../../middlewares/rate-limit.middleware';
-import { registerUserSchema, registerTenantSchema, verifyEmailSchema, resendVerificationSchema, loginSchema } from './auth.schema';
-import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleCheckToken, handleResendVerification, handleLogin, handleRefreshToken, handleLogout } from './auth.controller';
+import { registerUserSchema, registerTenantSchema, verifyEmailSchema, resendVerificationSchema, loginSchema, resetPasswordSchema, confirmResetPasswordSchema } from './auth.schema';
+import { handleRegisterUser, handleRegisterTenant, handleVerifyEmail, handleCheckToken, handleResendVerification, handleLogin, handleRefreshToken, handleLogout, handleResetPasswordRequest, handleConfirmResetPassword } from './auth.controller';
 
 const router = Router();
 
@@ -31,5 +31,7 @@ router.post('/resend-verification', resendRateLimiter, validateBody(resendVerifi
 router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
 router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
+router.post('/password/reset', authRateLimiter, validateBody(resetPasswordSchema), asyncHandler(handleResetPasswordRequest));
+router.post('/password/confirm', authRateLimiter, validateBody(confirmResetPasswordSchema), asyncHandler(handleConfirmResetPassword));
 
 export default router;
