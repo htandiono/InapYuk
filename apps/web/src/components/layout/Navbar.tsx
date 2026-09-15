@@ -29,7 +29,15 @@ export function Navbar({ isAuthenticated }: NavbarProps) {
         </Link>
         
         {isAuthenticated ? (
-          <LogoutButton />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/profile"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Profil
+            </Link>
+            <LogoutButton />
+          </div>
         ) : (
           <>
             <Link 

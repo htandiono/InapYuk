@@ -6,8 +6,10 @@ import { registerTenant, registerUser } from './auth.service';
 import { resendVerification, verifyEmail, checkToken } from './auth.verify.service';
 import { login, logout, refreshAccessToken } from './auth.session.service';
 import { requestPasswordReset, confirmPasswordReset } from './auth.reset.service';
+import { loginWithGoogle } from './auth.google.service';
+import type { GoogleAuthInput } from './auth.schema';
 
-const cookieOpts = { httpOnly: true, secure: isProduction, sameSite: 'strict' as const };
+import { cookieOpts } from '../../config/cookie';
 
 function setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }) {
   res.cookie('accessToken', tokens.accessToken, { ...cookieOpts, maxAge: 15 * 60 * 1000 });
@@ -79,4 +81,10 @@ export async function handleConfirmResetPassword(req: Request, res: Response) {
   await confirmPasswordReset(req.body as ConfirmResetPasswordInput);
   clearAuthCookies(res);
   sendSuccess(res, null, 'Password berhasil diubah, silakan login');
+}
+
+export async function handleGoogleAuth(req: Request, res: Response) {
+  const { user, accessToken, refreshToken } = await loginWithGoogle(req.body as GoogleAuthInput);
+  setAuthCookies(res, { accessToken, refreshToken });
+  sendSuccess(res, user, 'Login Google berhasil');
 }

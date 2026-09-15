@@ -1,5 +1,7 @@
 import supertest from 'supertest';
 import { createApp } from '../app';
+import { User } from '../generated/prisma/client';
+import { issueTokens } from '../libs/jwt';
 import { prisma } from '../libs/prisma';
 
 /**
@@ -21,9 +23,9 @@ export async function truncateAll(): Promise<void> {
   >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;
 
   const tables = tablenames
-    .map(({ tablename }) => tablename)
-    .filter((name) => name !== '_prisma_migrations')
-    .map((name) => `"${name}"`)
+    .map(({ tablename }: { tablename: string }) => tablename)
+    .filter((name: string) => name !== '_prisma_migrations')
+    .map((name: string) => `"${name}"`)
     .join(', ');
 
   try {
@@ -33,4 +35,18 @@ export async function truncateAll(): Promise<void> {
   } catch (error) {
     console.log({ error });
   }
+}
+
+/**
+ * Helper to generate valid authentication cookies for a given user.
+ */
+export async function getAuthCookies(user: User): Promise<string[]> {
+  const { accessToken, refreshToken } = issueTokens({
+    sub: user.id,
+    role: user.role,
+    email: user.email,
+    isVerified: user.isVerified,
+  });
+
+  return [`accessToken=${accessToken}`, `refreshToken=${refreshToken}`];
 }

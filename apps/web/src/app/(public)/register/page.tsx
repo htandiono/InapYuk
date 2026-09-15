@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import { toast } from 'sonner';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { Separator } from '@/components/ui/separator';
 
 const registerSchema = z.object({
   name: z
@@ -35,7 +37,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
       return () => clearTimeout(timer);
     }
   }, [cooldown]);
@@ -170,17 +172,27 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 rounded-xl transition-all" disabled={isSubmitting}>
               {isSubmitting ? 'Mendaftar...' : 'Daftar Sekarang'}
             </Button>
-
-            <div className="mt-4 text-center text-sm">
-              Punya properti?{' '}
-              <Link href="/tenant/register" className="text-primary hover:underline">
-                Daftar sebagai Tenant
-              </Link>
-            </div>
           </form>
+
+          <div className="mt-6 flex items-center space-x-2">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">Atau daftar dengan</span>
+            <Separator className="flex-1" />
+          </div>
+
+          <div className="mt-6">
+            <GoogleLoginButton />
+          </div>
+
+          <div className="mt-4 text-center text-sm">
+            Punya properti?{' '}
+            <Link href="/tenant/register" className="text-primary hover:underline">
+              Daftar sebagai Tenant
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

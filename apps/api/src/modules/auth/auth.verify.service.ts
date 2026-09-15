@@ -75,5 +75,7 @@ export async function resendVerification(input: ResendVerificationInput) {
     subject: 'Verifikasi Akun InapYuk',
     template: 'email-verification',
     context: { name: user.name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
-  }).catch(() => {});
+  }).catch((err) => {
+    console.error(`[MailError] Failed to resend verification email to ${user.email}`, err);
+  });
 }

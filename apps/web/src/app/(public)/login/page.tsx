@@ -9,6 +9,8 @@ import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
@@ -103,10 +105,24 @@ export default function LoginPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Memproses...' : 'Masuk'}
+            <Button
+              type="submit"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 rounded-xl transition-all"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Masuk...' : 'Masuk'}
             </Button>
           </form>
+
+          <div className="mt-6 flex items-center space-x-2">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">Atau masuk dengan</span>
+            <Separator className="flex-1" />
+          </div>
+
+          <div className="mt-6">
+            <GoogleLoginButton />
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-sm text-muted-foreground">
           <div className="text-center">
