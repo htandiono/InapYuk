@@ -1,0 +1,95 @@
+'use client';
+
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api-client';
+
+const formSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+export function EmailChangeForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { email: '' },
+  });
+
+  const onSubmit = async (values: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await api.post('/users/email', values);
+      setSuccess(true);
+      toast.success('Link konfirmasi telah dikirim ke email baru Anda');
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      toast.error(err.message || 'Terjadi kesalahan');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cek Email Anda</CardTitle>
+          <CardDescription>
+            Kami telah mengirimkan link konfirmasi ke email baru Anda. 
+            Silakan klik link tersebut untuk menyelesaikan proses perubahan email.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={() => setSuccess(false)} className="w-full">
+            Kirim ulang atau gunakan email lain
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ubah Email</CardTitle>
+        <CardDescription>
+          Perhatian: Mengubah email akan membuat status verifikasi Anda hilang sampai Anda mengkonfirmasi email baru.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }: { field: ControllerRenderProps<FormData, 'email'> }) => (
+                <FormItem>
+                  <FormLabel>Email Baru</FormLabel>
+                  <FormControl>
+                    <Input placeholder="email@contoh.com" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? 'Memproses...' : 'Ubah Email'}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

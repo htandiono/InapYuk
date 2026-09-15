@@ -55,12 +55,16 @@ export const confirmResetPasswordSchema = z
   .object({
     token: z.string().min(1, 'Token tidak valid'),
     password: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, 'Konfirmasi password wajib diisi'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Password tidak cocok',
+    message: 'Konfirmasi password tidak cocok',
     path: ['confirmPassword'],
   });
+
+export const googleAuthSchema = z.object({
+  token: z.string().min(1, 'Google token wajib ada'),
+});
 
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type RegisterTenantInput = z.infer<typeof registerTenantSchema>;
@@ -69,3 +73,4 @@ export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ConfirmResetPasswordInput = z.infer<typeof confirmResetPasswordSchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

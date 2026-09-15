@@ -20,7 +20,9 @@ function sendVerificationEmail(email: string, name: string, token: string, isTen
     subject: isTenant ? 'Verifikasi Akun InapYuk (Tenant)' : 'Verifikasi Akun InapYuk',
     template: 'email-verification',
     context: { name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
-  }).catch(() => {});
+  }).catch((err) => {
+    console.error(`[MailError] Failed to send verification email to ${email}`, err);
+  });
 }
 
 import type { Prisma } from '../../generated/prisma/client';

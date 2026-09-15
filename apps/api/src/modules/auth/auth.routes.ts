@@ -26,6 +26,7 @@ import {
   loginSchema,
   resetPasswordSchema,
   confirmResetPasswordSchema,
+  googleAuthSchema,
 } from './auth.schema';
 import {
   handleRegisterUser,
@@ -38,6 +39,7 @@ import {
   handleLogout,
   handleResetPasswordRequest,
   handleConfirmResetPassword,
+  handleGoogleAuth,
 } from './auth.controller';
 
 const router = Router();
@@ -72,5 +74,6 @@ router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
 router.post('/password/reset', authRateLimiter, validateBody(resetPasswordSchema), asyncHandler(handleResetPasswordRequest));
 router.post('/password/confirm', authRateLimiter, validateBody(confirmResetPasswordSchema), asyncHandler(handleConfirmResetPassword));
+router.post('/google', authRateLimiter, validateBody(googleAuthSchema), asyncHandler(handleGoogleAuth));
 
 export default router;
