@@ -48,9 +48,9 @@ function TableHeader() {
   return (
     <thead>
       <tr className="hover:bg-transparent border-b border-border/40">
-        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground">Properti</th>
-        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden sm:table-cell">Kategori</th>
-        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden lg:table-cell">Detail Kamar</th>
+        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground">Properti</th>
+        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground hidden sm:table-cell">Kategori</th>
+        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground hidden lg:table-cell">Detail Kamar</th>
         <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground">Aksi</th>
       </tr>
     </thead>
