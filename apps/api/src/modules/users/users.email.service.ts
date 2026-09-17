@@ -20,40 +20,50 @@ async function createEmailChangeToken(userId: string, newEmail: string): Promise
   return rawToken;
 }
 
+async function sendEmailChangeEmail(user: { name: string; email: string }, rawToken: string, newEmail: string): Promise<void> {
+  const verifyLink = `${env.WEB_BASE_URL}/email-change/verify?token=${rawToken}`;
+  await sendMail({
+    to: newEmail,
+    subject: 'Konfirmasi Perubahan Email',
+    template: 'email-change',
+    context: { name: user.name, verifyLink },
+  });
+}
+
 export async function requestEmailChange(userId: string, input: RequestEmailChangeInput) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
-  if (existing) throw conflict('Email sudah terdaftar');
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw badRequest('Pengguna tidak ditemukan');
 
+  if (user.email === input.email) {
+    throw badRequest('Email baru tidak boleh sama dengan email saat ini');
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) throw conflict('Email sudah terdaftar');
+
   const rawToken = await createEmailChangeToken(userId, input.email);
-  await sendMail({
-    to: input.email,
-    subject: 'Konfirmasi Perubahan Email',
-    template: 'email-change',
-    context: {
-      name: user.name,
-      verifyLink: `${env.WEB_BASE_URL}/email-change/verify?token=${rawToken}`,
-    },
-  });
+  await sendEmailChangeEmail(user, rawToken, input.email);
 }
-export async function verifyEmailChange(userId: string, input: VerifyEmailChangeInput) {
+
+async function validateEmailChangeToken(tokenStr: string) {
   const token = await prisma.verificationToken.findFirst({
-    where: {
-      userId,
-      tokenHash: hashToken(input.token),
-      type: 'EMAIL_CHANGE',
-      usedAt: null,
-      expiresAt: { gt: new Date() },
-    },
+    where: { tokenHash: hashToken(tokenStr), type: 'EMAIL_CHANGE', usedAt: null, expiresAt: { gt: new Date() } },
   });
   if (!token || !token.newEmail) throw badRequest('Token tidak valid atau sudah kedaluwarsa');
+  const latestToken = await prisma.verificationToken.findFirst({
+    where: { userId: token.userId, type: 'EMAIL_CHANGE' }, orderBy: { createdAt: 'desc' },
+  });
+  if (latestToken && latestToken.id !== token.id)
+    throw badRequest('Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.');
+  return token;
+}
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: { email: token.newEmail, isVerified: true },
-    }),
-    prisma.verificationToken.update({ where: { id: token.id }, data: { usedAt: new Date() } }),
+export async function verifyEmailChange(input: VerifyEmailChangeInput): Promise<{ role: string }> {
+  const t = await validateEmailChangeToken(input.token);
+  const [updatedUser] = await prisma.$transaction([
+    prisma.user.update({ where: { id: t.userId }, data: { email: t.newEmail!, isVerified: true } }),
+    prisma.verificationToken.update({ where: { id: t.id }, data: { usedAt: new Date() } }),
+    prisma.refreshToken.deleteMany({ where: { userId: t.userId } }),
   ]);
+  return { role: updatedUser.role };
 }

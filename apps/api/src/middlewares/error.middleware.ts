@@ -29,33 +29,13 @@ function handleZod(error: ZodError, res: Response): void {
 }
 
 /** Terminal error handler. Must stay registered last in app.ts. */
-export function errorHandler(
-  error: unknown,
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-): void {
-  if (res.headersSent) {
-    next(error);
-    return;
-  }
-
-  if (error instanceof AppError) {
-    sendError(res, error.statusCode, error.message, error.errors);
-    return;
-  }
-  if (error instanceof MulterError) {
-    handleMulter(error, res);
-    return;
-  }
-  if (error instanceof ZodError) {
-    handleZod(error, res);
-    return;
-  }
+export function errorHandler(error: unknown, _req: Request, res: Response, next: NextFunction): void {
+  if (res.headersSent) return next(error);
+  if (error instanceof AppError) return sendError(res, error.statusCode, error.message, error.errors);
+  if (error instanceof MulterError) return handleMulter(error, res);
+  if (error instanceof ZodError) return handleZod(error, res);
 
   logger.error('Unhandled error', error);
-  const message = isProduction
-    ? 'Something went wrong'
-    : String((error as Error)?.message ?? error);
+  const message = isProduction ? 'Something went wrong' : String((error as Error)?.message ?? error);
   sendError(res, 500, message);
 }

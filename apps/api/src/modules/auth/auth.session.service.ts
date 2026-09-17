@@ -16,24 +16,19 @@ async function validateUserCredentials(input: LoginInput) {
   return user;
 }
 
-async function createSessionTokens(user: {
-  id: string;
-  role: UserRole;
-  email: string;
-  isVerified: boolean;
-}) {
-  const tokens = issueTokens({
-    sub: user.id,
-    role: user.role,
-    email: user.email,
-    isVerified: user.isVerified,
-  });
+type TokenUser = { id: string; name: string; role: UserRole; email: string; isVerified: boolean };
 
+function getRefreshExpiry() {
   const days = parseInt(env.JWT_REFRESH_EXPIRES_IN.replace('d', ''), 10) || 7;
-  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+}
 
+async function createSessionTokens(user: TokenUser) {
+  const tokens = issueTokens({
+    sub: user.id, name: user.name, role: user.role, email: user.email, isVerified: user.isVerified,
+  });
   await prisma.refreshToken.create({
-    data: { userId: user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt },
+    data: { userId: user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt: getRefreshExpiry() },
   });
   return tokens;
 }
@@ -61,28 +56,15 @@ async function verifyAndFindToken(token: string) {
   return tokenRecord;
 }
 
-async function rotateTokens(tokenRecord: {
-  id: string;
-  user: { id: string; role: UserRole; email: string; isVerified: boolean };
-}) {
+async function rotateTokens(tokenRecord: { id: string; user: TokenUser }) {
   const tokens = issueTokens({
-    sub: tokenRecord.user.id,
-    role: tokenRecord.user.role,
-    email: tokenRecord.user.email,
-    isVerified: tokenRecord.user.isVerified,
+    sub: tokenRecord.user.id, name: tokenRecord.user.name, role: tokenRecord.user.role, 
+    email: tokenRecord.user.email, isVerified: tokenRecord.user.isVerified,
   });
-
-  const days = parseInt(env.JWT_REFRESH_EXPIRES_IN.replace('d', ''), 10) || 7;
-  const newExpiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-
   await prisma.$transaction([
     prisma.refreshToken.delete({ where: { id: tokenRecord.id } }),
     prisma.refreshToken.create({
-      data: {
-        userId: tokenRecord.user.id,
-        tokenHash: hashToken(tokens.refreshToken),
-        expiresAt: newExpiresAt,
-      },
+      data: { userId: tokenRecord.user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt: getRefreshExpiry() },
     }),
   ]);
   return tokens;

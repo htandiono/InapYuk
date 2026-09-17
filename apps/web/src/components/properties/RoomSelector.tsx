@@ -21,38 +21,15 @@ interface RoomSelectorProps {
   selectedNight?: { date?: string; price: number; isAvailable: boolean } | null;
 }
 
-export const RoomSelector: FC<RoomSelectorProps> = ({
-  rooms,
-  selectedRoomId,
-  onSelectRoom,
-  selectedNight,
-}) => {
-  const [lightbox, setLightbox] = useState<string | null>(null);
-  const activeRoom = rooms.find((r) => r.id === lightbox);
+export const RoomSelector: FC<RoomSelectorProps> = ({ rooms, selectedRoomId, onSelectRoom, selectedNight }) => {
+  const [lightbox, setLightbox] = useState<string | null>(null), activeRoom = rooms.find((r) => r.id === lightbox);
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-heading text-xl font-bold text-foreground">Pilih Tipe Kamar</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {rooms.map((r) => (
-          <RoomCard
-            key={r.id}
-            room={r}
-            selectedId={selectedRoomId}
-            onSelect={onSelectRoom}
-            night={selectedNight}
-            onLightbox={setLightbox}
-          />
-        ))}
+        {rooms.map((r) => <RoomCard key={r.id} room={r} selectedId={selectedRoomId} onSelect={onSelectRoom} night={selectedNight} onLightbox={setLightbox} />)}
       </div>
-      {lightbox && (
-        <ImageLightbox
-          images={activeRoom?.images || []}
-          initialIndex={0}
-          isOpen={!!lightbox}
-          onClose={() => setLightbox(null)}
-          altPrefix={activeRoom?.name || 'Kamar'}
-        />
-      )}
+      {lightbox && <ImageLightbox images={activeRoom?.images || []} initialIndex={0} isOpen={!!lightbox} onClose={() => setLightbox(null)} altPrefix={activeRoom?.name || 'Kamar'} />}
     </div>
   );
 };

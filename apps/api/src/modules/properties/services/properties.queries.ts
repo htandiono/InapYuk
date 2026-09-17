@@ -59,21 +59,12 @@ export async function getPropertyBySlug(slug: string) {
 export async function getTenantProperties(tenantId: string, page: number = 1, limit: number = 10) {
   const { take, skip } = toPrismaPageArgs({ page, limit });
   const where = { tenantId, deletedAt: null };
-
   const [data, total] = await Promise.all([
     prisma.property.findMany({
-      where,
-      take,
-      skip,
-      include: {
-        category: true,
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-        rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } },
-      },
-      orderBy: { createdAt: 'desc' },
+      where, take, skip, orderBy: { createdAt: 'desc' },
+      include: { category: true, images: { orderBy: { sortOrder: 'asc' }, take: 1 }, rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } } },
     }),
     prisma.property.count({ where }),
   ]);
-
   return { data, meta: buildPaginationMeta(total, page, limit) };
 }

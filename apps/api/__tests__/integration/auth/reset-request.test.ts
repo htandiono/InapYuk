@@ -7,6 +7,11 @@ vi.mock('../../../src/libs/mailer', () => ({
   renderTemplate: vi.fn().mockReturnValue('<html>mock</html>'),
 }));
 
+// Mock rate limiter to avoid 429 in tests
+vi.mock('express-rate-limit', () => ({
+  default: () => (req: unknown, res: unknown, next: () => void) => next(),
+}));
+
 const { sendMail } = await import('../../../src/libs/mailer');
 
 describe('POST /api/auth/password/reset', () => {

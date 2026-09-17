@@ -6,19 +6,12 @@ import { SearchForm } from '@/components/home/SearchForm';
 import { PropertyListPreview } from '@/components/home/PropertyListPreview';
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('accessToken')?.value;
-  const isAuthenticated = !!token;
-
+  const cookieStore = await cookies(), isAuthenticated = !!cookieStore.get('accessToken')?.value;
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar isAuthenticated={isAuthenticated} />
       <main className="flex-1 w-full flex flex-col pt-8 pb-16">
-        <div className="w-full max-w-5xl mx-auto px-5 sm:px-8">
-          <HeroCarousel />
-          <SearchForm />
-          <PropertyListPreview />
-        </div>
+        <div className="w-full max-w-5xl mx-auto px-5 sm:px-8"><HeroCarousel /><SearchForm /><PropertyListPreview /></div>
       </main>
       <Footer />
     </div>

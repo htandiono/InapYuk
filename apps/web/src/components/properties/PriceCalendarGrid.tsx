@@ -17,80 +17,29 @@ interface PriceCalendarGridProps {
   formatPrice: (price: number) => string;
 }
 
-export function PriceCalendarGrid({
-  isLoading,
-  blanks,
-  nights,
-  selectedDate,
-  onSelectDate,
-  formatPrice,
-}: PriceCalendarGridProps) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <span className="text-sm text-muted-foreground animate-pulse">Memuat kalender...</span>
-      </div>
-    );
-  }
+function NightCell({ night, isPast, isSelected, onSelectDate, formatPrice }: { night: NightlyRate; isPast: boolean; isSelected: boolean; onSelectDate: () => void; formatPrice: (price: number) => string }) {
+  const dateStr = new Date(night.date).getDate();
+  const wrapCls = `flex flex-col items-center justify-start rounded-xl py-1.5 transition-all overflow-hidden ${isPast ? 'opacity-40 cursor-not-allowed' : night.isAvailable ? 'hover:bg-muted/50 cursor-pointer group' : 'cursor-not-allowed'}`;
+  const dayCls = `flex items-center justify-center w-8 h-8 rounded-full mb-1 transition-colors ${isSelected ? 'bg-primary text-primary-foreground shadow-md scale-105' : isPast || !night.isAvailable ? 'text-muted-foreground/60' : 'text-foreground group-hover:bg-muted-foreground/10'}`;
+  const txtCls = `text-sm ${isPast || !night.isAvailable ? 'line-through decoration-muted-foreground/40' : 'font-semibold'}`;
+  const priceCls = `text-[9.5px] sm:text-[10.5px] font-medium text-center leading-tight tracking-tight px-0.5 truncate w-full ${isSelected ? 'text-primary font-bold' : night.isAvailable ? 'text-muted-foreground' : 'text-red-500/90 font-semibold'}`;
+  return (
+    <div onClick={() => !isPast && night.isAvailable && onSelectDate()} className={wrapCls}>
+      <div className={dayCls}><span className={txtCls}>{dateStr}</span></div>
+      {!isPast && <span className={priceCls}>{night.isAvailable ? formatPrice(night.finalPrice) : 'Penuh'}</span>}
+    </div>
+  );
+}
 
+export function PriceCalendarGrid({ isLoading, blanks, nights, selectedDate, onSelectDate, formatPrice }: PriceCalendarGridProps) {
+  if (isLoading) return <div className="flex items-center justify-center py-20"><span className="text-sm text-muted-foreground animate-pulse">Memuat kalender...</span></div>;
+  const today = new Date(new Date().setHours(0, 0, 0, 0)), selStr = selectedDate?.split('T')[0];
   return (
     <div className="grid grid-cols-7 gap-x-0 gap-y-2">
-      {blanks.map((_, i) => (
-        <div key={`blank-${i}`} className="min-h-16" />
+      {blanks.map((_, i) => <div key={`blank-${i}`} className="min-h-16" />)}
+      {nights.map((night, i) => (
+        <NightCell key={i} night={night} isPast={new Date(night.date) < today} isSelected={selStr === night.date.split('T')[0]} onSelectDate={() => onSelectDate(selStr === night.date.split('T')[0] ? null : night.date.split('T')[0])} formatPrice={formatPrice} />
       ))}
-      {nights.map((night, i) => {
-        const dateObj = new Date(night.date);
-        const isPast = dateObj < new Date(new Date().setHours(0, 0, 0, 0));
-        const isSelected = selectedDate?.split('T')[0] === night.date.split('T')[0];
-
-        return (
-          <div
-            key={i}
-            onClick={() =>
-              !isPast &&
-              night.isAvailable &&
-              onSelectDate(isSelected ? null : night.date.split('T')[0])
-            }
-            className={`flex flex-col items-center justify-start rounded-xl py-1.5 transition-all overflow-hidden ${
-              isPast
-                ? 'opacity-40 cursor-not-allowed'
-                : night.isAvailable
-                  ? 'hover:bg-muted/50 cursor-pointer group'
-                  : 'cursor-not-allowed'
-            }`}
-          >
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full mb-1 transition-colors ${
-                isSelected
-                  ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                  : isPast || !night.isAvailable
-                    ? 'text-muted-foreground/60'
-                    : 'text-foreground group-hover:bg-muted-foreground/10'
-              }`}
-            >
-              <span
-                className={`text-sm ${isPast || !night.isAvailable ? 'line-through decoration-muted-foreground/40' : 'font-semibold'}`}
-              >
-                {dateObj.getDate()}
-              </span>
-            </div>
-
-            {!isPast && (
-              <span
-                className={`text-[9.5px] sm:text-[10.5px] font-medium text-center leading-tight tracking-tight px-0.5 truncate w-full ${
-                  isSelected
-                    ? 'text-primary font-bold'
-                    : night.isAvailable
-                      ? 'text-muted-foreground'
-                      : 'text-red-500/90 font-semibold'
-                }`}
-              >
-                {night.isAvailable ? formatPrice(night.finalPrice) : 'Penuh'}
-              </span>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }

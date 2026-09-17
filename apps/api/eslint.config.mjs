@@ -15,6 +15,14 @@ export default tseslint.config(
       ],
       'no-console': ['warn', { allow: ['log', 'warn', 'error'] }],
       eqeqeq: ['error', 'smart'],
+      'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 15, skipBlankLines: true, skipComments: true }],
     },
+  },
+  {
+    files: ['__tests__/**'],
+    rules: {
+      'max-lines-per-function': 'off'
+    }
   },
 );

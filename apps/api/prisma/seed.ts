@@ -14,21 +14,14 @@ import { GUESTS, SEED_PASSWORD, TENANTS } from './seed/data';
 async function main(): Promise<void> {
   console.log('Seeding users and tenants...');
   const { tenantProfileIds, guestIds } = await seedUsers(prisma);
-
   console.log('Seeding categories, properties, rooms, availability and peak season rates...');
   const roomIds = await seedProperties(prisma, tenantProfileIds);
-
   console.log('Seeding bookings, reviews and replies...');
   const bookingCount = await seedBookings(prisma, guestIds, roomIds);
 
   console.log('\nSeed complete');
-  console.log(`  tenants   : ${tenantProfileIds.length}`);
-  console.log(`  guests    : ${guestIds.length}`);
-  console.log(`  rooms     : ${roomIds.length}`);
-  console.log(`  bookings  : ${bookingCount}`);
-  console.log(`\n  Password for every seeded account: ${SEED_PASSWORD}`);
-  console.log(`  Tenant login : ${TENANTS[0]?.email}`);
-  console.log(`  Guest login  : ${GUESTS[0]?.email}`);
+  console.log(`  tenants: ${tenantProfileIds.length}\n  guests: ${guestIds.length}\n  rooms: ${roomIds.length}\n  bookings: ${bookingCount}`);
+  console.log(`\n  Password: ${SEED_PASSWORD}\n  Tenant login: ${TENANTS[0]?.email}\n  Guest login: ${GUESTS[0]?.email}`);
 }
 
 main()

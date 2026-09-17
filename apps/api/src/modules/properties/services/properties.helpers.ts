@@ -31,23 +31,15 @@ export async function getPagedIdsByPrice(query: GetPropertiesQuery, skip: number
 export async function fetchBaseProperties(query: GetPropertiesQuery, skip?: number, take?: number) {
   const isPrice = query.sortBy === 'price' && skip !== undefined && take !== undefined;
   const ids = isPrice ? await getPagedIdsByPrice(query, skip!, take!) : undefined;
-
   const props = await prisma.property.findMany({
     where: isPrice ? { id: { in: ids } } : buildPropertyWhereClause(query),
-    skip: isPrice ? undefined : skip,
-    take: isPrice ? undefined : take,
-    orderBy: isPrice ? undefined : { name: query.sortOrder },
+    skip: isPrice ? undefined : skip, take: isPrice ? undefined : take, orderBy: isPrice ? undefined : { name: query.sortOrder },
     include: {
-      tenant: { select: { id: true, companyName: true, logoUrl: true } },
-      category: true,
-      rooms: {
-        where: { capacity: { gte: query.guests }, deletedAt: null },
-        select: { id: true, basePrice: true },
-      },
-      images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+      tenant: { select: { id: true, companyName: true, logoUrl: true } }, category: true,
+      rooms: { where: { capacity: { gte: query.guests }, deletedAt: null }, select: { id: true, basePrice: true } },
+      images: { orderBy: { sortOrder: 'asc' }, take: 5 },
     },
   });
-
   if (isPrice) props.sort((a, b) => ids!.indexOf(a.id) - ids!.indexOf(b.id));
   return props;
 }
@@ -66,19 +58,11 @@ export async function computeDynamicPrice(room: BaseRoom, checkIn?: string, chec
   }
 }
 
-export async function evaluateSingleProperty(
-  prop: BaseProperty,
-  checkIn?: string,
-  checkOut?: string,
-) {
-  let cheapest = Infinity;
-  let isAvail = false;
+export async function evaluateSingleProperty(prop: BaseProperty, checkIn?: string, checkOut?: string) {
+  let cheapest = Infinity, isAvail = false;
   for (const room of prop.rooms) {
     const { isAvailable, price } = await computeDynamicPrice(room, checkIn, checkOut);
-    if (isAvailable && price < cheapest) {
-      isAvail = true;
-      cheapest = price;
-    }
+    if (isAvailable && price < cheapest) { isAvail = true; cheapest = price; }
   }
   return { isAvail, cheapest };
 }
@@ -125,26 +109,10 @@ export async function generateUniqueSlug(name: string): Promise<string> {
   return slug;
 }
 
-export function mapToPropertyItem(p: {
-  id: string;
-  name: string;
-  slug: string;
-  city: string;
-  province: string;
-  tenant?: { companyName: string } | null;
-  category?: { name: string } | null;
-  images: { url: string }[];
-  cheapestPrice?: number | null;
-}) {
+export function mapToPropertyItem(p: { id: string; name: string; slug: string; city: string; province: string; tenant?: { companyName: string } | null; category?: { name: string } | null; images: { url: string }[]; cheapestPrice?: number | null; }) {
   return {
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    city: p.city,
-    province: p.province,
-    tenantName: p.tenant?.companyName || null,
-    categoryName: p.category?.name || null,
-    imageUrl: p.images[0]?.url || null,
-    cheapestPrice: p.cheapestPrice,
+    id: p.id, name: p.name, slug: p.slug, city: p.city, province: p.province,
+    tenantName: p.tenant?.companyName || null, categoryName: p.category?.name || null,
+    imageUrls: p.images.map(img => img.url), cheapestPrice: p.cheapestPrice,
   };
 }

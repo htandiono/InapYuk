@@ -12,16 +12,8 @@ export function CategoryEditDialog({ editingCategory, setEditingCategory, onSucc
   return (
     <Dialog open={!!editingCategory} onOpenChange={(open) => !open && setEditingCategory(null)}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Kategori</DialogTitle>
-        </DialogHeader>
-        {editingCategory && (
-          <CategoryForm
-            initialData={editingCategory}
-            onSuccess={onSuccess}
-            onCancel={() => setEditingCategory(null)}
-          />
-        )}
+        <DialogHeader><DialogTitle>Edit Kategori</DialogTitle></DialogHeader>
+        {editingCategory && <CategoryForm initialData={editingCategory} onSuccess={onSuccess} onCancel={() => setEditingCategory(null)} />}
       </DialogContent>
     </Dialog>
   );

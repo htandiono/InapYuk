@@ -9,50 +9,21 @@ import RoomForm from './RoomForm';
 import { AvailabilityDialog } from './availability/AvailabilityDialog';
 import { PeakSeasonDialog } from './peak-season/PeakSeasonDialog';
 
-type PaginationProps = {
-  page: number;
-  totalPages: number;
-  setPage: (fn: (p: number) => number) => void;
-  loading: boolean;
-};
-type CreateProps = {
-  open: boolean;
-  setOpen: (v: boolean) => void;
-  propertyId: string;
-  onDone: () => void;
-};
-type EditProps = {
-  r: Room | null;
-  setR: (r: Room | null) => void;
-  propertyId: string;
-  onDone: () => void;
-};
-type GridProps = {
-  loading: boolean;
-  rooms: Room[];
-  setEditing: (r: Room) => void;
-  handleDelete: (id: string) => void;
-  onManageAvailability: (id: string) => void;
-  onManagePeakSeason: (id: string) => void;
-};
+type PaginationProps = { page: number; totalPages: number; setPage: (fn: (p: number) => number) => void; loading: boolean; };
+type CreateProps = { open: boolean; setOpen: (v: boolean) => void; propertyId: string; onDone: () => void; };
+type EditProps = { r: Room | null; setR: (r: Room | null) => void; propertyId: string; onDone: () => void; };
+type GridProps = { loading: boolean; rooms: Room[]; setEditing: (r: Room) => void; handleDelete: (id: string) => void; onManageAvailability: (id: string) => void; onManagePeakSeason: (id: string) => void; };
 
 async function loadRooms(pid: string, p: number) {
   const res = await fetch(`/api/rooms/tenant/properties/${pid}/rooms?page=${p}&limit=10`);
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || 'Gagal memuat kamar');
-  }
+  if (!res.ok) throw new Error((await res.json()).message || 'Gagal memuat kamar');
   return res.json();
 }
 async function delRoom(id: string) {
   const res = await fetch(`/api/rooms/tenant/rooms/${id}`, { method: 'DELETE' });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || 'Gagal menghapus kamar');
-  }
+  if (!res.ok) throw new Error((await res.json()).message || 'Gagal menghapus kamar');
 }
 
-// prettier-ignore
 function useRooms(propertyId: string, page: number) {
   const [state, setState] = useState({ rooms: [] as Room[], totalPages: 1, loading: true });
   const fetchRooms = useCallback(async (p: number) => {
@@ -66,7 +37,6 @@ function useRooms(propertyId: string, page: number) {
   return { ...state, fetchRooms };
 }
 
-// prettier-ignore
 function useRoomActions(fetchRooms: (p: number) => void, page: number) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,16 +44,13 @@ function useRoomActions(fetchRooms: (p: number) => void, page: number) {
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      await delRoom(deletingId);
-      toast.success('Kamar berhasil dihapus');
-      fetchRooms(page);
+      await delRoom(deletingId); toast.success('Kamar berhasil dihapus'); fetchRooms(page);
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)); } 
     finally { setIsDeleting(false); setDeletingId(null); }
   };
   return { deletingId, setDeletingId, isDeleting, confirmDelete };
 }
 
-// prettier-ignore
 function RoomListHeader({ setOpen }: { setOpen: (v: boolean) => void }) {
   return (
     <div className="flex justify-between items-center mb-6">
@@ -93,30 +60,29 @@ function RoomListHeader({ setOpen }: { setOpen: (v: boolean) => void }) {
   );
 }
 
-// prettier-ignore
-function RoomListGrid({ loading, rooms, setEditing, handleDelete, onManageAvailability, onManagePeakSeason }: GridProps) {
-  if (loading) return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-52.5 rounded-xl bg-muted/50 animate-pulse" />)}</div>;
-  if (rooms.length === 0) return (
+function EmptyRooms() {
+  return (
     <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl border-dashed bg-white">
-      <HomeIcon className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-      <h3 className="text-lg font-medium">Belum ada kamar</h3>
+      <HomeIcon className="h-10 w-10 text-muted-foreground mb-3 opacity-50" /><h3 className="text-lg font-medium">Belum ada kamar</h3>
       <p className="text-muted-foreground mt-1 max-w-sm text-sm">Tambahkan jenis kamar untuk properti ini agar dapat mulai disewakan.</p>
     </div>
   );
+}
+
+function RoomListGrid({ loading, rooms, setEditing, handleDelete, onManageAvailability, onManagePeakSeason }: GridProps) {
+  if (loading) return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-52.5 rounded-xl bg-muted/50 animate-pulse" />)}</div>;
+  if (rooms.length === 0) return <EmptyRooms />;
   return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{rooms.map((r) => <RoomCard key={r.id} r={r} onEdit={setEditing} onDelete={handleDelete} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />)}</div>;
 }
 
-// prettier-ignore
 function PrevBtn({ page, loading, setPage }: PaginationProps) {
   return <Button variant="outline" disabled={page === 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>Sebelumnya</Button>;
 }
 
-// prettier-ignore
 function NextBtn({ page, loading, totalPages, setPage }: PaginationProps) {
   return <Button variant="outline" disabled={page === totalPages || loading} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Selanjutnya</Button>;
 }
 
-// prettier-ignore
 function PaginationControls({ page, totalPages, setPage, loading }: { page: number, totalPages: number, setPage: (fn: (p: number) => number) => void, loading: boolean }) {
   if (totalPages <= 1) return null;
   return (
@@ -126,7 +92,6 @@ function PaginationControls({ page, totalPages, setPage, loading }: { page: numb
   );
 }
 
-// prettier-ignore
 function CreateRoomDialog({ open, setOpen, propertyId, onDone }: CreateProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -138,7 +103,6 @@ function CreateRoomDialog({ open, setOpen, propertyId, onDone }: CreateProps) {
   );
 }
 
-// prettier-ignore
 function EditRoomDialog({ r, setR, propertyId, onDone }: EditProps) {
   return (
     <Dialog open={!!r} onOpenChange={(o) => !o && setR(null)}>
@@ -150,7 +114,6 @@ function EditRoomDialog({ r, setR, propertyId, onDone }: EditProps) {
   );
 }
 
-// prettier-ignore
 function DeleteRoomDialog({ deletingId, setDeletingId, isDeleting, confirmDelete }: { deletingId: string | null, setDeletingId: (id: string | null) => void, isDeleting: boolean, confirmDelete: () => void }) {
   return (
     <Dialog open={!!deletingId} onOpenChange={(open) => !open && !isDeleting && setDeletingId(null)}>
@@ -166,23 +129,25 @@ function DeleteRoomDialog({ deletingId, setDeletingId, isDeleting, confirmDelete
   );
 }
 
-// prettier-ignore
-export default function RoomList({ propertyId }: { propertyId: string }) {
+function useRoomListState() {
   const [[page, isCreate, edit], set] = useState<[number, boolean, Room|null]>([1, false, null]);
   const [availabilityRoomId, setAvailabilityRoomId] = useState<string | null>(null);
   const [peakSeasonRoomId, setPeakSeasonRoomId] = useState<string | null>(null);
-  const { rooms, totalPages, loading, fetchRooms } = useRooms(propertyId, page);
-  const acts = useRoomActions(fetchRooms, page);
+  return { page, isCreate, edit, set, availabilityRoomId, setAvailabilityRoomId, peakSeasonRoomId, setPeakSeasonRoomId };
+}
+
+export default function RoomList({ propertyId }: { propertyId: string }) {
+  const st = useRoomListState(), { rooms, totalPages, loading, fetchRooms } = useRooms(propertyId, st.page), acts = useRoomActions(fetchRooms, st.page);
   return (
     <div className="space-y-6">
-      <RoomListHeader setOpen={(c) => set([page, c, edit])} />
-      <CreateRoomDialog open={isCreate} setOpen={(c) => set([page, c, edit])} propertyId={propertyId} onDone={() => { set([page, false, edit]); fetchRooms(page); }} />
-      <RoomListGrid loading={loading} rooms={rooms} setEditing={(e) => set([page, isCreate, e])} handleDelete={acts.setDeletingId} onManageAvailability={setAvailabilityRoomId} onManagePeakSeason={setPeakSeasonRoomId} />
-      <PaginationControls page={page} totalPages={totalPages} setPage={(p: number | ((prev: number) => number)) => set([typeof p === 'function' ? p(page) : p, isCreate, edit])} loading={loading} />
-      <EditRoomDialog r={edit} setR={(e) => set([page, isCreate, e])} propertyId={propertyId} onDone={() => { set([page, isCreate, null]); fetchRooms(page); }} />
+      <RoomListHeader setOpen={(c) => st.set([st.page, c, st.edit])} />
+      <CreateRoomDialog open={st.isCreate} setOpen={(c) => st.set([st.page, c, st.edit])} propertyId={propertyId} onDone={() => { st.set([st.page, false, st.edit]); fetchRooms(st.page); }} />
+      <RoomListGrid loading={loading} rooms={rooms} setEditing={(e) => st.set([st.page, st.isCreate, e])} handleDelete={acts.setDeletingId} onManageAvailability={st.setAvailabilityRoomId} onManagePeakSeason={st.setPeakSeasonRoomId} />
+      <PaginationControls page={st.page} totalPages={totalPages} setPage={(p) => st.set([typeof p === 'function' ? (p as (n: number) => number)(st.page) : p, st.isCreate, st.edit])} loading={loading} />
+      <EditRoomDialog r={st.edit} setR={(e) => st.set([st.page, st.isCreate, e])} propertyId={propertyId} onDone={() => { st.set([st.page, st.isCreate, null]); fetchRooms(st.page); }} />
       <DeleteRoomDialog {...acts} />
-      <AvailabilityDialog roomId={availabilityRoomId} totalUnits={rooms.find(r => r.id === availabilityRoomId)?.totalUnits} onClose={() => setAvailabilityRoomId(null)} />
-      <PeakSeasonDialog roomId={peakSeasonRoomId} onClose={() => setPeakSeasonRoomId(null)} />
+      <AvailabilityDialog roomId={st.availabilityRoomId} totalUnits={rooms.find(r => r.id === st.availabilityRoomId)?.totalUnits} onClose={() => st.setAvailabilityRoomId(null)} />
+      <PeakSeasonDialog roomId={st.peakSeasonRoomId} onClose={() => st.setPeakSeasonRoomId(null)} />
     </div>
   );
 }

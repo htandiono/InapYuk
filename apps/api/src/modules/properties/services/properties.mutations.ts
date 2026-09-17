@@ -14,84 +14,71 @@ import {
 } from './properties.mutations.helpers';
 
 async function executeCreatePropertyQuery(
-  tenantId: string,
-  data: CreatePropertyInput,
-  slug: string,
-  geo: { lat: number; lng: number } | null | undefined,
-  imageUploads: { url: string; sortOrder: number }[],
+  tenantId: string, data: CreatePropertyInput, slug: string,
+  geo: { lat: number; lng: number } | null | undefined, imageUploads: { url: string; sortOrder: number }[],
 ) {
   return prisma.property.create({
     data: {
-      tenantId,
-      categoryId: data.categoryId,
-      name: data.name,
-      slug,
-      description: data.description,
-      address: data.address,
-      city: data.city,
-      province: data.state,
-      latitude: geo?.lat,
-      longitude: geo?.lng,
+      tenantId, categoryId: data.categoryId, name: data.name, slug,
+      description: data.description, address: data.address,
+      city: data.city, province: data.state,
+      latitude: geo?.lat, longitude: geo?.lng,
       images: { create: imageUploads },
     },
     include: { images: true },
   });
 }
 
-export async function createProperty(
-  tenantId: string,
-  data: CreatePropertyInput,
-  files: Express.Multer.File[],
-) {
-  await checkDuplicateName(tenantId, data.name);
-  await verifyCategoryOwnership(data.categoryId, tenantId);
-  const slug = await generateUniqueSlug(data.name);
-  const geo =
-    data.latitude !== undefined && data.longitude !== undefined
-      ? { lat: data.latitude, lng: data.longitude }
-      : await resolveGeocodeForUpdate(
-          { ...data, latitude: undefined, longitude: undefined },
-          { address: data.address, city: data.city, province: data.state },
-        );
-  const imageUploads = await uploadPropertyImages(files);
-  if (data.mainImageIndex !== undefined && imageUploads[data.mainImageIndex]) {
-    const mainImg = imageUploads[data.mainImageIndex];
-    imageUploads.splice(data.mainImageIndex, 1);
-    imageUploads.unshift(mainImg);
-    imageUploads.forEach((img, i) => {
-      img.sortOrder = i;
-    });
-  }
-  return executeCreatePropertyQuery(tenantId, data, slug, geo, imageUploads);
+async function getGeoForCreate(d: CreatePropertyInput) {
+  if (d.latitude !== undefined && d.longitude !== undefined)
+    return { lat: d.latitude, lng: d.longitude };
+  return resolveGeocodeForUpdate(
+    { ...d, latitude: undefined, longitude: undefined },
+    { address: d.address, city: d.city, province: d.state }
+  );
 }
 
-export async function updateProperty(
-  tenantId: string,
-  propertyId: string,
-  data: UpdatePropertyInput,
-  newFiles: Express.Multer.File[],
-) {
-  const property = await getValidPropertyForUpdate(tenantId, propertyId);
-  if (data.name && data.name.toLowerCase() !== property.name.toLowerCase())
-    await checkDuplicateName(tenantId, data.name, propertyId);
-  if (data.categoryId) await verifyCategoryOwnership(data.categoryId, tenantId);
-  const geo = await resolveGeocodeForUpdate(data, property);
-  const deletedIds = extractDeletedImageIds(data);
-  const deletedImagesData = property.images.filter((img) => deletedIds.includes(img.id));
-  const newImageUploads = await uploadPropertyImages(
-    newFiles,
-    property.images.length - deletedImagesData.length,
-  );
-  const updatedProperty = await executeUpdatePropertyQuery(
-    propertyId,
-    data,
-    geo,
-    deletedIds,
-    newImageUploads,
-  );
-  if (deletedImagesData.length > 0)
-    Promise.all(deletedImagesData.map((img) => deleteImage(img.url))).catch(logImageDeleteError);
-  return updatedProperty;
+function handleMainImageForCreate(uploads: { url: string; sortOrder: number }[], idx?: number) {
+  if (idx !== undefined && uploads[idx]) {
+    const mainImg = uploads.splice(idx, 1)[0];
+    uploads.unshift(mainImg);
+    uploads.forEach((img, i) => { img.sortOrder = i; });
+  }
+}
+
+export async function createProperty(tId: string, d: CreatePropertyInput, f: Express.Multer.File[]) {
+  await checkDuplicateName(tId, d.name);
+  await verifyCategoryOwnership(d.categoryId, tId);
+  const [slug, geo, uploads] = await Promise.all([
+    generateUniqueSlug(d.name),
+    getGeoForCreate(d),
+    uploadPropertyImages(f),
+  ]);
+  handleMainImageForCreate(uploads, d.mainImageIndex);
+  return executeCreatePropertyQuery(tId, d, slug, geo, uploads);
+}
+
+async function validateUpdate(tId: string, pId: string, d: UpdatePropertyInput, p: { name: string }) {
+  if (d.name && d.name.toLowerCase() !== p.name.toLowerCase())
+    await checkDuplicateName(tId, d.name, pId);
+  if (d.categoryId) await verifyCategoryOwnership(d.categoryId, tId);
+}
+
+async function handlePropertyImages(p: { images: { id: string; url: string }[] }, dIds: string[], f: Express.Multer.File[]) {
+  const deletedImgs = p.images.filter((img) => dIds.includes(img.id));
+  const newUploads = await uploadPropertyImages(f, p.images.length - deletedImgs.length);
+  if (deletedImgs.length > 0)
+    Promise.all(deletedImgs.map((img) => deleteImage(img.url))).catch(logImageDeleteError);
+  return newUploads;
+}
+
+export async function updateProperty(tId: string, pId: string, d: UpdatePropertyInput, f: Express.Multer.File[]) {
+  const prop = await getValidPropertyForUpdate(tId, pId);
+  await validateUpdate(tId, pId, d, prop);
+  const geo = await resolveGeocodeForUpdate(d, prop);
+  const dIds = extractDeletedImageIds(d);
+  const newUploads = await handlePropertyImages(prop, dIds, f);
+  return executeUpdatePropertyQuery(pId, d, geo, dIds, newUploads);
 }
 
 export async function deleteProperty(tenantId: string, propertyId: string) {

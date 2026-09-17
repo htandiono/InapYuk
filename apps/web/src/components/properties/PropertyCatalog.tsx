@@ -27,29 +27,13 @@ function CatalogEmpty() {
   );
 }
 
-function CatalogGrid({
-  properties,
-  searchParams,
-}: {
-  properties: {
-    id: string;
-    slug: string;
-    name: string;
-    city: string;
-    province: string;
-    categoryName: string;
-    imageUrl: string | null;
-    cheapestPrice: number;
-    tenantName?: string | null;
-  }[];
-  searchParams: URLSearchParams;
-}) {
+type PropItem = { id: string; slug: string; name: string; city: string; province: string; categoryName: string; imageUrl: string | null; cheapestPrice: number; tenantName?: string | null; };
+
+function CatalogGrid({ properties, searchParams }: { properties: PropItem[]; searchParams: URLSearchParams; }) {
   if (properties.length === 0) return <CatalogEmpty />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {properties.map((prop) => (
-        <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />
-      ))}
+      {properties.map((prop) => <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />)}
     </div>
   );
 }
@@ -63,54 +47,36 @@ function CatalogHeader({ meta }: { meta: { total?: number } | null }) {
   );
 }
 
-function CatalogFilters({
-  name,
-  setName,
-  searchParams,
-}: {
-  name: string;
-  setName: (v: string) => void;
-  searchParams: URLSearchParams;
-}) {
+function CatalogFilters({ name, setName, searchParams }: { name: string; setName: (v: string) => void; searchParams: URLSearchParams; }) {
   const router = useRouter();
   return (
     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-      <input
-        type="text"
-        placeholder="Cari nama properti..."
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="w-full sm:w-64 rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-      />
+      <input type="text" placeholder="Cari nama properti..." value={name} onChange={(e) => setName(e.target.value)} className="w-full sm:w-64 rounded-xl border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
       <CategorySelect searchParams={searchParams} router={router} />
       <SortSelect searchParams={searchParams} router={router} />
     </div>
   );
 }
 
-export function PropertyCatalogContent() {
-  const searchParams = useSearchParams();
-  const { name, setName, debouncedName } = useCatalogSearch(searchParams);
-  const pageNavigate = usePageNavigate(searchParams);
-  const { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
-
+function CatalogTopSection({ name, setName, searchParams, meta }: { name: string; setName: (v: string) => void; searchParams: URLSearchParams; meta: { total?: number } | null; }) {
   return (
     <>
-      <div className="mb-10 w-full max-w-5xl mx-auto">
-        <SearchForm compact />
-      </div>
+      <div className="mb-10 w-full max-w-5xl mx-auto"><SearchForm compact /></div>
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
         <CatalogHeader meta={meta} />
         <CatalogFilters name={name} setName={setName} searchParams={searchParams} />
       </div>
-      {isLoading ? (
-        <CatalogLoading />
-      ) : (
-        <>
-          <CatalogGrid properties={properties} searchParams={searchParams} />
-          {meta && <PaginationControls meta={meta} onPageChange={pageNavigate} />}
-        </>
-      )}
+    </>
+  );
+}
+
+export function PropertyCatalogContent() {
+  const searchParams = useSearchParams(), { name, setName, debouncedName } = useCatalogSearch(searchParams);
+  const pageNavigate = usePageNavigate(searchParams), { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
+  return (
+    <>
+      <CatalogTopSection name={name} setName={setName} searchParams={searchParams} meta={meta} />
+      {isLoading ? <CatalogLoading /> : <><CatalogGrid properties={properties} searchParams={searchParams} />{meta && <PaginationControls meta={meta} onPageChange={pageNavigate} />}</>}
     </>
   );
 }

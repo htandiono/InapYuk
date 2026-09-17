@@ -10,19 +10,11 @@ type AvailabilityDialogProps = {
 
 export function AvailabilityDialog({ roomId, totalUnits, onClose }: AvailabilityDialogProps) {
   const { loading, updateAvailability } = useAvailability(roomId, onClose);
-
   return (
     <Dialog open={!!roomId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Kelola Ketersediaan</DialogTitle>
-        </DialogHeader>
-        <AvailabilityForm
-          loading={loading}
-          totalUnits={totalUnits}
-          onSubmit={updateAvailability}
-          onCancel={onClose}
-        />
+        <DialogHeader><DialogTitle>Kelola Ketersediaan</DialogTitle></DialogHeader>
+        <AvailabilityForm loading={loading} totalUnits={totalUnits} onSubmit={updateAvailability} onCancel={onClose} />
       </DialogContent>
     </Dialog>
   );

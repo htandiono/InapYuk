@@ -11,41 +11,16 @@ export interface ImageLightboxProps {
   altPrefix?: string;
 }
 
-export function ImageLightbox({
-  images,
-  initialIndex = 0,
-  isOpen,
-  onClose,
-  altPrefix = 'Gambar',
-}: ImageLightboxProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, altPrefix = 'Gambar' }: ImageLightboxProps) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex), [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   useResetIndex(isOpen, prevIsOpen, setPrevIsOpen, initialIndex, setCurrentIndex);
   useLightboxKeys(isOpen, images.length, setCurrentIndex);
   if (!images || images.length === 0) return null;
-  return (
-    <LightboxDialog
-      isOpen={isOpen}
-      onClose={onClose}
-      images={images}
-      currentIndex={currentIndex}
-      setCurrentIndex={setCurrentIndex}
-      altPrefix={altPrefix}
-    />
-  );
+  return <LightboxDialog isOpen={isOpen} onClose={onClose} images={images} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex} altPrefix={altPrefix} />;
 }
 
-function useResetIndex(
-  isOpen: boolean,
-  prevIsOpen: boolean,
-  setPrevIsOpen: (b: boolean) => void,
-  initialIndex: number,
-  setCurrentIndex: (i: number) => void,
-) {
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
-    if (isOpen) setCurrentIndex(initialIndex);
-  }
+function useResetIndex(isOpen: boolean, prevIsOpen: boolean, setPrevIsOpen: (b: boolean) => void, initialIndex: number, setCurrentIndex: (i: number) => void) {
+  if (isOpen !== prevIsOpen) { setPrevIsOpen(isOpen); if (isOpen) setCurrentIndex(initialIndex); }
 }
 
 function useLightboxKeys(

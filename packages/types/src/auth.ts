@@ -15,6 +15,7 @@ export interface AuthUser {
 export interface JwtPayload {
   sub: string;
   email: string;
+  name: string;
   role: UserRole;
   isVerified: boolean;
 }

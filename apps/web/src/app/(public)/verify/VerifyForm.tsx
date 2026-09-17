@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { api, ApiError } from '@/lib/api-client';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 const passwordSchema = z
   .string()
   .min(8, 'Password minimal 8 karakter')
+  .max(72, 'Password maksimal 72 karakter')
   .regex(/[A-Z]/, 'Password harus mengandung huruf besar')
   .regex(/[a-z]/, 'Password harus mengandung huruf kecil')
   .regex(/[0-9]/, 'Password harus mengandung angka')
@@ -33,97 +34,45 @@ function ErrorBanner({ message }: { message: string }) {
   return <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{message}</div>;
 }
 
-function PasswordFields({
-  register,
-  errors,
-  disabled,
-}: {
-  register: ReturnType<typeof useForm<VerifyFormValues>>['register'];
-  errors: { password?: { message?: string }; confirmPassword?: { message?: string } };
-  disabled: boolean;
-}) {
+type PProps = { register: UseFormRegister<VerifyFormValues>; errors: FieldErrors<VerifyFormValues>; disabled: boolean; };
+function PasswordFields({ register, errors, disabled }: PProps) {
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="password">Password Baru</Label>
-        <PasswordInput
-          id="password"
-          placeholder="Minimal 8 karakter"
-          {...register('password')}
-          disabled={disabled}
-        />
+        <Label htmlFor="password">Password Baru</Label><PasswordInput id="password" placeholder="Minimal 8 karakter" {...register('password')} disabled={disabled} />
+        <p className="text-[0.8rem] text-muted-foreground mt-1.5 leading-snug">Minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial.</p>
         {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-        <PasswordInput
-          id="confirmPassword"
-          placeholder="Ketik ulang password"
-          {...register('confirmPassword')}
-          disabled={disabled}
-        />
-        {errors.confirmPassword && (
-          <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-        )}
+        <Label htmlFor="confirmPassword">Konfirmasi Password</Label><PasswordInput id="confirmPassword" placeholder="Ketik ulang password" {...register('confirmPassword')} disabled={disabled} />
+        {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
       </div>
     </>
   );
 }
 
-export function VerifyForm({ token }: { token: string }) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<VerifyFormValues>({
-    resolver: zodResolver(verifySchema),
-  });
-
+function useVerifyForm(token: string) {
+  const router = useRouter(), [isSubmitting, setIsSubmitting] = useState(false), [serverError, setServerError] = useState<string | null>(null);
+  const form = useForm<VerifyFormValues>({ resolver: zodResolver(verifySchema) });
   const onSubmit = async (data: VerifyFormValues) => {
-    setIsSubmitting(true);
-    setServerError(null);
+    setIsSubmitting(true); setServerError(null);
     try {
       const res = await api.post<{ role: string }>('/auth/verify', { token, ...data });
-      toast.success('Verifikasi berhasil! Silakan masuk.');
-      router.push(res.role === 'TENANT' ? '/tenant/login' : '/login');
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message);
-        if (error.fieldErrors?.length) {
-          error.fieldErrors.forEach((fe) =>
-            setError(fe.path as keyof VerifyFormValues, { type: 'server', message: fe.message }),
-          );
-        }
-      } else {
-        setServerError('Terjadi kesalahan yang tidak diketahui.');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+      toast.success('Verifikasi berhasil! Silakan masuk.'); router.push(res.role === 'TENANT' ? '/tenant/login' : '/login');
+    } catch (err) {
+      setServerError(err instanceof ApiError ? err.message : 'Terjadi kesalahan.');
+      if (err instanceof ApiError) err.fieldErrors?.forEach((fe) => form.setError(fe.path as keyof VerifyFormValues, { type: 'server', message: fe.message }));
+    } finally { setIsSubmitting(false); }
   };
+  return { ...form, isSubmitting, serverError, onSubmit: form.handleSubmit(onSubmit) };
+}
 
+export function VerifyForm({ token }: { token: string }) {
+  const { register, formState: { errors }, isSubmitting, serverError, onSubmit } = useVerifyForm(token);
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold font-heading text-primary">
-          Verifikasi Akun
-        </CardTitle>
-        <CardDescription>Buat password untuk menyelesaikan pendaftaran kamu</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {serverError && <ErrorBanner message={serverError} />}
-          <PasswordFields register={register} errors={errors} disabled={isSubmitting} />
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Memproses...' : 'Verifikasi & Simpan'}
-          </Button>
-        </form>
-      </CardContent>
+      <CardHeader><CardTitle className="text-2xl font-bold font-heading text-primary">Verifikasi Akun</CardTitle><CardDescription>Buat password untuk menyelesaikan pendaftaran kamu</CardDescription></CardHeader>
+      <CardContent><form onSubmit={onSubmit} className="space-y-4">{serverError && <ErrorBanner message={serverError} />}<PasswordFields register={register} errors={errors} disabled={isSubmitting} /><Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? 'Memproses...' : 'Verifikasi & Simpan'}</Button></form></CardContent>
     </Card>
   );
 }

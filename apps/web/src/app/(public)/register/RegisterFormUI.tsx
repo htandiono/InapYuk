@@ -11,13 +11,11 @@ export function RegisterFormFields({ register, errors, isSubmitting }: { registe
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="name">Nama Lengkap</Label>
-        <Input id="name" placeholder="Budi Santoso" {...register('name')} disabled={isSubmitting} />
+        <Label htmlFor="name">Nama Lengkap</Label><Input id="name" placeholder="Budi Santoso" {...register('name')} disabled={isSubmitting} />
         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" placeholder="budi@example.com" {...register('email')} disabled={isSubmitting} />
+        <Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="budi@example.com" {...register('email')} disabled={isSubmitting} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
     </>
@@ -31,9 +29,7 @@ export function RegisterFormActions({ isSubmitting }: { isSubmitting: boolean })
         {isSubmitting ? 'Mendaftar...' : 'Daftar Sekarang'}
       </Button>
       <div className="mt-6 flex items-center space-x-2">
-        <Separator className="flex-1" />
-        <span className="text-xs text-muted-foreground uppercase tracking-wider">Atau daftar dengan</span>
-        <Separator className="flex-1" />
+        <Separator className="flex-1" /><span className="text-xs text-muted-foreground uppercase tracking-wider">Atau daftar dengan</span><Separator className="flex-1" />
       </div>
       <div className="mt-6"><GoogleLoginButton /></div>
       <div className="mt-4 text-center text-sm">Punya properti? <Link href="/tenant/register" className="text-primary hover:underline">Daftar sebagai Tenant</Link></div>

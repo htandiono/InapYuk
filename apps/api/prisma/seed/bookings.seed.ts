@@ -50,82 +50,32 @@ function paymentFields(plan: BookingPlan, createdAt: Date) {
   return { ...proof, confirmedAt: createdAt };
 }
 
-async function createBooking(
-  prisma: PrismaClient,
-  plan: BookingPlan,
-  sequence: number,
-  guestIds: string[],
-  roomIds: string[],
-) {
-  const roomId = roomIds[plan.roomIndex % roomIds.length] as string;
-  const userId = guestIds[plan.guestIndex % guestIds.length] as string;
-  const checkIn = toDateOnly(dayjs().add(plan.checkInOffsetDays, 'day').format('YYYY-MM-DD'));
-  const checkOut = toDateOnly(dayjs(checkIn).add(plan.nights, 'day').format('YYYY-MM-DD'));
-
+async function createBooking(prisma: PrismaClient, plan: BookingPlan, sequence: number, guestIds: string[], roomIds: string[]) {
+  const roomId = roomIds[plan.roomIndex % roomIds.length] as string, userId = guestIds[plan.guestIndex % guestIds.length] as string;
+  const checkIn = toDateOnly(dayjs().add(plan.checkInOffsetDays, 'day').format('YYYY-MM-DD')), checkOut = toDateOnly(dayjs(checkIn).add(plan.nights, 'day').format('YYYY-MM-DD'));
   const orderNumber = buildOrderNumber(checkIn, sequence);
   const existing = await prisma.booking.findUnique({ where: { orderNumber } });
   if (existing) return existing;
-
-  const pricing = await resolveRoomPricing({ roomId, checkIn, checkOut });
-  const createdAt = dayjs(checkIn).subtract(3, 'day').toDate();
-
+  const pricing = await resolveRoomPricing({ roomId, checkIn, checkOut }), createdAt = dayjs(checkIn).subtract(3, 'day').toDate();
   return prisma.booking.create({
     data: {
-      orderNumber,
-      userId,
-      roomId,
-      propertyId: pricing.propertyId,
-      checkIn,
-      checkOut,
-      guestCount: Math.min(2, pricing.capacity),
-      totalPrice: pricing.totalPrice,
-      status: plan.status,
-      createdAt,
-      ...paymentFields(plan, createdAt),
-      nights: {
-        create: pricing.nights.map((night) => ({
-          date: night.date,
-          basePrice: night.basePrice,
-          finalPrice: night.finalPrice,
-          peakSeasonRateName: night.peakSeasonRateName,
-        })),
-      },
+      orderNumber, userId, roomId, propertyId: pricing.propertyId, checkIn, checkOut,
+      guestCount: Math.min(2, pricing.capacity), totalPrice: pricing.totalPrice, status: plan.status, createdAt, ...paymentFields(plan, createdAt),
+      nights: { create: pricing.nights.map((night) => ({ date: night.date, basePrice: night.basePrice, finalPrice: night.finalPrice, peakSeasonRateName: night.peakSeasonRateName })) },
     },
   });
 }
 
-async function addReview(
-  prisma: PrismaClient,
-  bookingId: string,
-  userId: string,
-  propertyId: string,
-) {
+async function addReview(prisma: PrismaClient, bookingId: string, userId: string, propertyId: string) {
   const existing = await prisma.review.findUnique({ where: { bookingId } });
   if (existing) return;
-
   const review = await prisma.review.create({
-    data: {
-      bookingId,
-      userId,
-      propertyId,
-      rating: 5,
-      comment:
-        'Kamarnya bersih, tuan rumah responsif, dan lokasinya dekat ke mana-mana. Pasti menginap di sini lagi.',
-    },
+    data: { bookingId, userId, propertyId, rating: 5, comment: 'Kamarnya bersih, responsif, mantap.' },
   });
-
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-    select: { tenantId: true },
-  });
+  const property = await prisma.property.findUnique({ where: { id: propertyId }, select: { tenantId: true } });
   if (!property) return;
-
   await prisma.reviewReply.create({
-    data: {
-      reviewId: review.id,
-      tenantId: property.tenantId,
-      comment: 'Terima kasih banyak atas ulasannya! Kami tunggu kedatangan berikutnya.',
-    },
+    data: { reviewId: review.id, tenantId: property.tenantId, comment: 'Terima kasih banyak!' },
   });
 }
 

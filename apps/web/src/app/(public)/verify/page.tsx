@@ -8,59 +8,34 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 import { api } from '@/lib/api-client';
 import { VerifyForm } from './VerifyForm';
 
-function VerifyPageInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-
-  const [isChecking, setIsChecking] = useState(!!token);
-  const [checkError, setCheckError] = useState<string | null>(null);
-
+function useVerifyCheck() {
+  const searchParams = useSearchParams(), token = searchParams.get('token');
+  const [isChecking, setIsChecking] = useState(!!token), [checkError, setCheckError] = useState<string | null>(null);
   useEffect(() => {
-    if (!token) return;
-    api
-      .get(`/auth/verify/check?token=${token}`)
-      .catch(() => setCheckError('Link verifikasi tidak valid.'))
-      .finally(() => setIsChecking(false));
+    if (token) api.get(`/auth/verify/check?token=${token}`).catch(() => setCheckError('Link verifikasi tidak valid.')).finally(() => setIsChecking(false));
   }, [token]);
+  return { token, isChecking, checkError, isVerified: checkError === 'Akun ini sudah diverifikasi sebelumnya' };
+}
 
-  if (isChecking) {
-    return (
-      <Card className="w-full max-w-md p-8 flex justify-center items-center">
-        <p className="text-muted-foreground">Memeriksa link verifikasi...</p>
-      </Card>
-    );
-  }
+function InvalidLinkView({ isVerified, checkError }: { isVerified: boolean; checkError: string | null }) {
+  const router = useRouter();
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold text-destructive">{isVerified ? 'Sudah Diverifikasi' : 'Link Tidak Valid'}</CardTitle>
+        <CardDescription>{isVerified ? 'User telah berhasil diverifikasi sebelumnya. Silakan menuju halaman login.' : checkError || 'Link verifikasi tidak valid atau tidak lengkap.'}</CardDescription>
+      </CardHeader>
+      <CardFooter className="flex justify-center">
+        {isVerified ? <Button className="w-full" onClick={() => router.push('/login')}>Menuju halaman Login</Button> : <Link href="/resend-verification" className="text-primary hover:underline text-sm">Kirim ulang link verifikasi</Link>}
+      </CardFooter>
+    </Card>
+  );
+}
 
-  if (!token || checkError) {
-    const isVerified = checkError === 'Akun ini sudah diverifikasi sebelumnya';
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-destructive">
-            {isVerified ? 'Sudah Diverifikasi' : 'Link Tidak Valid'}
-          </CardTitle>
-          <CardDescription>
-            {isVerified
-              ? 'User telah berhasil diverifikasi sebelumnya. Silakan menuju halaman login.'
-              : checkError || 'Link verifikasi tidak valid atau tidak lengkap.'}
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="flex justify-center">
-          {isVerified ? (
-            <Button className="w-full" onClick={() => router.push('/login')}>
-              Menuju halaman Login
-            </Button>
-          ) : (
-            <Link href="/resend-verification" className="text-primary hover:underline text-sm">
-              Kirim ulang link verifikasi
-            </Link>
-          )}
-        </CardFooter>
-      </Card>
-    );
-  }
-
+function VerifyPageInner() {
+  const { token, isChecking, checkError, isVerified } = useVerifyCheck();
+  if (isChecking) return <Card className="w-full max-w-md p-8 flex justify-center items-center"><p className="text-muted-foreground">Memeriksa link verifikasi...</p></Card>;
+  if (!token || checkError) return <InvalidLinkView isVerified={isVerified} checkError={checkError} />;
   return <VerifyForm token={token} />;
 }
 

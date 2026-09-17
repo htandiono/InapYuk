@@ -11,75 +11,45 @@ interface JwtPayload {
 }
 
 const publicRoutes = [
-  '/login',
-  '/register',
-  '/verify',
-  '/resend-verification',
-  '/tenant/register',
-  '/tenant/login',
-  '/',
-  '/properties',
-  '/bantuan',
-  '/privasi',
-  '/syarat',
+  '/login', '/register', '/verify', '/resend-verification', '/email-change/verify',
+  '/reset-password', '/reset-password/confirm', '/tenant/register', '/tenant/login',
+  '/', '/properties', '/bantuan', '/privasi', '/syarat',
 ];
 const authRoutes = ['/login', '/register', '/tenant/register', '/tenant/login'];
+const globalSharedRoutes = ['/bantuan', '/privasi', '/syarat'];
+
+function decodeToken(request: NextRequest): JwtPayload | null {
+  const token = request.cookies.get('accessToken')?.value;
+  if (!token) return null;
+  try { return decodeJwt(token) as unknown as JwtPayload; } catch { return null; }
+}
+
+function redirectAuthRoute(role: UserRole, url: string): NextResponse {
+  const dest = role === 'TENANT' ? '/tenant/properties' : '/';
+  return NextResponse.redirect(new URL(dest, url));
+}
+
+function guardTenantAccess(role: UserRole, pathname: string, url: string): NextResponse | null {
+  if (role === 'USER' && pathname.startsWith('/tenant'))
+    return NextResponse.redirect(new URL('/', url));
+  if (role === 'TENANT' && !pathname.startsWith('/tenant') && !globalSharedRoutes.includes(pathname))
+    return NextResponse.redirect(new URL('/tenant/properties', url));
+  return null;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('accessToken')?.value;
-
-  // 1. Decode token if present
-  let payload: JwtPayload | null = null;
-  if (token) {
-    try {
-      payload = decodeJwt(token) as unknown as JwtPayload;
-    } catch {
-      // Invalid token, ignore
-    }
-  }
-
+  const payload = decodeToken(request);
   const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/properties');
   const isAuthRoute = authRoutes.includes(pathname);
 
-  // 2. Unauthenticated User Logic
   if (!payload) {
-    if (!isPublicRoute) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return NextResponse.next();
+    return isPublicRoute ? NextResponse.next() : NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // 3. Authenticated User Logic
-  const role = payload.role;
-
-  // Prevent authenticated users from visiting login/register pages
-  if (isAuthRoute) {
-    if (role === 'TENANT') {
-      return NextResponse.redirect(new URL('/tenant/properties', request.url));
-    }
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // 4. Role Separation Logic
-  const isTenantRoute = pathname.startsWith('/tenant');
-
-  if (role === 'USER' && isTenantRoute) {
-    // Users cannot access tenant routes
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  if (role === 'TENANT' && !isTenantRoute) {
-    // Tenants cannot access user-specific routes (e.g., /profile) or the consumer homepage (/).
-    // They can only access /tenant/* routes.
-    // Allow tenants to access global shared pages (help, privacy, terms)
-    const globalSharedRoutes = ['/bantuan', '/privasi', '/syarat'];
-    if (!globalSharedRoutes.includes(pathname)) {
-      return NextResponse.redirect(new URL('/tenant/properties', request.url));
-    }
-  }
-
-  return NextResponse.next();
+  if (isAuthRoute) return redirectAuthRoute(payload.role, request.url);
+  const tenantGuard = guardTenantAccess(payload.role, pathname, request.url);
+  return tenantGuard ?? NextResponse.next();
 }
 
 export const config = {

@@ -13,43 +13,19 @@ function generateSlug(name: string): string {
 export class CategoriesService {
   static async createCategory(tenantId: string, data: CreateCategoryInput) {
     const slug = generateSlug(data.name);
-
-    const existing = await prisma.propertyCategory.findFirst({
-      where: { tenantId, slug, deletedAt: null },
-    });
-
-    if (existing) {
-      throw conflict('Kategori sudah ada');
-    }
-
-    return prisma.propertyCategory.create({
-      data: {
-        tenantId,
-        name: data.name,
-        slug,
-      },
-    });
+    const existing = await prisma.propertyCategory.findFirst({ where: { tenantId, slug, deletedAt: null } });
+    if (existing) throw conflict('Kategori sudah ada');
+    return prisma.propertyCategory.create({ data: { tenantId, name: data.name, slug } });
   }
 
   static async getCategories(tenantId: string, page: number = 1, limit: number = 10) {
     const { take, skip } = toPrismaPageArgs({ page, limit });
-
     const where = { tenantId, deletedAt: null };
-
     const [data, total] = await Promise.all([
-      prisma.propertyCategory.findMany({
-        where,
-        take,
-        skip,
-        orderBy: { createdAt: 'desc' },
-      }),
+      prisma.propertyCategory.findMany({ where, take, skip, orderBy: { createdAt: 'desc' } }),
       prisma.propertyCategory.count({ where }),
     ]);
-
-    return {
-      data,
-      meta: buildPaginationMeta(total, page, limit),
-    };
+    return { data, meta: buildPaginationMeta(total, page, limit) };
   }
 
   static async updateCategory(tenantId: string, id: string, data: UpdateCategoryInput) {

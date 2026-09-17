@@ -95,7 +95,7 @@ describe('POST /api/auth/password/confirm', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Token tidak valid atau kedaluwarsa');
+    expect(res.body.message).toBe('Token tidak valid atau sudah kedaluwarsa');
   });
 
   it('should return 400 if the token is expired', async () => {
@@ -115,7 +115,7 @@ describe('POST /api/auth/password/confirm', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Token tidak valid atau kedaluwarsa');
+    expect(res.body.message).toBe('Token tidak valid atau sudah kedaluwarsa');
   });
 
   it('should return 400 if the token does not exist', async () => {
@@ -128,6 +128,6 @@ describe('POST /api/auth/password/confirm', () => {
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Token tidak valid atau kedaluwarsa');
+    expect(res.body.message).toBe('Token tidak valid atau sudah kedaluwarsa');
   });
 });

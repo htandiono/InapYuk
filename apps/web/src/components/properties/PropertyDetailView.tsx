@@ -1,12 +1,13 @@
 'use client';
 import { BackButton } from '@/components/ui/BackButton';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { BookingWidget } from './BookingWidget';
 import { ImageLightbox } from './ImageLightbox';
 import { PriceCalendar } from './PriceCalendar';
 import { PropertyLocation } from './PropertyLocation';
 import { RoomSelector, type Room } from './RoomSelector';
+import { MobileGallery } from './MobileGallery';
 
 export interface Property {
   id: string;
@@ -28,16 +29,32 @@ export interface PropertyDetailViewProps {
   initialDate?: string;
 }
 
-// prettier-ignore
+function DesktopGallery({ imgs, renderImg }: { imgs: { url: string }[]; renderImg: (i: number, cls?: string, children?: React.ReactNode) => React.ReactNode }) {
+  return (
+    <div className="hidden md:grid grid-cols-2 gap-4 h-125">
+      {renderImg(0)}
+      {imgs.length === 2 && renderImg(1)}
+      {imgs.length === 3 && <div className="grid grid-rows-2 gap-4 h-full">{renderImg(1)}{renderImg(2)}</div>}
+      {imgs.length === 4 && <div className="grid grid-cols-2 grid-rows-2 gap-4 h-full">{renderImg(1, "col-span-2")}{renderImg(2)}{renderImg(3)}</div>}
+      {imgs.length > 4 && <div className="grid grid-cols-2 grid-rows-2 gap-4 h-full">{imgs.slice(1, 5).map((_, i) => renderImg(i + 1, "", i === 3 && imgs.length > 5 ? <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xl hover:bg-black/50 transition-colors">+{imgs.length - 5}</div> : null))}</div>}
+    </div>
+  );
+}
+
 function Gallery({ imgs, name }: { imgs: { url: string }[], name: string }) {
   const [lb, setLb] = useState({ open: false, idx: 0 });
-  const renderImg = (i: number, cls?: string, children?: React.ReactNode) => <div key={i} onClick={() => setLb({ open: true, idx: i })} className={`relative cursor-pointer w-full h-full rounded-3xl overflow-hidden bg-muted group ${cls || ''}`}><Image src={imgs[i].url} alt={name} fill sizes="100vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />{children}</div>;
+  const openLb = (idx: number) => setLb({ open: true, idx });
+  const renderImg = (i: number, cls?: string, children?: React.ReactNode) => <div key={i} onClick={() => openLb(i)} className={`relative cursor-pointer w-full h-full rounded-3xl overflow-hidden bg-muted group ${cls || ''}`}><Image src={imgs[i].url} alt={name} fill sizes="100vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />{children}</div>;
   if (imgs.length === 0) return <div className="w-full aspect-21/9 sm:aspect-video md:aspect-21/9 rounded-3xl bg-muted flex items-center justify-center text-muted-foreground">Belum ada foto</div>;
   if (imgs.length === 1) return <><div className="w-full aspect-21/9 sm:aspect-video md:aspect-21/9">{renderImg(0)}</div>{lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}</>;
-  if (imgs.length === 2) return <><div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">{renderImg(0)}{renderImg(1, "hidden md:block")}</div>{lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}</>;
-  if (imgs.length === 3) return <><div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">{renderImg(0)}<div className="hidden md:grid grid-rows-2 gap-4 h-full">{renderImg(1)}{renderImg(2)}</div></div>{lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}</>;
-  if (imgs.length === 4) return <><div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">{renderImg(0)}<div className="hidden md:grid grid-cols-2 grid-rows-2 gap-4 h-full">{renderImg(1, "col-span-2")}{renderImg(2)}{renderImg(3)}</div></div>{lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}</>;
-  return <><div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-75 sm:h-100 md:h-125">{renderImg(0)}<div className="hidden md:grid grid-cols-2 grid-rows-2 gap-4 h-full">{imgs.slice(1, 5).map((_, idx) => renderImg(idx + 1, "", idx === 3 && imgs.length > 5 ? <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xl hover:bg-black/50 transition-colors">+{imgs.length - 5}</div> : null))}</div></div>{lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}</>;
+
+  return (
+    <>
+      <MobileGallery imgs={imgs} name={name} onImageClick={openLb} />
+      <DesktopGallery imgs={imgs} renderImg={renderImg} />
+      {lb.open && <ImageLightbox images={imgs} initialIndex={lb.idx} isOpen={lb.open} onClose={() => setLb({ ...lb, open: false })} altPrefix={name} />}
+    </>
+  );
 }
 
 // prettier-ignore
@@ -83,8 +100,8 @@ export function PropertyDetailView({ property, initialDate }: PropertyDetailView
     <div className="w-full">
       <div className="mb-6"><BackButton fallbackHref="/properties" /></div><PropertyHeader property={property} /><div className="mb-12"><Gallery imgs={property.images} name={property.name} /></div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2"><PropertyDesc text={property.description} isExpanded={isExp} onToggle={() => set([roomId, night, date, !isExp])} /><hr className="my-10 border-border/60" /><RoomSelector rooms={property.rooms} selectedRoomId={roomId} onSelectRoom={(r: string) => set([r, night, date, isExp])} selectedNight={night} /><PropertyLocation lat={property.latitude} lng={property.longitude} name={property.name} address={property.address} city={property.city} province={property.province} /></div>
-        <PropertySidebar slug={property.slug} room={roomId} date={date} setDate={(d: string | null) => set([roomId, night, d, isExp])} night={night} setNight={(n: { date?: string, price: number, isAvailable: boolean } | null) => set([roomId, n, date, isExp])} />
+        <div className="lg:col-span-2"><PropertyDesc text={property.description} isExpanded={isExp} onToggle={() => set(p => [p[0], p[1], p[2], !p[3]])} /><hr className="my-10 border-border/60" /><RoomSelector rooms={property.rooms} selectedRoomId={roomId} onSelectRoom={useCallback((r: string) => set(p => [r, p[1], p[2], p[3]]), [])} selectedNight={night} /><PropertyLocation lat={property.latitude} lng={property.longitude} name={property.name} address={property.address} city={property.city} province={property.province} /></div>
+        <PropertySidebar slug={property.slug} room={roomId} date={date} setDate={useCallback((d: string | null) => set(p => [p[0], p[1], d, p[3]]), [])} night={night} setNight={useCallback((n: { date?: string, price: number, isAvailable: boolean } | null) => set(p => [p[0], n, p[2], p[3]]), [])} />
       </div>
     </div>
   );

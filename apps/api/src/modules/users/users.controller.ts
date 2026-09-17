@@ -13,18 +13,9 @@ import type {
 } from './users.schema';
 
 export async function handleGetProfile(req: Request, res: Response) {
-  const userId = req.user!.sub;
   const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      avatarUrl: true,
-      role: true,
-      isVerified: true,
-      provider: true,
-    },
+    where: { id: req.user!.sub },
+    select: { id: true, name: true, email: true, avatarUrl: true, role: true, isVerified: true, provider: true },
   });
   sendSuccess(res, user, 'Berhasil mengambil profil');
 }
@@ -42,9 +33,8 @@ export async function handleRequestEmailChange(req: Request, res: Response) {
 }
 
 export async function handleVerifyEmailChange(req: Request, res: Response) {
-  const userId = req.user!.sub;
-  await verifyEmailChange(userId, req.body as VerifyEmailChangeInput);
-  sendSuccess(res, null, 'Email berhasil diperbarui');
+  const { role } = await verifyEmailChange(req.body as VerifyEmailChangeInput);
+  sendSuccess(res, { role }, 'Email berhasil diperbarui');
 }
 
 export async function handleChangePassword(req: Request, res: Response) {
