@@ -23,11 +23,7 @@ export default async function TenantProfilePage() {
   if (!user) redirect('/tenant/login');
   return (
     <div className="p-6 lg:p-8 w-full max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Profil Tenant</h1>
-        <p className="text-muted-foreground mt-2">Kelola informasi profil, email, dan password Anda.</p>
-      </div>
-      <ProfileView user={user} />
+      <ProfileView user={user} isTenant />
     </div>
   );
 }
