@@ -70,9 +70,9 @@ function EmptyRooms() {
 }
 
 function RoomListGrid({ loading, rooms, setEditing, handleDelete, onManageAvailability, onManagePeakSeason }: GridProps) {
-  if (loading) return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-52.5 rounded-xl bg-muted/50 animate-pulse" />)}</div>;
+  if (loading) return <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">{[1, 2, 3].map(i => <div key={i} className="h-52.5 rounded-xl bg-muted/50 animate-pulse" />)}</div>;
   if (rooms.length === 0) return <EmptyRooms />;
-  return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{rooms.map((r) => <RoomCard key={r.id} r={r} onEdit={setEditing} onDelete={handleDelete} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />)}</div>;
+  return <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">{rooms.map((r) => <RoomCard key={r.id} r={r} onEdit={setEditing} onDelete={handleDelete} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />)}</div>;
 }
 
 function PrevBtn({ page, loading, setPage }: PaginationProps) {
