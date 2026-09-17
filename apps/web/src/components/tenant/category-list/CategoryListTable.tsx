@@ -7,7 +7,6 @@ function TableHeader() {
   return (
     <tr className="hover:bg-transparent border-b border-border/40">
       <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground text-left">Nama</th>
-      <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden sm:table-cell text-left">Slug</th>
       <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground w-45">Aksi</th>
     </tr>
   );
