@@ -25,8 +25,8 @@ function TenantAvatarLink({ displayName, initial }: { displayName: string; initi
         <AvatarImage src="" alt={displayName} />
         <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">{initial}</AvatarFallback>
       </Avatar>
-      <div className="hidden sm:flex flex-col items-start">
-        <span className="text-sm font-medium leading-none text-foreground">Halo, {displayName}</span>
+      <div className="hidden md:flex flex-col items-start min-w-0">
+        <span className="text-sm font-medium leading-none text-foreground truncate max-w-[120px] lg:max-w-[200px]">Halo, {displayName}</span>
       </div>
     </Link>
   );
@@ -48,9 +48,9 @@ function TenantTopbarHeader({ displayName, initial }: { displayName: string; ini
       <div className="h-6 w-px bg-border/40 md:hidden ml-2" aria-hidden="true" />
       <div className="flex flex-1 gap-x-2 self-stretch lg:gap-x-4 justify-end items-center">
         <TenantAvatarLink displayName={displayName} initial={initial} />
-        <div className="hidden sm:block h-6 w-px bg-border/60 mx-2" aria-hidden="true" />
-        <LogoutButton variant="ghost" className="hidden sm:flex px-4 h-9 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" />
-        <LogoutButton variant="ghost" className="sm:hidden text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2 h-9" />
+        <div className="hidden md:block h-6 w-px bg-border/60 mx-2" aria-hidden="true" />
+        <LogoutButton variant="ghost" className="hidden md:flex px-4 h-9 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" />
+        <LogoutButton variant="ghost" iconOnly className="md:hidden text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 w-9 p-0 rounded-full flex items-center justify-center" />
       </div>
     </header>
   );
