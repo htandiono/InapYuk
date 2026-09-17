@@ -24,16 +24,33 @@ export type PropertyCardProps = {
   onDelete: (id: string) => void;
 };
 
+function PropertyMobileStackedData({ p }: { p: Property }) {
+  const roomCount = p.rooms?.length || 0;
+  return (
+    <>
+      <div className="flex flex-col gap-1.5 mt-1 sm:hidden"><Badge variant="secondary" className="w-fit text-[10px] bg-primary/10 text-primary py-0 px-1.5">{p.category?.name || 'Tanpa Kategori'}</Badge></div>
+      <div className="flex flex-col mt-1.5 lg:hidden text-xs text-muted-foreground">{roomCount > 0 ? <span>{roomCount} Kamar</span> : <span className="italic">Belum ada kamar</span>}</div>
+    </>
+  );
+}
+
+function PropertyImage({ p }: { p: Property }) {
+  return (
+    <div className="h-16 w-20 sm:w-24 relative rounded-md overflow-hidden bg-muted shrink-0 shadow-sm border border-border/50">
+      {p.images && p.images[0] ? <Image src={p.images[0].url} alt={p.name} fill sizes="(max-width: 640px) 80px, 96px" className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No Image</div>}
+    </div>
+  );
+}
+
 function PropertyInfoCell({ p }: { p: Property }) {
   return (
     <TableCell className="py-4 px-4">
-      <div className="flex items-center gap-4">
-        <div className="h-16 w-24 relative rounded-md overflow-hidden bg-muted shrink-0 shadow-sm border border-border/50">
-          {p.images && p.images[0] ? <Image src={p.images[0].url} alt={p.name} fill sizes="96px" className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No Image</div>}
-        </div>
-        <div>
-          <div className="font-semibold text-foreground text-base leading-tight mb-1">{p.name}</div>
-          <div className="flex items-center text-sm text-muted-foreground gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate max-w-50">{p.city}</span></div>
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+        <PropertyImage p={p} />
+        <div className="flex flex-col">
+          <div className="font-semibold text-foreground text-sm sm:text-base leading-tight mb-1">{p.name}</div>
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground gap-1 mb-1.5 sm:mb-0"><MapPin className="h-3 sm:h-3.5 w-3 sm:w-3.5 shrink-0" /><span className="truncate max-w-32 sm:max-w-50">{p.city}</span></div>
+          <PropertyMobileStackedData p={p} />
         </div>
       </div>
     </TableCell>
