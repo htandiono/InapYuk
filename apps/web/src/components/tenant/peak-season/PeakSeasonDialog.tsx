@@ -14,7 +14,7 @@ export function PeakSeasonDialog({ roomId, onClose }: PeakSeasonDialogProps) {
   useEffect(() => { if (roomId) void fetchRates(); }, [roomId, fetchRates]);
   return (
     <Dialog open={!!roomId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-xl min-w-[320px] max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Kelola Harga Musiman</DialogTitle></DialogHeader>
         <PeakSeasonForm rates={rates} loading={loading} onSubmit={addRate} />
         <div className="mt-6">

@@ -78,21 +78,32 @@ function MobileNavGuest({ pathname }: { pathname: string }) {
   );
 }
 
-function MobileNavAuth({ pathname, displayName }: { pathname: string; displayName: string }) {
+function ProfileMenuLink({ displayName, initial }: { displayName: string; initial: string }) {
+  return (
+    <Link href="/profile" className="flex items-center gap-3 w-full h-full py-1 cursor-pointer">
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">{initial}</AvatarFallback>
+      </Avatar>
+      <span className="font-medium">Profil ({displayName})</span>
+    </Link>
+  );
+}
+
+function MobileNavAuth({ pathname, displayName, initial }: { pathname: string; displayName: string; initial: string }) {
   return (
     <>
-      <DropdownMenuItem className={pathname === '/profile' ? 'bg-accent text-accent-foreground' : ''}>
-        <Link href="/profile" className="w-full h-full block cursor-pointer py-1">Profil ({displayName})</Link>
+      <DropdownMenuItem className={pathname === '/profile' ? 'bg-primary/10 text-primary focus:bg-primary/15' : 'text-muted-foreground'}>
+        <ProfileMenuLink displayName={displayName} initial={initial} />
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <div className="pt-2">
-        <LogoutButton variant="destructive" className="w-full h-9 text-xs" />
-      </div>
+      <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+        <LogoutButton variant="ghost" className="h-7 w-full justify-start px-2 text-xs" />
+      </DropdownMenuItem>
     </>
   );
 }
 
-function MobileNav({ pathname, showTenantLink, isAuthenticated, displayName }: NavProps) {
+function MobileNav({ pathname, showTenantLink, isAuthenticated, displayName, initial }: NavProps) {
   return (
     <div className="flex sm:hidden">
       <DropdownMenu>
@@ -101,7 +112,7 @@ function MobileNav({ pathname, showTenantLink, isAuthenticated, displayName }: N
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 p-2">
           {showTenantLink && <><DropdownMenuItem className={pathname === '/tenant/login' ? 'bg-accent text-accent-foreground' : ''}><Link href="/tenant/login" className="w-full h-full block cursor-pointer py-1">Untuk Tenant</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
-          {isAuthenticated ? <MobileNavAuth pathname={pathname} displayName={displayName} /> : <MobileNavGuest pathname={pathname} />}
+          {isAuthenticated ? <MobileNavAuth pathname={pathname} displayName={displayName} initial={initial} /> : <MobileNavGuest pathname={pathname} />}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

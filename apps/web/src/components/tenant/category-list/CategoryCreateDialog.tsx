@@ -10,7 +10,7 @@ interface Props {
 export function CategoryCreateDialog({ isCreateOpen, setIsCreateOpen, onSuccess }: Props) {
   return (
     <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-      <DialogContent>
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md min-w-[320px]">
         <DialogHeader>
           <DialogTitle>Kategori Baru</DialogTitle>
         </DialogHeader>
