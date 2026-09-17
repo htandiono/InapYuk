@@ -62,12 +62,12 @@ function PropertyRoomsCell({ rooms }: { rooms?: { name: string }[] }) {
 function PropertyActionsCell({ p, onEdit, onDelete }: PropertyCardProps) {
   return (
     <TableCell className="py-3 px-4 text-right">
-      <div className="flex justify-end gap-3 items-center">
+      <div className="flex justify-end gap-2 items-center">
         <Link href={`/tenant/properties/${p.id}/rooms`}>
-          <Button variant="outline" size="sm" className="h-9 shadow-sm rounded-lg px-3 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"><Settings className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Kelola Kamar</span></Button>
+          <Button variant="outline" size="sm" className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors flex items-center justify-center"><Settings className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Kelola Kamar</span></Button>
         </Link>
-        <Button variant="outline" size="sm" onClick={() => onEdit(p)} className="h-9 shadow-sm rounded-lg px-3"><Edit className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Edit</span></Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(p.id)} className="h-9 shadow-sm rounded-lg px-3"><Trash2 className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Hapus</span></Button>
+        <Button variant="outline" size="sm" onClick={() => onEdit(p)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Edit className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Edit</span></Button>
+        <Button variant="destructive" size="sm" onClick={() => onDelete(p.id)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Trash2 className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Hapus</span></Button>
       </div>
     </TableCell>
   );

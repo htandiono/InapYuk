@@ -49,9 +49,9 @@ function TableHeader() {
     <thead>
       <tr className="hover:bg-transparent border-b border-border/40">
         <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground">Properti</th>
-        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden sm:table-cell w-45">Kategori</th>
-        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden lg:table-cell w-55">Detail Kamar</th>
-        <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground w-[320px]">Aksi</th>
+        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden sm:table-cell">Kategori</th>
+        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-foreground hidden lg:table-cell">Detail Kamar</th>
+        <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-foreground">Aksi</th>
       </tr>
     </thead>
   );
@@ -68,10 +68,12 @@ function TableBody({ loading, properties, setEditingProperty, setDeletingId }: {
 export function PropertyListTable({ loading, properties, setEditingProperty, setDeletingId }: { loading: boolean; properties: Property[]; setEditingProperty: (p: Property) => void; setDeletingId: (id: string) => void; }) {
   return (
     <div className="rounded-xl border border-border/40 bg-card text-card-foreground shadow-sm overflow-hidden">
-      <table className="w-full">
-        <TableHeader />
-        <TableBody loading={loading} properties={properties} setEditingProperty={setEditingProperty} setDeletingId={setDeletingId} />
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <TableHeader />
+          <TableBody loading={loading} properties={properties} setEditingProperty={setEditingProperty} setDeletingId={setDeletingId} />
+        </table>
+      </div>
     </div>
   );
 }
