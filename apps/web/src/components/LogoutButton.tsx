@@ -5,11 +5,20 @@ import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { LogOut } from 'lucide-react';
 
 interface LogoutButtonProps {
   className?: string;
   variant?:
-    'link' | 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | null | undefined;
+    | 'link'
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | null
+    | undefined;
+  iconOnly?: boolean;
 }
 
 function useLogout() {
@@ -22,7 +31,11 @@ function useLogout() {
   return { isLoggingOut, handleLogout };
 }
 
-export function LogoutButton({ className, variant = 'outline' }: LogoutButtonProps) {
+export function LogoutButton({ className, variant = 'outline', iconOnly }: LogoutButtonProps) {
   const { isLoggingOut, handleLogout } = useLogout();
-  return <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>{isLoggingOut ? 'Keluar...' : 'Keluar'}</Button>;
+  return (
+    <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>
+      {iconOnly ? <LogOut className="h-4 w-4" /> : isLoggingOut ? 'Keluar...' : 'Keluar'}
+    </Button>
+  );
 }
