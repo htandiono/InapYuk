@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${figtree.variable} ${fraunces.variable} h-full antialiased`}>
+    <html lang="id" className={`${figtree.variable} ${fraunces.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-w-[320px] min-h-full flex-col bg-background text-foreground">
         <UnverifiedBanner />
         {children}
