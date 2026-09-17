@@ -70,6 +70,16 @@
       "dataType": "SINGLE_SELECT",
       "options": ["Backend", "Frontend", "Fullstack", "DevOps"]
     },
+    {
+      "name": "Owner",
+      "dataType": "SINGLE_SELECT",
+      "options": ["awanstywn", "htandiono"]
+    },
+    {
+      "name": "Priority",
+      "dataType": "SINGLE_SELECT",
+      "options": ["High", "Medium", "Low"]
+    },
     { "name": "Estimate", "dataType": "NUMBER" }
   ],
 

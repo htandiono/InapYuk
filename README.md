@@ -27,7 +27,7 @@ apps/
 packages/
   types/      DTOs and enums shared by both apps
 docs/         ERD, API contract, sprint plan, workflow guide
-scripts/      Backlog-as-code that provisions GitHub issues and the project board
+scripts/      Backlog-as-code that provisions the GitHub Project board
 ```
 
 ## Getting started
@@ -93,6 +93,10 @@ both nominal and percentage form, and one booking in every order status.
 See [docs/WORKFLOW.md](docs/WORKFLOW.md) for the branch model and the file ownership map,
 [docs/ERD.md](docs/ERD.md) for the data model, and
 [docs/SPRINT-PLAN.md](docs/SPRINT-PLAN.md) for the sprint breakdown.
+
+Starting Feature 1? Read [docs/HANDOFF-FEATURE-1.md](docs/HANDOFF-FEATURE-1.md) and
+[docs/UI.md](docs/UI.md). If you (or your AI tool) need a single rules file, that is
+[AGENTS.md](AGENTS.md).
 
 ## Scheduled jobs
 
