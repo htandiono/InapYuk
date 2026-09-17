@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { MapPin, Settings, Edit, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MapPin, Settings, Edit, Trash2, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -76,16 +77,39 @@ function PropertyRoomsCell({ rooms }: { rooms?: { name: string }[] }) {
   );
 }
 
+function PropertyMobileActions({ p, onEdit, onDelete }: PropertyCardProps) {
+  return (
+    <div className="flex sm:hidden justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 px-0 rounded-full"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem asChild><Link href={`/tenant/properties/${p.id}/rooms`} className="cursor-pointer"><Settings className="mr-2 h-4 w-4" />Kelola Kamar</Link></DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onEdit(p)} className="cursor-pointer"><Edit className="mr-2 h-4 w-4" />Edit Properti</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onDelete(p.id)} className="text-destructive focus:text-destructive cursor-pointer"><Trash2 className="mr-2 h-4 w-4" />Hapus Properti</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+function PropertyDesktopActions({ p, onEdit, onDelete }: PropertyCardProps) {
+  return (
+    <div className="hidden sm:flex justify-end gap-2 items-center">
+      <Link href={`/tenant/properties/${p.id}/rooms`}>
+        <Button variant="outline" size="sm" className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors flex items-center justify-center"><Settings className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Kelola Kamar</span></Button>
+      </Link>
+      <Button variant="outline" size="sm" onClick={() => onEdit(p)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Edit className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Edit</span></Button>
+      <Button variant="destructive" size="sm" onClick={() => onDelete(p.id)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Trash2 className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Hapus</span></Button>
+    </div>
+  );
+}
+
 function PropertyActionsCell({ p, onEdit, onDelete }: PropertyCardProps) {
   return (
     <TableCell className="py-3 px-4 text-right">
-      <div className="flex justify-end gap-2 items-center">
-        <Link href={`/tenant/properties/${p.id}/rooms`}>
-          <Button variant="outline" size="sm" className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors flex items-center justify-center"><Settings className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Kelola Kamar</span></Button>
-        </Link>
-        <Button variant="outline" size="sm" onClick={() => onEdit(p)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Edit className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Edit</span></Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(p.id)} className="h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center"><Trash2 className="h-4 w-4 xl:mr-2" /><span className="hidden xl:inline">Hapus</span></Button>
-      </div>
+      <PropertyMobileActions p={p} onEdit={onEdit} onDelete={onDelete} />
+      <PropertyDesktopActions p={p} onEdit={onEdit} onDelete={onDelete} />
     </TableCell>
   );
 }
