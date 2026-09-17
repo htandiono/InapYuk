@@ -26,7 +26,7 @@ function TenantAvatarLink({ displayName, initial }: { displayName: string; initi
         <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">{initial}</AvatarFallback>
       </Avatar>
       <div className="hidden md:flex flex-col items-start min-w-0">
-        <span className="text-sm font-medium leading-none text-foreground truncate max-w-[120px] lg:max-w-[200px]">Halo, {displayName}</span>
+        <span className="text-sm font-medium leading-none text-foreground truncate max-w-30 lg:max-w-50">Halo, {displayName}</span>
       </div>
     </Link>
   );
