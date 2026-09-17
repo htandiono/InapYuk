@@ -33,16 +33,16 @@ export function ProfileView({ user }: ProfileViewProps) {
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
         </TabsList>
-        
+
         <div className="mt-6">
           <TabsContent value="profile" className="mt-0">
             <ProfileForm user={user} />
           </TabsContent>
-          
+
           <TabsContent value="email" className="mt-0">
             <EmailChangeForm />
           </TabsContent>
-          
+
           <TabsContent value="password" className="mt-0">
             <ChangePasswordForm isSocialLogin={user.provider === 'GOOGLE'} />
           </TabsContent>

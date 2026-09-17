@@ -14,7 +14,10 @@ const categorySchema = z.object({
     .string()
     .min(3, 'Nama kategori harus terdiri dari minimal 3 karakter.')
     .max(50, 'Nama kategori tidak boleh lebih dari 50 karakter.')
-    .regex(/^[a-zA-Z0-9\s-]+$/, 'Nama kategori hanya boleh mengandung huruf, angka, spasi, dan tanda hubung (-).')
+    .regex(
+      /^[a-zA-Z0-9\s-]+$/,
+      'Nama kategori hanya boleh mengandung huruf, angka, spasi, dan tanda hubung (-).',
+    ),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -32,27 +35,27 @@ export default function CategoryForm({ initialData, onSuccess, onCancel }: Categ
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      name: initialData?.name || ''
-    }
+      name: initialData?.name || '',
+    },
   });
 
   const onSubmit = async (values: CategoryFormValues) => {
     setLoading(true);
     try {
-      const url = initialData 
-        ? `/api/categories/tenant/categories/${initialData.id}` 
+      const url = initialData
+        ? `/api/categories/tenant/categories/${initialData.id}`
         : '/api/categories/tenant/categories';
-      
+
       const method = initialData ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values)
+        body: JSON.stringify(values),
       });
 
       const data = await res.json();
@@ -71,8 +74,10 @@ export default function CategoryForm({ initialData, onSuccess, onCancel }: Categ
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1">Nama Kategori</label>
-        <Input 
+        <label htmlFor="name" className="block text-sm font-medium mb-1">
+          Nama Kategori
+        </label>
+        <Input
           id="name"
           {...register('name')}
           placeholder="Misal: Vila Mewah"

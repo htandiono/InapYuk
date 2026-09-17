@@ -4,7 +4,10 @@ import { CreateCategoryInput, UpdateCategoryInput } from './categories.schema';
 import { toPrismaPageArgs, buildPaginationMeta } from '../../utils/pagination';
 
 function generateSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 export class CategoriesService {
@@ -12,7 +15,7 @@ export class CategoriesService {
     const slug = generateSlug(data.name);
 
     const existing = await prisma.propertyCategory.findFirst({
-      where: { tenantId, slug, deletedAt: null }
+      where: { tenantId, slug, deletedAt: null },
     });
 
     if (existing) {
@@ -23,8 +26,8 @@ export class CategoriesService {
       data: {
         tenantId,
         name: data.name,
-        slug
-      }
+        slug,
+      },
     });
   }
 
@@ -38,14 +41,14 @@ export class CategoriesService {
         where,
         take,
         skip,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       }),
-      prisma.propertyCategory.count({ where })
+      prisma.propertyCategory.count({ where }),
     ]);
 
     return {
       data,
-      meta: buildPaginationMeta(total, page, limit)
+      meta: buildPaginationMeta(total, page, limit),
     };
   }
 
@@ -53,33 +56,33 @@ export class CategoriesService {
     const slug = generateSlug(data.name);
 
     const target = await prisma.propertyCategory.findFirst({
-      where: { id, tenantId, deletedAt: null }
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!target) throw forbidden('Akses ditolak');
 
     const duplicate = await prisma.propertyCategory.findFirst({
-      where: { tenantId, slug, id: { not: id }, deletedAt: null }
+      where: { tenantId, slug, id: { not: id }, deletedAt: null },
     });
 
     if (duplicate) throw conflict('Kategori sudah ada');
 
     return prisma.propertyCategory.update({
       where: { id },
-      data: { name: data.name, slug }
+      data: { name: data.name, slug },
     });
   }
 
   static async deleteCategory(tenantId: string, id: string) {
     const target = await prisma.propertyCategory.findFirst({
-      where: { id, tenantId, deletedAt: null }
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!target) throw forbidden('Akses ditolak');
 
     return prisma.propertyCategory.update({
       where: { id },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() },
     });
   }
 }

@@ -16,7 +16,7 @@ export class CategoriesController {
     if (!req.tenantId) throw forbidden('Akses ditolak');
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    
+
     const result = await CategoriesService.getCategories(req.tenantId, page, limit);
     sendPaginated(res, result.data, result.meta, 'Berhasil mengambil daftar kategori');
   }

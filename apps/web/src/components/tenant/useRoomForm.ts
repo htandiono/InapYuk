@@ -4,7 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { RoomFormInitData, RoomFormData, RoomFormSchema, RoomFormState } from './RoomFormSchema';
 
-export function useRoomForm(propertyId: string, initialData?: RoomFormInitData, onSuccess?: () => void): RoomFormState {
+export function useRoomForm(
+  propertyId: string,
+  initialData?: RoomFormInitData,
+  onSuccess?: () => void,
+): RoomFormState {
   const [images, setImages] = useState<File[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
   const [mainId, setMainId] = useState<string | null>(initialData?.images?.[0]?.id || null);
@@ -19,20 +23,40 @@ export function useRoomForm(propertyId: string, initialData?: RoomFormInitData, 
       basePrice: initialData?.basePrice || 0,
       capacity: initialData?.capacity || 1,
       totalUnits: initialData?.totalUnits || 1,
-    }
+    },
   });
 
-  return { form, images, setImages, deleted, setDeleted, mainId, setMainId, mainIdx, setMainIdx, ref, propertyId, initialData, onSuccess };
+  return {
+    form,
+    images,
+    setImages,
+    deleted,
+    setDeleted,
+    mainId,
+    setMainId,
+    mainIdx,
+    setMainIdx,
+    ref,
+    propertyId,
+    initialData,
+    onSuccess,
+  };
 }
 
-export function handleImageFiles(e: React.ChangeEvent<HTMLInputElement>, state: RoomFormState, previewsCount: number) {
+export function handleImageFiles(
+  e: React.ChangeEvent<HTMLInputElement>,
+  state: RoomFormState,
+  previewsCount: number,
+) {
   if (!e.target.files) return;
   const files = Array.from(e.target.files);
-  if (files.length + state.images.length + previewsCount - state.deleted.length > 5) return toast.error('Maksimal 5 foto kamar diperbolehkan');
+  if (files.length + state.images.length + previewsCount - state.deleted.length > 5)
+    return toast.error('Maksimal 5 foto kamar diperbolehkan');
   const validFiles = filterValidFiles(files);
   if (validFiles.length > 0) {
     state.setImages((p: File[]) => [...p, ...validFiles]);
-    if (!state.mainId && state.mainIdx === null && previewsCount - state.deleted.length === 0) state.setMainIdx(0);
+    if (!state.mainId && state.mainIdx === null && previewsCount - state.deleted.length === 0)
+      state.setMainIdx(0);
   }
   if (state.ref.current) state.ref.current.value = '';
 }
@@ -40,7 +64,8 @@ export function handleImageFiles(e: React.ChangeEvent<HTMLInputElement>, state: 
 function filterValidFiles(files: File[]) {
   const valid: File[] = [];
   for (const f of files) {
-    if (!['image/jpeg', 'image/png'].includes(f.type)) toast.error(`${f.name}: Format tidak didukung.`);
+    if (!['image/jpeg', 'image/png'].includes(f.type))
+      toast.error(`${f.name}: Format tidak didukung.`);
     else if (f.size < 50 * 1024) toast.error(`${f.name}: Terlalu kecil (min. 50KB).`);
     else if (f.size > 5 * 1024 * 1024) toast.error(`${f.name}: Terlalu besar (maks. 5MB).`);
     else valid.push(f);
@@ -56,13 +81,19 @@ export function removeNewFile(index: number, state: RoomFormState) {
 
 export async function submitForm(data: RoomFormData, state: RoomFormState) {
   try {
-    const url = state.initialData?.id ? `/api/rooms/tenant/rooms/${state.initialData.id}` : `/api/rooms/tenant/properties/${state.propertyId}/rooms`;
+    const url = state.initialData?.id
+      ? `/api/rooms/tenant/rooms/${state.initialData.id}`
+      : `/api/rooms/tenant/properties/${state.propertyId}/rooms`;
     const form = buildFormData(data, state);
     const res = await fetch(url, { method: state.initialData?.id ? 'PATCH' : 'POST', body: form });
     if (!res.ok) throw new Error((await res.json()).message || 'Terjadi kesalahan');
-    toast.success(state.initialData?.id ? 'Kamar berhasil diperbarui' : 'Kamar berhasil ditambahkan');
+    toast.success(
+      state.initialData?.id ? 'Kamar berhasil diperbarui' : 'Kamar berhasil ditambahkan',
+    );
     if (state.onSuccess) state.onSuccess();
-  } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)); }
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : String(err));
+  }
 }
 
 function buildFormData(data: RoomFormData, state: RoomFormState) {

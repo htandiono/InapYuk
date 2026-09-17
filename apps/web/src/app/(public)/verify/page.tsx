@@ -18,7 +18,8 @@ function VerifyPageInner() {
 
   useEffect(() => {
     if (!token) return;
-    api.get(`/auth/verify/check?token=${token}`)
+    api
+      .get(`/auth/verify/check?token=${token}`)
       .catch(() => setCheckError('Link verifikasi tidak valid.'))
       .finally(() => setIsChecking(false));
   }, [token]);
@@ -36,7 +37,9 @@ function VerifyPageInner() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-destructive">{isVerified ? 'Sudah Diverifikasi' : 'Link Tidak Valid'}</CardTitle>
+          <CardTitle className="text-xl font-bold text-destructive">
+            {isVerified ? 'Sudah Diverifikasi' : 'Link Tidak Valid'}
+          </CardTitle>
           <CardDescription>
             {isVerified
               ? 'User telah berhasil diverifikasi sebelumnya. Silakan menuju halaman login.'
@@ -44,10 +47,15 @@ function VerifyPageInner() {
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-center">
-          {isVerified
-            ? <Button className="w-full" onClick={() => router.push('/login')}>Menuju halaman Login</Button>
-            : <Link href="/resend-verification" className="text-primary hover:underline text-sm">Kirim ulang link verifikasi</Link>
-          }
+          {isVerified ? (
+            <Button className="w-full" onClick={() => router.push('/login')}>
+              Menuju halaman Login
+            </Button>
+          ) : (
+            <Link href="/resend-verification" className="text-primary hover:underline text-sm">
+              Kirim ulang link verifikasi
+            </Link>
+          )}
         </CardFooter>
       </Card>
     );

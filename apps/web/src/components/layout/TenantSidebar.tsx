@@ -26,7 +26,9 @@ export function TenantSidebar() {
 
       {/* Navigation Links */}
       <nav className="flex flex-1 flex-col p-4 space-y-1 overflow-y-auto">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4 px-2">Menu Utama</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4 px-2">
+          Menu Utama
+        </div>
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
@@ -34,8 +36,8 @@ export function TenantSidebar() {
               key={item.name}
               href={item.href}
               className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive 
-                  ? 'bg-primary/10 text-primary' 
+                isActive
+                  ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
@@ -48,12 +50,14 @@ export function TenantSidebar() {
           );
         })}
 
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-8 px-2">Ketersediaan</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-8 px-2">
+          Ketersediaan
+        </div>
         <Link
           href="/tenant/calendar"
           className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-            pathname.startsWith('/tenant/calendar') 
-              ? 'bg-primary/10 text-primary' 
+            pathname.startsWith('/tenant/calendar')
+              ? 'bg-primary/10 text-primary'
               : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
         >

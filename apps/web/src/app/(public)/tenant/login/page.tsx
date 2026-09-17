@@ -10,7 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 
@@ -41,9 +48,9 @@ export default function TenantLoginPage() {
     try {
       const response = await api.post<{ role: string }>('/auth/login', {
         ...data,
-        role: 'TENANT'
+        role: 'TENANT',
       });
-      
+
       // Redirect based on role
       if (response.role === 'TENANT') {
         router.push('/tenant/properties');
@@ -75,7 +82,7 @@ export default function TenantLoginPage() {
                 {serverError}
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -85,9 +92,7 @@ export default function TenantLoginPage() {
                 {...register('email')}
                 disabled={isSubmitting}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">

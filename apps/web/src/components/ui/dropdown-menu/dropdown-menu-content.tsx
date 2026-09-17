@@ -78,7 +78,10 @@ export function DropdownMenuLabel({
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn('px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7', className)}
+      className={cn(
+        'px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7',
+        className,
+      )}
       {...props}
     />
   );

@@ -19,9 +19,16 @@ interface PropertyLocationProps {
   province: string;
 }
 
-export function PropertyLocation({ lat, lng, name, address, city, province }: PropertyLocationProps) {
+export function PropertyLocation({
+  lat,
+  lng,
+  name,
+  address,
+  city,
+  province,
+}: PropertyLocationProps) {
   const fullAddress = `${address}, ${city}, ${province}`;
-  
+
   const hasCoordinates = typeof lat === 'number' && typeof lng === 'number';
 
   return (
@@ -43,7 +50,8 @@ export function PropertyLocation({ lat, lng, name, address, city, province }: Pr
           </div>
           <h3 className="font-semibold text-lg mb-2">Peta Belum Tersedia</h3>
           <p className="text-muted-foreground max-w-md mx-auto mb-6">
-            Titik koordinat pasti untuk properti ini belum ditambahkan oleh pengelola. Anda dapat mencari alamat berikut secara manual di aplikasi navigasi Anda.
+            Titik koordinat pasti untuk properti ini belum ditambahkan oleh pengelola. Anda dapat
+            mencari alamat berikut secara manual di aplikasi navigasi Anda.
           </p>
           <div className="bg-background border border-border rounded-lg px-4 py-3 text-sm text-left max-w-md w-full relative group">
             <p className="pr-10">{fullAddress}</p>

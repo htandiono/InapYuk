@@ -47,7 +47,9 @@ export function DropdownMenuCheckboxItem({
         className="pointer-events-none absolute right-2 flex items-center justify-center"
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
-        <MenuPrimitive.CheckboxItemIndicator><CheckIcon /></MenuPrimitive.CheckboxItemIndicator>
+        <MenuPrimitive.CheckboxItemIndicator>
+          <CheckIcon />
+        </MenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
     </MenuPrimitive.CheckboxItem>
@@ -74,7 +76,9 @@ export function DropdownMenuRadioItem({
         className="pointer-events-none absolute right-2 flex items-center justify-center"
         data-slot="dropdown-menu-radio-item-indicator"
       >
-        <MenuPrimitive.RadioItemIndicator><CheckIcon /></MenuPrimitive.RadioItemIndicator>
+        <MenuPrimitive.RadioItemIndicator>
+          <CheckIcon />
+        </MenuPrimitive.RadioItemIndicator>
       </span>
       {children}
     </MenuPrimitive.RadioItem>

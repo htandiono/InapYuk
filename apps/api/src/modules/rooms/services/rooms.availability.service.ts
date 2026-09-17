@@ -10,7 +10,7 @@ export async function upsertAvailability(
     endDate: string;
     isAvailable: boolean;
     availableUnits?: number | null;
-  }
+  },
 ) {
   const room = await prisma.room.findFirst({
     where: { id: roomId, property: { tenantId }, deletedAt: null },
@@ -43,8 +43,8 @@ export async function upsertAvailability(
           isAvailable: data.isAvailable,
           availableUnits: data.availableUnits ?? null,
         },
-      })
-    )
+      }),
+    ),
   );
 
   return { message: 'Ketersediaan kamar berhasil diperbarui' };

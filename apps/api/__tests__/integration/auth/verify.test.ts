@@ -51,7 +51,7 @@ describe('POST /api/auth/verify', () => {
     const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
     expect(updatedUser!.isVerified).toBe(true);
     expect(updatedUser!.passwordHash).not.toBeNull();
-    
+
     // Verify password is encrypted correctly
     const isValid = await verifyPassword('StrongPassword123!', updatedUser!.passwordHash!);
     expect(isValid).toBe(true);

@@ -21,11 +21,12 @@ describe('POST /api/auth/resend-verification', () => {
     await truncateAll();
   });
 
-  const SUCCESS_MESSAGE = 'Jika email terdaftar dan belum terverifikasi, kami sudah mengirim link baru';
+  const SUCCESS_MESSAGE =
+    'Jika email terdaftar dan belum terverifikasi, kami sudah mengirim link baru';
 
   it('should create a new token and send email for unverified user (200)', async () => {
     const app = createTestApp();
-    
+
     const user = await prisma.user.create({
       data: {
         email: 'unverified@example.com',

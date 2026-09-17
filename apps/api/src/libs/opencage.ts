@@ -12,7 +12,12 @@ export interface AddressSuggestion {
   lng: number;
 }
 
-export async function geocodeAddress(address: string, city: string, state: string, country: string): Promise<GeocodeResult | null> {
+export async function geocodeAddress(
+  address: string,
+  city: string,
+  state: string,
+  country: string,
+): Promise<GeocodeResult | null> {
   if (!env.OPENCAGE_API_KEY) {
     logger.warn('OPENCAGE_API_KEY is not set. Skipping geocoding.');
     return null;
@@ -35,7 +40,11 @@ export async function geocodeAddress(address: string, city: string, state: strin
   }
 }
 
-export async function searchAddress(query: string, province?: string, city?: string): Promise<AddressSuggestion[]> {
+export async function searchAddress(
+  query: string,
+  province?: string,
+  city?: string,
+): Promise<AddressSuggestion[]> {
   if (!env.OPENCAGE_API_KEY) {
     logger.warn('OPENCAGE_API_KEY is not set. Skipping geosearch.');
     return [];
@@ -47,10 +56,12 @@ export async function searchAddress(query: string, province?: string, city?: str
 
   try {
     const res = await fetch(url);
-    const data = (await res.json()) as { results?: { formatted: string; geometry: { lat: number; lng: number } }[] };
-    
+    const data = (await res.json()) as {
+      results?: { formatted: string; geometry: { lat: number; lng: number } }[];
+    };
+
     if (data.results && data.results.length > 0) {
-      return data.results.map(r => ({
+      return data.results.map((r) => ({
         formatted: r.formatted,
         lat: r.geometry.lat,
         lng: r.geometry.lng,
@@ -74,7 +85,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
   try {
     const res = await fetch(url);
     const data = (await res.json()) as { results?: { formatted: string }[] };
-    
+
     if (data.results && data.results.length > 0) {
       return data.results[0].formatted;
     }

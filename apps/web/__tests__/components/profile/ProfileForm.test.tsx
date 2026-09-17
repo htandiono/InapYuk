@@ -43,10 +43,10 @@ describe('ProfileForm', () => {
   it('shows error when name is too short', async () => {
     render(<ProfileForm user={mockUser} />);
     const nameInput = screen.getByDisplayValue('Budi Santoso');
-    
+
     fireEvent.change(nameInput, { target: { value: 'Bu' } });
     fireEvent.submit(screen.getByRole('button', { name: /Simpan Perubahan/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText('Nama minimal 3 karakter')).toBeInTheDocument();
     });
@@ -56,12 +56,12 @@ describe('ProfileForm', () => {
   it('submits correctly', async () => {
     render(<ProfileForm user={mockUser} />);
     const nameInput = screen.getByDisplayValue('Budi Santoso');
-    
+
     fireEvent.change(nameInput, { target: { value: 'Budi Updated' } });
     fireEvent.submit(screen.getByRole('button', { name: /Simpan Perubahan/i }));
-    
+
     await waitFor(() => {
-      expect(api.patch).toHaveBeenCalledWith('/users/profile', expect.any(FormData), expect.any(Object));
+      expect(api.patch).toHaveBeenCalledWith('/users/profile', expect.any(FormData));
     });
   });
 });

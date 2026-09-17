@@ -1,14 +1,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Edit,
-  Trash2,
-  Users,
-  CalendarDays,
-  CalendarClock,
-  Image as ImageIcon,
-} from 'lucide-react';
+import { Edit, Trash2, Users, CalendarDays, CalendarClock, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 
 export interface Room {
@@ -29,7 +22,13 @@ type RoomCardProps = {
   onManagePeakSeason?: (id: string) => void;
 };
 
-export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePeakSeason }: RoomCardProps) {
+export function RoomCard({
+  r,
+  onEdit,
+  onDelete,
+  onManageAvailability,
+  onManagePeakSeason,
+}: RoomCardProps) {
   return (
     <Card className="overflow-hidden bg-card transition-all hover:shadow-md border-border/40 group flex flex-col h-full pt-0 gap-0">
       {/* Image Section */}
@@ -46,7 +45,10 @@ export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePe
               {r.description}
             </p>
           </div>
-          <Badge variant="outline" className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full">
+          <Badge
+            variant="outline"
+            className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full"
+          >
             {r.totalUnits} Unit
           </Badge>
         </div>

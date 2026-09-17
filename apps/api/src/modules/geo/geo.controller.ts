@@ -4,7 +4,7 @@ import { searchAddress, reverseGeocode } from '../../libs/opencage';
 export const autocompleteAddress = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { q, province, city } = req.query;
@@ -17,7 +17,7 @@ export const autocompleteAddress = async (
     const suggestions = await searchAddress(
       q,
       typeof province === 'string' ? province : undefined,
-      typeof city === 'string' ? city : undefined
+      typeof city === 'string' ? city : undefined,
     );
 
     res.status(200).json({ success: true, data: suggestions });
@@ -26,11 +26,7 @@ export const autocompleteAddress = async (
   }
 };
 
-export const reverseAddress = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const reverseAddress = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { lat, lng } = req.query;
     if (!lat || !lng) {

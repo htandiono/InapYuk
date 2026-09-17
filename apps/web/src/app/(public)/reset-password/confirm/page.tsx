@@ -9,7 +9,9 @@ export const metadata = {
 export default function ConfirmResetPasswordPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Suspense fallback={<div className="animate-pulse h-64 w-full max-w-md bg-muted rounded-xl" />}>
+      <Suspense
+        fallback={<div className="animate-pulse h-64 w-full max-w-md bg-muted rounded-xl" />}
+      >
         <ConfirmResetPasswordForm />
       </Suspense>
     </div>

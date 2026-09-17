@@ -5,27 +5,33 @@ import { Footer } from '@/components/layout/Footer';
 import { PropertyDetailView, type Property } from '@/components/properties/PropertyDetailView';
 import { api } from '@/lib/api-client';
 
-export default async function PropertyDetailPage({ 
+export default async function PropertyDetailPage({
   params,
   searchParams,
-}: { 
+}: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const cookieStore = await cookies();
   const token = cookieStore.get('accessToken')?.value;
   const isAuthenticated = !!token;
-  
+
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
-  const initialCheckIn = typeof resolvedSearchParams.checkIn === 'string' ? resolvedSearchParams.checkIn : undefined;
+  const initialCheckIn =
+    typeof resolvedSearchParams.checkIn === 'string' ? resolvedSearchParams.checkIn : undefined;
 
   let property: Property;
   try {
     const data = await api.get<Property>(`/properties/${slug}`);
     property = data;
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'status' in error && (error as { status: number }).status === 404) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      (error as { status: number }).status === 404
+    ) {
       notFound();
     }
     throw error;

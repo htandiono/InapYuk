@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { sendMail } from '../../libs/mailer';
+import { logger } from '../../libs/logger';
 import { hashPassword, hashToken } from '../../libs/password';
 import { prisma } from '../../libs/prisma';
 import { badRequest } from '../../utils/app-error';
@@ -22,7 +23,9 @@ async function validateTokenRecord(tokenRecord: (VerificationToken & { user: Use
   });
 
   if (latestToken && latestToken.id !== tokenRecord.id) {
-    throw badRequest('Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.');
+    throw badRequest(
+      'Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.',
+    );
   }
 
   if (tokenRecord.usedAt !== null || tokenRecord.expiresAt < new Date()) {
@@ -40,8 +43,14 @@ export async function verifyEmail(input: VerifyEmailInput) {
 
   const hashedPw = await hashPassword(input.password);
   const [updatedUser] = await prisma.$transaction([
-    prisma.user.update({ where: { id: tokenRecord!.userId }, data: { isVerified: true, passwordHash: hashedPw } }),
-    prisma.verificationToken.updateMany({ where: { userId: tokenRecord!.userId, type: 'EMAIL_VERIFICATION' }, data: { usedAt: new Date() } }),
+    prisma.user.update({
+      where: { id: tokenRecord!.userId },
+      data: { isVerified: true, passwordHash: hashedPw },
+    }),
+    prisma.verificationToken.updateMany({
+      where: { userId: tokenRecord!.userId, type: 'EMAIL_VERIFICATION' },
+      data: { usedAt: new Date() },
+    }),
   ]);
   return { role: updatedUser.role };
 }
@@ -74,8 +83,12 @@ export async function resendVerification(input: ResendVerificationInput) {
     to: user.email,
     subject: 'Verifikasi Akun InapYuk',
     template: 'email-verification',
-    context: { name: user.name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
+    context: {
+      name: user.name,
+      verificationUrl,
+      expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
+    },
   }).catch((err) => {
-    console.error(`[MailError] Failed to resend verification email to ${user.email}`, err);
+    logger.error(`[MailError] Failed to resend verification email to ${user.email}`, err);
   });
 }

@@ -13,7 +13,12 @@ type AvailabilityFormProps = {
   onCancel: () => void;
 };
 
-export function AvailabilityForm({ loading, totalUnits, onSubmit, onCancel }: AvailabilityFormProps) {
+export function AvailabilityForm({
+  loading,
+  totalUnits,
+  onSubmit,
+  onCancel,
+}: AvailabilityFormProps) {
   const [formData, setFormData] = useState<AvailabilityData>({
     startDate: '',
     endDate: '',
@@ -60,12 +65,18 @@ export function AvailabilityForm({ loading, totalUnits, onSubmit, onCancel }: Av
       <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
         <div className="space-y-0.5">
           <Label className="text-base">Kamar Tersedia</Label>
-          <p className="text-sm text-muted-foreground">Aktifkan untuk menerima pesanan pada tanggal ini</p>
+          <p className="text-sm text-muted-foreground">
+            Aktifkan untuk menerima pesanan pada tanggal ini
+          </p>
         </div>
         <Switch
           checked={formData.isAvailable}
           onCheckedChange={(c: boolean) => {
-            setFormData({ ...formData, isAvailable: c, availableUnits: c ? formData.availableUnits : '' });
+            setFormData({
+              ...formData,
+              isAvailable: c,
+              availableUnits: c ? formData.availableUnits : '',
+            });
           }}
         />
       </div>
@@ -82,7 +93,8 @@ export function AvailabilityForm({ loading, totalUnits, onSubmit, onCancel }: Av
           disabled={!formData.isAvailable}
         />
         <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-          Tentukan batas maksimal unit yang bisa dipesan (sudah termasuk yang terpesan). Maksimal: <strong>{totalUnits} unit</strong>.
+          Tentukan batas maksimal unit yang bisa dipesan (sudah termasuk yang terpesan). Maksimal:{' '}
+          <strong>{totalUnits} unit</strong>.
         </p>
       </div>
 

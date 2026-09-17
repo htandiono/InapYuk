@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { sendMail } from '../../libs/mailer';
+import { logger } from '../../libs/logger';
 import { prisma } from '../../libs/prisma';
 import { conflict } from '../../utils/app-error';
 import type { RegisterTenantInput, RegisterUserInput } from './auth.schema';
@@ -21,7 +22,7 @@ function sendVerificationEmail(email: string, name: string, token: string, isTen
     template: 'email-verification',
     context: { name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
   }).catch((err) => {
-    console.error(`[MailError] Failed to send verification email to ${email}`, err);
+    logger.error(`[MailError] Failed to send verification email to ${email}`, err);
   });
 }
 
@@ -30,7 +31,7 @@ import type { Prisma } from '../../generated/prisma/client';
 async function createUserAndToken(
   tx: Prisma.TransactionClient,
   data: Prisma.UserCreateInput,
-  tokenData: { tokenHash: string; expiresAt: Date }
+  tokenData: { tokenHash: string; expiresAt: Date },
 ) {
   const user = await tx.user.create({ data });
   const token = await tx.verificationToken.create({

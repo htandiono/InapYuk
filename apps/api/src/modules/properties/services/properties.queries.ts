@@ -29,7 +29,7 @@ export async function searchProperties(query: GetPropertiesQuery) {
 
   const [total, rawProps] = await Promise.all([
     prisma.property.count({ where: buildPropertyWhereClause(query) }),
-    fetchBaseProperties(query, skip, take)
+    fetchBaseProperties(query, skip, take),
   ]);
 
   const evaluated = await evaluatePricesForProperties(rawProps, query.checkIn, query.checkOut);
@@ -62,11 +62,13 @@ export async function getTenantProperties(tenantId: string, page: number = 1, li
 
   const [data, total] = await Promise.all([
     prisma.property.findMany({
-      where, take, skip,
-      include: { 
-        category: true, 
+      where,
+      take,
+      skip,
+      include: {
+        category: true,
         images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-        rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } }
+        rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),

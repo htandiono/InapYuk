@@ -10,28 +10,28 @@ const filesToAudit = [
   'apps/web/src/components/properties/ImageLightbox.tsx',
   'apps/api/src/modules/rooms/rooms.service.ts',
   'apps/api/src/modules/rooms/rooms.controller.ts',
-  'apps/api/src/middlewares/upload.middleware.ts'
+  'apps/api/src/middlewares/upload.middleware.ts',
 ];
 
 function auditFile(filePath) {
-  const absolutePath = path.resolve('/Users/tuanstrange/Documents/Fullstack Engineer/Purwadhika Bootcamp/Final_Project/InapYuk', filePath);
+  const absolutePath = path.resolve(
+    '/Users/tuanstrange/Documents/Fullstack Engineer/Purwadhika Bootcamp/Final_Project/InapYuk',
+    filePath,
+  );
   if (!fs.existsSync(absolutePath)) {
     console.log(`Missing: ${filePath}`);
     return;
   }
-  
+
   const content = fs.readFileSync(absolutePath, 'utf8');
   const lines = content.split('\n');
   const fileLines = lines.length;
-  
-  console.log(`\n--- ${filePath} (${fileLines} lines) ${fileLines > 200 ? '❌ VIOLATION (File > 200 lines)' : '✅'} ---`);
 
-  const sourceFile = ts.createSourceFile(
-    filePath,
-    content,
-    ts.ScriptTarget.Latest,
-    true
+  console.log(
+    `\n--- ${filePath} (${fileLines} lines) ${fileLines > 200 ? '❌ VIOLATION (File > 200 lines)' : '✅'} ---`,
   );
+
+  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
 
   let violations = 0;
 
@@ -45,18 +45,28 @@ function auditFile(filePath) {
       const start = sourceFile.getLineAndCharacterOfPosition(node.getStart());
       const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
       const numLines = end.line - start.line + 1;
-      
+
       let name = 'Anonymous';
       if (node.name) {
         name = node.name.text;
-      } else if (node.parent && ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)) {
+      } else if (
+        node.parent &&
+        ts.isVariableDeclaration(node.parent) &&
+        ts.isIdentifier(node.parent.name)
+      ) {
         name = node.parent.name.text;
-      } else if (node.parent && ts.isPropertyAssignment(node.parent) && ts.isIdentifier(node.parent.name)) {
+      } else if (
+        node.parent &&
+        ts.isPropertyAssignment(node.parent) &&
+        ts.isIdentifier(node.parent.name)
+      ) {
         name = node.parent.name.text;
       }
-      
+
       if (numLines > 15) {
-        console.log(`  ❌ Function '${name}' at line ${start.line + 1} has ${numLines} lines (> 15).`);
+        console.log(
+          `  ❌ Function '${name}' at line ${start.line + 1} has ${numLines} lines (> 15).`,
+        );
         violations++;
       }
     }

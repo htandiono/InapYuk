@@ -9,9 +9,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       <div className="flex flex-1 flex-col overflow-hidden">
         <TenantTopbar />
         <main className="flex-1 overflow-y-auto outline-none flex flex-col">
-          <div className="flex-1 flex flex-col">
-            {children}
-          </div>
+          <div className="flex-1 flex flex-col">{children}</div>
           <TenantFooter />
         </main>
       </div>

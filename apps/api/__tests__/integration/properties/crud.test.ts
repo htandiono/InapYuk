@@ -7,18 +7,22 @@ import { signAccessToken } from '../../../src/libs/jwt';
 
 vi.mock('../../../src/libs/cloudinary', () => {
   return {
-    uploadImage: vi.fn().mockResolvedValue('https://res.cloudinary.com/demo/image/upload/sample.jpg'),
+    uploadImage: vi
+      .fn()
+      .mockResolvedValue('https://res.cloudinary.com/demo/image/upload/sample.jpg'),
     default: {
       uploader: {
-        upload: vi.fn().mockResolvedValue({ secure_url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg' })
-      }
-    }
+        upload: vi.fn().mockResolvedValue({
+          secure_url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+        }),
+      },
+    },
   };
 });
 
 vi.mock('../../../src/libs/opencage', () => {
   return {
-    geocodeAddress: vi.fn().mockResolvedValue({ lat: -8.409518, lng: 115.188919 })
+    geocodeAddress: vi.fn().mockResolvedValue({ lat: -8.409518, lng: 115.188919 }),
   };
 });
 
@@ -39,7 +43,7 @@ describe('Properties CRUD', () => {
         name: 'Tenant Bali',
         role: 'TENANT',
         isVerified: true,
-      }
+      },
     });
 
     const tenantProfile = await prisma.tenantProfile.create({
@@ -47,14 +51,19 @@ describe('Properties CRUD', () => {
         id: 'tenant-profile-1',
         userId: user.id,
         companyName: 'Bali Co',
-      }
+      },
     });
 
     tenantId = tenantProfile.id;
-    tenantToken = signAccessToken({ sub: user.id, email: user.email, role: user.role, isVerified: user.isVerified });
+    tenantToken = signAccessToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    });
 
     const cat = await prisma.propertyCategory.create({
-      data: { name: 'Vila', slug: 'vila', tenantId }
+      data: { name: 'Vila', slug: 'vila', tenantId },
     });
     categoryId = cat.id;
   });
@@ -77,9 +86,9 @@ describe('Properties CRUD', () => {
       expect(res.status).toBe(201);
       expect(res.body.data.name).toBe('Vila Baru');
       expect(res.body.data.slug).toBe('vila-baru');
-      // geocoding is skipped without API key, so these are null in test
-      expect(res.body.data.latitude).toEqual(null);
-      expect(res.body.data.longitude).toEqual(null);
+      // geocoding mock returns fixed coords — assert they are numbers
+      expect(typeof res.body.data.latitude).toBe('number');
+      expect(typeof res.body.data.longitude).toBe('number');
       expect(res.body.data.images).toHaveLength(1);
     });
   });

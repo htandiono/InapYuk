@@ -6,9 +6,15 @@ export function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-xs text-muted-foreground gap-4">
         <p>InapYuk &copy; 2026. Nginap lebih tenang, harganya kelihatan jelas.</p>
         <div className="flex gap-4 sm:mt-0">
-          <Link href="/bantuan" className="hover:text-primary transition-colors">Bantuan</Link>
-          <Link href="/privasi" className="hover:text-primary transition-colors">Privasi</Link>
-          <Link href="/syarat" className="hover:text-primary transition-colors">Syarat</Link>
+          <Link href="/bantuan" className="hover:text-primary transition-colors">
+            Bantuan
+          </Link>
+          <Link href="/privasi" className="hover:text-primary transition-colors">
+            Privasi
+          </Link>
+          <Link href="/syarat" className="hover:text-primary transition-colors">
+            Syarat
+          </Link>
         </div>
       </div>
     </footer>

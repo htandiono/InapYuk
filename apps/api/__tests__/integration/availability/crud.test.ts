@@ -8,7 +8,12 @@ import { signAccessToken } from '../../../src/libs/jwt';
 describe('Availability CRUD', () => {
   const app = createApp();
   const tenantId = 'test-tenant-id';
-  const token = signAccessToken({ sub: 'test-user-id', email: 'tenant@test.com', role: 'TENANT', isVerified: true });
+  const token = signAccessToken({
+    sub: 'test-user-id',
+    email: 'tenant@test.com',
+    role: 'TENANT',
+    isVerified: true,
+  });
   let roomId: string;
 
   beforeEach(async () => {
@@ -21,18 +26,18 @@ describe('Availability CRUD', () => {
         name: 'Test Tenant',
         passwordHash: 'hash',
         role: 'TENANT',
-        isVerified: true
-      }
+        isVerified: true,
+      },
     });
-    
+
     await prisma.tenantProfile.create({
-      data: { id: tenantId, userId: user.id, companyName: 'Test Company' }
+      data: { id: tenantId, userId: user.id, companyName: 'Test Company' },
     });
-    
+
     const category = await prisma.propertyCategory.create({
-      data: { name: 'Villa', slug: 'villa', tenantId }
+      data: { name: 'Villa', slug: 'villa', tenantId },
     });
-    
+
     const property = await prisma.property.create({
       data: {
         tenantId,
@@ -42,8 +47,8 @@ describe('Availability CRUD', () => {
         description: 'A test property',
         address: 'Test Address',
         city: 'Test City',
-        province: 'Test State'
-      }
+        province: 'Test State',
+      },
     });
 
     const room = await prisma.room.create({
@@ -53,8 +58,8 @@ describe('Availability CRUD', () => {
         description: 'Nice room',
         basePrice: 500000,
         capacity: 2,
-        totalUnits: 5
-      }
+        totalUnits: 5,
+      },
     });
     roomId = room.id;
   });
@@ -68,14 +73,14 @@ describe('Availability CRUD', () => {
           startDate: '2026-10-01',
           endDate: '2026-10-02',
           isAvailable: false,
-          availableUnits: 0
+          availableUnits: 0,
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
       const availabilities = await prisma.roomAvailability.findMany({
-        where: { roomId }
+        where: { roomId },
       });
       expect(availabilities.length).toBe(2); // Oct 1 and Oct 2
       expect(availabilities[0].isAvailable).toBe(false);
@@ -89,7 +94,7 @@ describe('Availability CRUD', () => {
         .send({
           startDate: '2026-10-02',
           endDate: '2026-10-01',
-          isAvailable: false
+          isAvailable: false,
         });
 
       expect(res.status).toBe(400);

@@ -5,7 +5,11 @@ import supertest from 'supertest';
 import { truncateAll } from '../../../src/test/helpers';
 import { prisma } from '../../../src/libs/prisma';
 import { issueTokens } from '../../../src/libs/jwt';
-import { authenticate, requireRole, requireVerified } from '../../../src/middlewares/auth.middleware';
+import {
+  authenticate,
+  requireRole,
+  requireVerified,
+} from '../../../src/middlewares/auth.middleware';
 
 describe('Route Guards & Role Separation (auth.middleware)', () => {
   beforeEach(async () => {
@@ -15,17 +19,36 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
   function setupApp() {
     const expressApp = express();
     expressApp.use(cookieParser());
-    expressApp.get('/api/test-protected-user', authenticate, requireRole('USER'), requireVerified, (req, res) => {
-      res.status(200).json({ success: true, message: 'Welcome verified user' });
-    });
-    expressApp.get('/api/test-protected-tenant', authenticate, requireRole('TENANT'), requireVerified, (req, res) => {
-      res.status(200).json({ success: true, message: 'Welcome verified tenant' });
-    });
-    
+    expressApp.get(
+      '/api/test-protected-user',
+      authenticate,
+      requireRole('USER'),
+      requireVerified,
+      (req, res) => {
+        res.status(200).json({ success: true, message: 'Welcome verified user' });
+      },
+    );
+    expressApp.get(
+      '/api/test-protected-tenant',
+      authenticate,
+      requireRole('TENANT'),
+      requireVerified,
+      (req, res) => {
+        res.status(200).json({ success: true, message: 'Welcome verified tenant' });
+      },
+    );
+
     // Simple error handler matching what errorHandler does
-    expressApp.use((err: Error & { statusCode?: number }, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      res.status(err.statusCode || 500).json({ message: err.message || 'Internal Server Error' });
-    });
+    expressApp.use(
+      (
+        err: Error & { statusCode?: number },
+        req: express.Request,
+        res: express.Response,
+        _next: express.NextFunction,
+      ) => {
+        res.status(err.statusCode || 500).json({ message: err.message || 'Internal Server Error' });
+      },
+    );
 
     return supertest(expressApp);
   }
@@ -54,7 +77,9 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
     const app = setupApp();
     const { accessToken } = await createUserAndToken('USER', true);
 
-    const res = await app.get('/api/test-protected-user').set('Cookie', [`accessToken=${accessToken}`]);
+    const res = await app
+      .get('/api/test-protected-user')
+      .set('Cookie', [`accessToken=${accessToken}`]);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -72,7 +97,9 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
     const app = setupApp();
     const { accessToken } = await createUserAndToken('TENANT', true);
 
-    const res = await app.get('/api/test-protected-user').set('Cookie', [`accessToken=${accessToken}`]);
+    const res = await app
+      .get('/api/test-protected-user')
+      .set('Cookie', [`accessToken=${accessToken}`]);
 
     expect(res.status).toBe(403);
     expect(res.body.message).toBe('Akses ditolak');
@@ -82,7 +109,9 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
     const app = setupApp();
     const { accessToken } = await createUserAndToken('USER', true);
 
-    const res = await app.get('/api/test-protected-tenant').set('Cookie', [`accessToken=${accessToken}`]);
+    const res = await app
+      .get('/api/test-protected-tenant')
+      .set('Cookie', [`accessToken=${accessToken}`]);
 
     expect(res.status).toBe(403);
     expect(res.body.message).toBe('Akses ditolak');
@@ -92,7 +121,9 @@ describe('Route Guards & Role Separation (auth.middleware)', () => {
     const app = setupApp();
     const { accessToken } = await createUserAndToken('USER', false);
 
-    const res = await app.get('/api/test-protected-user').set('Cookie', [`accessToken=${accessToken}`]);
+    const res = await app
+      .get('/api/test-protected-user')
+      .set('Cookie', [`accessToken=${accessToken}`]);
 
     expect(res.status).toBe(403);
     expect(res.body.message).toBe('Akun belum diverifikasi');

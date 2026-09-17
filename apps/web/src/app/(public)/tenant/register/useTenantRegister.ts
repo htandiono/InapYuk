@@ -6,9 +6,17 @@ import { api, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(3, 'Nama minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
   email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
-  companyName: z.string().trim().min(3, 'Nama perusahaan minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
+  companyName: z
+    .string()
+    .trim()
+    .min(3, 'Nama perusahaan minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
   companyAddress: z.string().trim().min(5, 'Alamat perusahaan minimal 5 karakter'),
 });
 
@@ -32,7 +40,9 @@ export function useTenantRegister() {
   const handleApiError = (error: unknown) => {
     if (error instanceof ApiError) {
       setServerError(error.message);
-      error.fieldErrors?.forEach((fe) => form.setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message }));
+      error.fieldErrors?.forEach((fe) =>
+        form.setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message }),
+      );
     } else {
       setServerError('Terjadi kesalahan yang tidak diketahui.');
     }
