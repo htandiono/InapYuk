@@ -83,10 +83,10 @@ function PropertyMobileActions({ p, onEdit, onDelete }: PropertyCardProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 px-0 rounded-full"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem asChild><Link href={`/tenant/properties/${p.id}/rooms`} className="cursor-pointer"><Settings className="mr-2 h-4 w-4" />Kelola Kamar</Link></DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(p)} className="cursor-pointer"><Edit className="mr-2 h-4 w-4" />Edit Properti</DropdownMenuItem>
+          <DropdownMenuItem asChild><Link href={`/tenant/properties/${p.id}/rooms`} className="cursor-pointer flex items-center w-full"><Settings className="mr-2 h-4 w-4" />Kelola Kamar</Link></DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onEdit(p)} className="cursor-pointer flex items-center w-full"><Edit className="mr-2 h-4 w-4" />Edit Properti</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onDelete(p.id)} className="text-destructive focus:text-destructive cursor-pointer"><Trash2 className="mr-2 h-4 w-4" />Hapus Properti</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDelete(p.id)} className="text-destructive focus:text-destructive cursor-pointer flex items-center w-full"><Trash2 className="mr-2 h-4 w-4" />Hapus Properti</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
