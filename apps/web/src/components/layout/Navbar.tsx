@@ -1,17 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { decodeJwt } from 'jose';
-import { Search, Menu } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/ui/logo';
-import { LogoutButton } from '../LogoutButton';
 
 interface NavbarProps {
   isAuthenticated: boolean;

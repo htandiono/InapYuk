@@ -1,9 +1,8 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Users, CalendarDays, CalendarClock, ImageIcon, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, Users, CalendarDays, CalendarClock, ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export interface Room {
   id: string; name: string; description: string; basePrice: number; capacity: number; totalUnits: number;
@@ -15,25 +14,9 @@ type RoomCardProps = {
   onManageAvailability?: (id: string) => void; onManagePeakSeason?: (id: string) => void;
 };
 
-function RoomCardHeaderMenu({ r, onEdit, onDelete }: { r: Room; onEdit: (r: Room) => void; onDelete: (id: string) => void; }) {
-  return (
-    <div className="absolute top-3 right-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 px-0 rounded-full text-muted-foreground hover:text-foreground"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem onClick={() => onEdit(r)} className="cursor-pointer flex items-center gap-2"><Edit className="h-4 w-4" /><span>Edit Kamar</span></DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onDelete(r.id)} className="text-destructive focus:text-destructive cursor-pointer flex items-center gap-2"><Trash2 className="h-4 w-4" /><span>Hapus Kamar</span></DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
-function RoomCardHeader({ r, onEdit, onDelete }: { r: Room; onEdit: (r: Room) => void; onDelete: (id: string) => void; }) {
+function RoomCardHeader({ r }: { r: Room; }) {
   return (
     <CardHeader className="pb-3 pt-4 px-5 space-y-1 relative pr-10">
-      <RoomCardHeaderMenu r={r} onEdit={onEdit} onDelete={onDelete} />
       <div className="flex flex-col gap-1.5 pr-2">
         <div className="flex items-center gap-2">
           <CardTitle className="font-semibold text-base leading-tight line-clamp-1 wrap-break-word">{r.name}</CardTitle>
@@ -49,9 +32,9 @@ function RoomCardContent({ r }: { r: Room }) {
   return (
     <CardContent className="px-5 pb-4 grow">
       <div className="bg-muted/40 rounded-lg p-3 mb-3 space-y-2">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Harga Dasar</span>
-          <span className="font-bold text-lg text-primary">Rp {Number(r.basePrice).toLocaleString('id-ID')}</span>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+          <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap">Harga Dasar</span>
+          <span className="font-bold text-base md:text-lg text-primary whitespace-nowrap">Rp {Number(r.basePrice).toLocaleString('id-ID')}</span>
         </div>
         <div className="flex items-center gap-4 pt-1 border-t border-border/30">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Users className="h-3.5 w-3.5 text-accent shrink-0" /><span className="font-medium">{r.capacity} Orang</span></div>
@@ -64,14 +47,23 @@ function RoomCardContent({ r }: { r: Room }) {
 function RoomCardActionsPrimary({ r, onManageAvailability, onManagePeakSeason }: { r: Room; onManageAvailability?: (id: string) => void; onManagePeakSeason?: (id: string) => void; }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button size="sm" className="flex-1 min-w-[130px] h-9 px-3 rounded-full text-xs font-medium bg-[#0f6d5e] hover:bg-[#0b5649] border-transparent text-white" onClick={() => onManageAvailability?.(r.id)}>
+      <Button size="sm" className="flex-1 min-w-32.5 h-9 px-3 rounded-full text-xs font-medium bg-[#0f6d5e] hover:bg-[#0b5649] border-transparent text-white" onClick={() => onManageAvailability?.(r.id)}>
         <CalendarDays className="h-3.5 w-3.5 mr-1.5 shrink-0" />
         <span>Ketersediaan</span>
       </Button>
-      <Button size="sm" variant="outline" className="flex-1 min-w-[130px] h-9 px-3 rounded-full text-xs font-medium border-[#0f6d5e]/30 text-[#0f6d5e] hover:bg-[#0f6d5e]/10 hover:border-[#0f6d5e]/50" onClick={() => onManagePeakSeason?.(r.id)}>
+      <Button size="sm" variant="outline" className="flex-1 min-w-32.5 h-9 px-3 rounded-full text-xs font-medium border-[#0f6d5e]/30 text-[#0f6d5e] hover:bg-[#0f6d5e]/10 hover:border-[#0f6d5e]/50" onClick={() => onManagePeakSeason?.(r.id)}>
         <CalendarClock className="h-3.5 w-3.5 mr-1.5 shrink-0" />
         <span>Harga Musiman</span>
       </Button>
+    </div>
+  );
+}
+
+function RoomCardActionsSecondary({ r, onEdit, onDelete }: { r: Room; onEdit: (r: Room) => void; onDelete: (id: string) => void; }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" className="flex-1 h-8 rounded-full text-xs font-medium border-border/60 hover:bg-muted/50" onClick={() => onEdit(r)}><Edit className="h-3.5 w-3.5 mr-1.5 shrink-0" /><span>Edit</span></Button>
+      <Button size="sm" variant="destructive" className="h-8 rounded-full text-xs font-medium shadow-sm shrink-0 bg-destructive/10 text-destructive hover:bg-destructive/20" onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5 mr-1.5 shrink-0" /><span>Hapus</span></Button>
     </div>
   );
 }
@@ -80,10 +72,11 @@ export function RoomCard({ r, onEdit, onDelete, onManageAvailability, onManagePe
   return (
     <Card className="overflow-hidden bg-card transition-all hover:shadow-md border-border/40 group flex flex-col h-full pt-0 gap-0">
       <RoomImage r={r} />
-      <RoomCardHeader r={r} onEdit={onEdit} onDelete={onDelete} />
+      <RoomCardHeader r={r} />
       <RoomCardContent r={r} />
       <CardFooter className="flex flex-col gap-2 px-5 pt-6 pb-4 border-t border-border/30 bg-muted/20">
         <RoomCardActionsPrimary r={r} onManageAvailability={onManageAvailability} onManagePeakSeason={onManagePeakSeason} />
+        <RoomCardActionsSecondary r={r} onEdit={onEdit} onDelete={onDelete} />
       </CardFooter>
     </Card>
   );
