@@ -11,7 +11,7 @@ interface Props {
 export function CategoryEditDialog({ editingCategory, setEditingCategory, onSuccess }: Props) {
   return (
     <Dialog open={!!editingCategory} onOpenChange={(open) => !open && setEditingCategory(null)}>
-      <DialogContent>
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md min-w-[320px]">
         <DialogHeader><DialogTitle>Edit Kategori</DialogTitle></DialogHeader>
         {editingCategory && <CategoryForm initialData={editingCategory} onSuccess={onSuccess} onCancel={() => setEditingCategory(null)} />}
       </DialogContent>

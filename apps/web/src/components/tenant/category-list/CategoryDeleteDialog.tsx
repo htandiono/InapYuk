@@ -12,7 +12,7 @@ interface Props {
 export function CategoryDeleteDialog({ deletingId, isDeleting, onOpenChange, onCancel, onConfirm }: Props) {
   return (
     <Dialog open={!!deletingId} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md min-w-[320px]">
         <DialogHeader><DialogTitle>Konfirmasi Hapus</DialogTitle></DialogHeader>
         <div className="py-4"><p className="text-muted-foreground">Apakah Anda yakin ingin menghapus kategori ini? Tindakan ini tidak dapat dibatalkan.</p></div>
         <div className="flex justify-end gap-3 mt-4">

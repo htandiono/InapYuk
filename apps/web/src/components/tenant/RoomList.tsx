@@ -95,7 +95,7 @@ function PaginationControls({ page, totalPages, setPage, loading }: { page: numb
 function CreateRoomDialog({ open, setOpen, propertyId, onDone }: CreateProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-2xl min-w-[320px] max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Kamar Baru</DialogTitle></DialogHeader>
         <RoomForm propertyId={propertyId} onSuccess={onDone} onCancel={() => setOpen(false)} />
       </DialogContent>
@@ -106,7 +106,7 @@ function CreateRoomDialog({ open, setOpen, propertyId, onDone }: CreateProps) {
 function EditRoomDialog({ r, setR, propertyId, onDone }: EditProps) {
   return (
     <Dialog open={!!r} onOpenChange={(o) => !o && setR(null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-2xl min-w-[320px] max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Edit Kamar</DialogTitle></DialogHeader>
         {r && <RoomForm propertyId={propertyId} initialData={r} onSuccess={onDone} onCancel={() => setR(null)} />}
       </DialogContent>
@@ -117,7 +117,7 @@ function EditRoomDialog({ r, setR, propertyId, onDone }: EditProps) {
 function DeleteRoomDialog({ deletingId, setDeletingId, isDeleting, confirmDelete }: { deletingId: string | null, setDeletingId: (id: string | null) => void, isDeleting: boolean, confirmDelete: () => void }) {
   return (
     <Dialog open={!!deletingId} onOpenChange={(open) => !open && !isDeleting && setDeletingId(null)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md min-w-[320px]">
         <DialogHeader><DialogTitle>Konfirmasi Hapus</DialogTitle></DialogHeader>
         <div className="py-4"><p className="text-muted-foreground">Apakah Anda yakin ingin menghapus kamar ini? Tindakan ini tidak dapat dibatalkan.</p></div>
         <div className="flex justify-end gap-3 mt-4">

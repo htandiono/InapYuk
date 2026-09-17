@@ -9,7 +9,7 @@ import { TableLoadingRow, TableEmptyRow } from './PropertyListRows';
 export function CreateDialog({ open, setOpen, onDone }: { open: boolean; setOpen: (v: boolean) => void; onDone?: () => void; }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-2xl min-w-[320px] max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Properti Baru</DialogTitle></DialogHeader>
         <PropertyForm onSuccess={onDone} onCancel={() => setOpen(false)} />
       </DialogContent>
@@ -19,7 +19,7 @@ export function CreateDialog({ open, setOpen, onDone }: { open: boolean; setOpen
 
 function EditDialogContent({ setP, onDone, fullProp, loadingFull }: { setP: (p: Property | null) => void; onDone?: () => void; fullProp: Property | null; loadingFull: boolean; }) {
   return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-2xl min-w-[320px] max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>Edit Properti</DialogTitle></DialogHeader>
       {loadingFull && <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}
       {!loadingFull && fullProp && <PropertyForm initialData={fullProp} onSuccess={onDone} onCancel={() => setP(null)} />}
@@ -80,7 +80,7 @@ export function PropertyListTable({ loading, properties, setEditingProperty, set
 
 function DeleteDialogContent({ isDeleting, setDeletingId, confirmDelete }: { isDeleting: boolean; setDeletingId: (id: string | null) => void; confirmDelete: () => void; }) {
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md min-w-[320px]">
       <DialogHeader><DialogTitle>Konfirmasi Hapus</DialogTitle></DialogHeader>
       <div className="py-4"><p className="text-muted-foreground">Apakah Anda yakin ingin menghapus properti ini? Tindakan ini tidak dapat dibatalkan.</p></div>
       <div className="flex justify-end gap-3 mt-4">
