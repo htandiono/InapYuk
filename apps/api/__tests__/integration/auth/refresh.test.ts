@@ -51,7 +51,7 @@ describe('POST /api/auth/refresh', () => {
     const cookies = res.headers['set-cookie'];
     expect(cookies).toBeDefined();
     expect(cookies.some((c: string) => c.startsWith('accessToken='))).toBe(true);
-    
+
     // Refresh token should be rotated
     expect(cookies.some((c: string) => c.startsWith('refreshToken='))).toBe(true);
   });
@@ -64,7 +64,7 @@ describe('POST /api/auth/refresh', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Sesi Anda telah berakhir, silakan login kembali');
-    
+
     const cookies = res.headers['set-cookie'] || [];
     expect(cookies.some((c: string) => c.includes('accessToken=;'))).toBe(true);
     expect(cookies.some((c: string) => c.includes('refreshToken=;'))).toBe(true);
@@ -81,7 +81,7 @@ describe('POST /api/auth/refresh', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Sesi Anda telah berakhir, silakan login kembali');
-    
+
     const cookies = res.headers['set-cookie'] || [];
     expect(cookies.some((c: string) => c.includes('accessToken=;'))).toBe(true);
     expect(cookies.some((c: string) => c.includes('refreshToken=;'))).toBe(true);
@@ -94,7 +94,7 @@ describe('POST /api/auth/refresh', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Sesi Anda telah berakhir, silakan login kembali');
-    
+
     const cookies = res.headers['set-cookie'] || [];
     expect(cookies.some((c: string) => c.includes('accessToken=;'))).toBe(true);
     expect(cookies.some((c: string) => c.includes('refreshToken=;'))).toBe(true);

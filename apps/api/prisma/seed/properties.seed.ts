@@ -45,7 +45,9 @@ async function seedRooms(prisma: PrismaClient, propertyId: string, seed: Propert
           basePrice: room.basePrice,
           capacity: room.capacity,
           totalUnits: room.totalUnits,
-          images: { create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }] },
+          images: {
+            create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }],
+          },
         },
       }));
     roomIds.push(record.id);

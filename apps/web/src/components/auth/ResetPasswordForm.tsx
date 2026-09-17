@@ -8,7 +8,14 @@ import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
@@ -18,6 +25,54 @@ const resetRequestSchema = z.object({
 });
 
 type ResetRequestValues = z.infer<typeof resetRequestSchema>;
+
+function SuccessView({ message }: { message: string }) {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader className="flex flex-col items-center text-center pb-2">
+        <CheckCircle2 className="mb-2 h-12 w-12 text-green-500" />
+        <CardTitle className="text-xl font-bold">Email Terkirim</CardTitle>
+      </CardHeader>
+      <CardContent className="text-center text-muted-foreground">
+        <p>{message}</p>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Link href="/login" className="text-primary hover:underline text-sm">
+          Kembali ke halaman Masuk
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function FormFields({
+  register,
+  errors,
+  isSubmitting,
+}: {
+  register: ReturnType<typeof useForm<ResetRequestValues>>['register'];
+  errors: { email?: { message?: string } };
+  isSubmitting: boolean;
+}) {
+  return (
+    <>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="budi@example.com"
+          {...register('email')}
+          disabled={isSubmitting}
+        />
+        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+      </div>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Memproses...' : 'Kirim Link Reset'}
+      </Button>
+    </>
+  );
+}
 
 export function ResetPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,39 +91,17 @@ export function ResetPasswordForm() {
     setIsSubmitting(true);
     setServerError(null);
     setSuccessMessage(null);
-
     try {
       await api.post('/auth/password/reset', data);
       setSuccessMessage('Jika email terdaftar, kami telah mengirimkan link reset');
     } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message);
-      } else {
-        setServerError('Terjadi kesalahan yang tidak diketahui.');
-      }
+      setServerError(error instanceof ApiError ? error.message : 'Terjadi kesalahan.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (successMessage) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center pb-2">
-          <CheckCircle2 className="mb-2 h-12 w-12 text-green-500" />
-          <CardTitle className="text-xl font-bold">Email Terkirim</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center text-muted-foreground">
-          <p>{successMessage}</p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Link href="/login" className="text-primary hover:underline text-sm">
-            Kembali ke halaman Masuk
-          </Link>
-        </CardFooter>
-      </Card>
-    );
-  }
+  if (successMessage) return <SuccessView message={successMessage} />;
 
   return (
     <Card className="w-full max-w-md">
@@ -84,24 +117,7 @@ export function ResetPasswordForm() {
               {serverError}
             </div>
           )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="budi@example.com"
-              {...register('email')}
-              disabled={isSubmitting}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Memproses...' : 'Kirim Link Reset'}
-          </Button>
+          <FormFields register={register} errors={errors} isSubmitting={isSubmitting} />
         </form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm text-muted-foreground">

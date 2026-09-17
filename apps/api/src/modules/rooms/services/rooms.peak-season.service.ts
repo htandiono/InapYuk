@@ -24,7 +24,7 @@ export async function createPeakSeason(
     endDate: string;
     adjustmentType: 'NOMINAL' | 'PERCENTAGE';
     adjustmentValue: number;
-  }
+  },
 ) {
   const room = await prisma.room.findFirst({
     where: { id: roomId, property: { tenantId }, deletedAt: null },
@@ -61,7 +61,7 @@ export async function updatePeakSeason(
     endDate?: string;
     adjustmentType?: 'NOMINAL' | 'PERCENTAGE';
     adjustmentValue?: number;
-  }
+  },
 ) {
   const rate = await prisma.peakSeasonRate.findUnique({
     where: { id: rateId },

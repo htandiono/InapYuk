@@ -43,15 +43,8 @@ router.post(
   asyncHandler(handleVerifyEmailChange),
 );
 
-router.post(
-  '/password',
-  validateBody(changePasswordSchema),
-  asyncHandler(handleChangePassword),
-);
+router.post('/password', validateBody(changePasswordSchema), asyncHandler(handleChangePassword));
 
-router.post(
-  '/google-link',
-  asyncHandler(handleLinkGoogle),
-);
+router.post('/google-link', asyncHandler(handleLinkGoogle));
 
 export default router;

@@ -61,8 +61,12 @@ export default function ResendVerificationPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold font-heading text-primary">Kirim Ulang Link</CardTitle>
-          <CardDescription>Masukkan email terdaftar untuk mendapatkan link verifikasi baru</CardDescription>
+          <CardTitle className="text-2xl font-bold font-heading text-primary">
+            Kirim Ulang Link
+          </CardTitle>
+          <CardDescription>
+            Masukkan email terdaftar untuk mendapatkan link verifikasi baru
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {success && (
@@ -71,7 +75,7 @@ export default function ResendVerificationPage() {
               <p className="text-sm text-emerald-600 mt-1">Silakan cek kotak masuk email kamu.</p>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {serverError && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
@@ -88,17 +92,15 @@ export default function ResendVerificationPage() {
                 {...register('email')}
                 disabled={isSubmitting || cooldown > 0}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting || cooldown > 0}>
-              {isSubmitting 
-                ? 'Mengirim...' 
-                : cooldown > 0 
-                ? `Kirim Ulang dalam ${cooldown}s` 
-                : 'Kirim Ulang'}
+              {isSubmitting
+                ? 'Mengirim...'
+                : cooldown > 0
+                  ? `Kirim Ulang dalam ${cooldown}s`
+                  : 'Kirim Ulang'}
             </Button>
           </form>
         </CardContent>

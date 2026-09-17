@@ -12,7 +12,14 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 
@@ -43,9 +50,9 @@ export default function LoginPage() {
     try {
       const response = await api.post<{ role: string }>('/auth/login', {
         ...data,
-        role: 'USER'
+        role: 'USER',
       });
-      
+
       // Redirect based on role
       if (response.role === 'TENANT') {
         router.push('/tenant/properties');
@@ -77,7 +84,7 @@ export default function LoginPage() {
                 {serverError}
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -87,9 +94,7 @@ export default function LoginPage() {
                 {...register('email')}
                 disabled={isSubmitting}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -116,7 +121,9 @@ export default function LoginPage() {
 
           <div className="mt-6 flex items-center space-x-2">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Atau masuk dengan</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">
+              Atau masuk dengan
+            </span>
             <Separator className="flex-1" />
           </div>
 

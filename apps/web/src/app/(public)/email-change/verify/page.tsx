@@ -56,17 +56,19 @@ export default async function VerifyEmailChangePage({
           <CardTitle className="text-2xl font-bold">
             {success ? 'Email Berhasil Diubah' : 'Verifikasi Gagal'}
           </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            {message}
-          </CardDescription>
+          <CardDescription className="text-base text-muted-foreground">{message}</CardDescription>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-4">
               <p className="text-sm">
-                Status akun Anda sekarang sudah kembali terverifikasi. Anda dapat melanjutkan aktivitas.
+                Status akun Anda sekarang sudah kembali terverifikasi. Anda dapat melanjutkan
+                aktivitas.
               </p>
-              <Link href="/profile" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
+              <Link
+                href="/profile"
+                className={cn(buttonVariants({ variant: 'default' }), 'w-full')}
+              >
                 Kembali ke Profil
               </Link>
             </div>

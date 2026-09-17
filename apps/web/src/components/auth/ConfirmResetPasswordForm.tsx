@@ -9,7 +9,14 @@ import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 
@@ -33,6 +40,84 @@ const confirmResetSchema = z
 
 type ConfirmResetValues = z.infer<typeof confirmResetSchema>;
 
+interface PasswordFieldProps {
+  id: 'password' | 'confirmPassword';
+  label: string;
+  placeholder: string;
+  register: ReturnType<typeof useForm<ConfirmResetValues>>['register'];
+  error?: string;
+  disabled: boolean;
+}
+
+function PasswordField({ id, label, placeholder, register, error, disabled }: PasswordFieldProps) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <PasswordInput id={id} placeholder={placeholder} {...register(id)} disabled={disabled} />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function FormContent({
+  serverError,
+  errors,
+  onSubmit,
+  isSubmitting,
+  register,
+}: {
+  serverError: string | null;
+  errors: { password?: { message?: string }; confirmPassword?: { message?: string } };
+  onSubmit: (e: React.BaseSyntheticEvent) => void;
+  isSubmitting: boolean;
+  register: ReturnType<typeof useForm<ConfirmResetValues>>['register'];
+}) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {serverError && (
+        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          {serverError}
+        </div>
+      )}
+      <PasswordField
+        id="password"
+        label="Password Baru"
+        placeholder="Minimal 8 karakter"
+        register={register}
+        error={errors.password?.message}
+        disabled={isSubmitting}
+      />
+      <PasswordField
+        id="confirmPassword"
+        label="Konfirmasi Password Baru"
+        placeholder="Ketik ulang password"
+        register={register}
+        error={errors.confirmPassword?.message}
+        disabled={isSubmitting}
+      />
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Menyimpan...' : 'Simpan Password Baru'}
+      </Button>
+    </form>
+  );
+}
+
+function TokenMissingView() {
+  return (
+    <Card className="w-full max-w-md border-destructive">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-xl font-bold text-destructive">Link Tidak Valid</CardTitle>
+        <CardDescription>Token reset password tidak ditemukan</CardDescription>
+      </CardHeader>
+      <CardFooter className="flex justify-center">
+        <Link href="/reset-password" className="text-primary hover:underline text-sm">
+          Minta link reset baru
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}
+
 export function ConfirmResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,10 +139,8 @@ export function ConfirmResetPasswordForm() {
       setServerError('Token tidak ditemukan di URL');
       return;
     }
-
     setIsSubmitting(true);
     setServerError(null);
-
     try {
       await api.post('/auth/password/confirm', {
         token,
@@ -66,30 +149,12 @@ export function ConfirmResetPasswordForm() {
       });
       router.push('/login?reset=success');
     } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message);
-      } else {
-        setServerError('Terjadi kesalahan yang tidak diketahui.');
-      }
+      setServerError(error instanceof ApiError ? error.message : 'Terjadi kesalahan.');
       setIsSubmitting(false);
     }
   };
 
-  if (!token) {
-    return (
-      <Card className="w-full max-w-md border-destructive">
-        <CardHeader className="text-center pb-4">
-          <CardTitle className="text-xl font-bold text-destructive">Link Tidak Valid</CardTitle>
-          <CardDescription>Token reset password tidak ditemukan</CardDescription>
-        </CardHeader>
-        <CardFooter className="flex justify-center">
-          <Link href="/reset-password" className="text-primary hover:underline text-sm">
-            Minta link reset baru
-          </Link>
-        </CardFooter>
-      </Card>
-    );
-  }
+  if (!token) return <TokenMissingView />;
 
   return (
     <Card className="w-full max-w-md">
@@ -99,43 +164,13 @@ export function ConfirmResetPasswordForm() {
         <CardDescription>Silakan masukkan password baru Anda</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {serverError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {serverError}
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="password">Password Baru</Label>
-            <PasswordInput
-              id="password"
-              placeholder="Minimal 8 karakter"
-              {...register('password')}
-              disabled={isSubmitting}
-            />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
-            <PasswordInput
-              id="confirmPassword"
-              placeholder="Ketik ulang password"
-              {...register('confirmPassword')}
-              disabled={isSubmitting}
-            />
-            {errors.confirmPassword && (
-              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Menyimpan...' : 'Simpan Password Baru'}
-          </Button>
-        </form>
+        <FormContent
+          serverError={serverError}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          isSubmitting={isSubmitting}
+          register={register}
+        />
       </CardContent>
     </Card>
   );

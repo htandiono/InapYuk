@@ -29,14 +29,11 @@ describe('POST /api/users/password', () => {
     const app = createTestApp();
     const { user, cookies, oldHash } = await seedUser();
 
-    const res = await app
-      .post('/api/users/password')
-      .set('Cookie', cookies)
-      .send({
-        oldPassword: 'OldPassword123!',
-        newPassword: 'NewStrongPassword123!',
-        confirmPassword: 'NewStrongPassword123!',
-      });
+    const res = await app.post('/api/users/password').set('Cookie', cookies).send({
+      oldPassword: 'OldPassword123!',
+      newPassword: 'NewStrongPassword123!',
+      confirmPassword: 'NewStrongPassword123!',
+    });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -52,14 +49,11 @@ describe('POST /api/users/password', () => {
     const app = createTestApp();
     const { cookies } = await seedUser();
 
-    const res = await app
-      .post('/api/users/password')
-      .set('Cookie', cookies)
-      .send({
-        oldPassword: 'WrongPassword!',
-        newPassword: 'NewStrongPassword123!',
-        confirmPassword: 'NewStrongPassword123!',
-      });
+    const res = await app.post('/api/users/password').set('Cookie', cookies).send({
+      oldPassword: 'WrongPassword!',
+      newPassword: 'NewStrongPassword123!',
+      confirmPassword: 'NewStrongPassword123!',
+    });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Password lama salah');
@@ -80,14 +74,11 @@ describe('POST /api/users/password', () => {
 
     const cookies = await getAuthCookies(user);
 
-    const res = await app
-      .post('/api/users/password')
-      .set('Cookie', cookies)
-      .send({
-        oldPassword: 'SomePassword123!',
-        newPassword: 'NewStrongPassword123!',
-        confirmPassword: 'NewStrongPassword123!',
-      });
+    const res = await app.post('/api/users/password').set('Cookie', cookies).send({
+      oldPassword: 'SomePassword123!',
+      newPassword: 'NewStrongPassword123!',
+      confirmPassword: 'NewStrongPassword123!',
+    });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Akun ini menggunakan login sosial');

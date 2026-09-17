@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { api } from '@/lib/api-client';
@@ -32,16 +39,64 @@ const formSchema = z
 
 type FormData = z.infer<typeof formSchema>;
 
+function PasswordFields({
+  control,
+  disabled,
+}: {
+  control: ReturnType<typeof useForm<FormData>>['control'];
+  disabled: boolean;
+}) {
+  return (
+    <>
+      <FormField
+        control={control}
+        name="oldPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Password Lama</FormLabel>
+            <FormControl>
+              <PasswordInput placeholder="••••••••" {...field} disabled={disabled} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="newPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Password Baru</FormLabel>
+            <FormControl>
+              <PasswordInput placeholder="••••••••" {...field} disabled={disabled} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="confirmPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Konfirmasi Password Baru</FormLabel>
+            <FormControl>
+              <PasswordInput placeholder="••••••••" {...field} disabled={disabled} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
+  );
+}
+
 export function ChangePasswordForm({ isSocialLogin }: { isSocialLogin: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    },
+    defaultValues: { oldPassword: '', newPassword: '', confirmPassword: '' },
   });
 
   const onSubmit = async (values: FormData) => {
@@ -51,8 +106,7 @@ export function ChangePasswordForm({ isSocialLogin }: { isSocialLogin: boolean }
       toast.success('Password berhasil diubah');
       form.reset();
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      toast.error(err.message || 'Terjadi kesalahan');
+      toast.error((error as { message?: string }).message || 'Terjadi kesalahan');
     } finally {
       setIsSubmitting(false);
     }
@@ -75,55 +129,12 @@ export function ChangePasswordForm({ isSocialLogin }: { isSocialLogin: boolean }
     <Card>
       <CardHeader>
         <CardTitle>Ubah Password</CardTitle>
-        <CardDescription>
-          Pastikan Anda menggunakan password yang kuat dan unik.
-        </CardDescription>
+        <CardDescription>Pastikan Anda menggunakan password yang kuat dan unik.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto">
-            <FormField
-              control={form.control}
-              name="oldPassword"
-              render={({ field }: { field: ControllerRenderProps<FormData, 'oldPassword'> }) => (
-                <FormItem>
-                  <FormLabel>Password Lama</FormLabel>
-                  <FormControl>
-                    <PasswordInput placeholder="••••••••" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="newPassword"
-              render={({ field }: { field: ControllerRenderProps<FormData, 'newPassword'> }) => (
-                <FormItem>
-                  <FormLabel>Password Baru</FormLabel>
-                  <FormControl>
-                    <PasswordInput placeholder="••••••••" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }: { field: ControllerRenderProps<FormData, 'confirmPassword'> }) => (
-                <FormItem>
-                  <FormLabel>Konfirmasi Password Baru</FormLabel>
-                  <FormControl>
-                    <PasswordInput placeholder="••••••••" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            <PasswordFields control={form.control} disabled={isSubmitting} />
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Memproses...' : 'Ubah Password'}
             </Button>

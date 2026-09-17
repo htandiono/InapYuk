@@ -1,7 +1,13 @@
 'use client';
 
 import { Property, useProperties, delProp } from './PropertyListHooks';
-import { CreateDialog, EditDialog, PropertyListHeader, PropertyListTable, DeleteConfirmation } from './PropertyListComponents';
+import {
+  CreateDialog,
+  EditDialog,
+  PropertyListHeader,
+  PropertyListTable,
+  DeleteConfirmation,
+} from './PropertyListComponents';
 import { PaginationControls } from './PaginationControls';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -36,7 +42,10 @@ export default function PropertyList() {
       <CreateDialog
         open={isCreateOpen}
         setOpen={setIsCreateOpen}
-        onDone={() => { setIsCreateOpen(false); fetchProps(page); }}
+        onDone={() => {
+          setIsCreateOpen(false);
+          fetchProps(page);
+        }}
       />
 
       <PropertyListTable
@@ -51,7 +60,10 @@ export default function PropertyList() {
       <EditDialog
         p={editingProperty}
         setP={setEditingProperty}
-        onDone={() => { setEditingProperty(null); fetchProps(page); }}
+        onDone={() => {
+          setEditingProperty(null);
+          fetchProps(page);
+        }}
       />
 
       <DeleteConfirmation

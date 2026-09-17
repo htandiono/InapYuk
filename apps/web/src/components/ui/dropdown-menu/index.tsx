@@ -17,7 +17,4 @@ export {
   DropdownMenuRadioItem,
   DropdownMenuShortcut,
 } from './dropdown-menu-items';
-export {
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-} from './dropdown-menu-sub';
+export { DropdownMenuSub, DropdownMenuSubTrigger } from './dropdown-menu-sub';

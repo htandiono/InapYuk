@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 
 interface LogoutButtonProps {
   className?: string;
-  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+  variant?:
+    'link' | 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | null | undefined;
 }
 
-export function LogoutButton({ className, variant = "outline" }: LogoutButtonProps) {
+export function LogoutButton({ className, variant = 'outline' }: LogoutButtonProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 

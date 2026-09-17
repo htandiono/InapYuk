@@ -29,12 +29,58 @@ const verifySchema = z
 
 type VerifyFormValues = z.infer<typeof verifySchema>;
 
+function ErrorBanner({ message }: { message: string }) {
+  return <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{message}</div>;
+}
+
+function PasswordFields({
+  register,
+  errors,
+  disabled,
+}: {
+  register: ReturnType<typeof useForm<VerifyFormValues>>['register'];
+  errors: { password?: { message?: string }; confirmPassword?: { message?: string } };
+  disabled: boolean;
+}) {
+  return (
+    <>
+      <div className="space-y-2">
+        <Label htmlFor="password">Password Baru</Label>
+        <PasswordInput
+          id="password"
+          placeholder="Minimal 8 karakter"
+          {...register('password')}
+          disabled={disabled}
+        />
+        {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+        <PasswordInput
+          id="confirmPassword"
+          placeholder="Ketik ulang password"
+          {...register('confirmPassword')}
+          disabled={disabled}
+        />
+        {errors.confirmPassword && (
+          <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+        )}
+      </div>
+    </>
+  );
+}
+
 export function VerifyForm({ token }: { token: string }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<VerifyFormValues>({
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<VerifyFormValues>({
     resolver: zodResolver(verifySchema),
   });
 
@@ -64,24 +110,15 @@ export function VerifyForm({ token }: { token: string }) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold font-heading text-primary">Verifikasi Akun</CardTitle>
+        <CardTitle className="text-2xl font-bold font-heading text-primary">
+          Verifikasi Akun
+        </CardTitle>
         <CardDescription>Buat password untuk menyelesaikan pendaftaran kamu</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {serverError && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{serverError}</div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="password">Password Baru</Label>
-            <PasswordInput id="password" placeholder="Minimal 8 karakter" {...register('password')} disabled={isSubmitting} />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <PasswordInput id="confirmPassword" placeholder="Ketik ulang password" {...register('confirmPassword')} disabled={isSubmitting} />
-            {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
-          </div>
+          {serverError && <ErrorBanner message={serverError} />}
+          <PasswordFields register={register} errors={errors} disabled={isSubmitting} />
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Memproses...' : 'Verifikasi & Simpan'}
           </Button>

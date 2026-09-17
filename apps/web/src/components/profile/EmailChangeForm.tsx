@@ -6,7 +6,14 @@ import { useForm, ControllerRenderProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api-client';
@@ -16,6 +23,49 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+function SuccessView({ onReset }: { onReset: () => void }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Cek Email Anda</CardTitle>
+        <CardDescription>
+          Kami telah mengirimkan link konfirmasi ke email baru Anda. Silakan klik link tersebut
+          untuk menyelesaikan proses perubahan email.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button variant="outline" onClick={onReset} className="w-full">
+          Kirim ulang atau gunakan email lain
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FormFields({
+  control,
+  disabled,
+}: {
+  control: ReturnType<typeof useForm<FormData>>['control'];
+  disabled: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name="email"
+      render={({ field }: { field: ControllerRenderProps<FormData, 'email'> }) => (
+        <FormItem>
+          <FormLabel>Email Baru</FormLabel>
+          <FormControl>
+            <Input placeholder="email@contoh.com" {...field} disabled={disabled} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export function EmailChangeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,57 +83,27 @@ export function EmailChangeForm() {
       setSuccess(true);
       toast.success('Link konfirmasi telah dikirim ke email baru Anda');
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      toast.error(err.message || 'Terjadi kesalahan');
+      toast.error((error as { message?: string }).message || 'Terjadi kesalahan');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (success) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Cek Email Anda</CardTitle>
-          <CardDescription>
-            Kami telah mengirimkan link konfirmasi ke email baru Anda. 
-            Silakan klik link tersebut untuk menyelesaikan proses perubahan email.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={() => setSuccess(false)} className="w-full">
-            Kirim ulang atau gunakan email lain
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (success) return <SuccessView onReset={() => setSuccess(false)} />;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Ubah Email</CardTitle>
         <CardDescription>
-          Perhatian: Mengubah email akan membuat status verifikasi Anda hilang sampai Anda mengkonfirmasi email baru.
+          Perhatian: Mengubah email akan membuat status verifikasi Anda hilang sampai Anda
+          mengkonfirmasi email baru.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }: { field: ControllerRenderProps<FormData, 'email'> }) => (
-                <FormItem>
-                  <FormLabel>Email Baru</FormLabel>
-                  <FormControl>
-                    <Input placeholder="email@contoh.com" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            <FormFields control={form.control} disabled={isSubmitting} />
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? 'Memproses...' : 'Ubah Email'}
             </Button>

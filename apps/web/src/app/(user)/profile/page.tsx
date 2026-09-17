@@ -18,7 +18,7 @@ async function getProfile(token: string) {
       },
       cache: 'no-store',
     });
-    
+
     if (!res.ok) return null;
     const data = await res.json();
     return data.success ? data.data : null;

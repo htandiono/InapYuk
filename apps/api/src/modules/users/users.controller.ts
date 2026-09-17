@@ -5,13 +5,26 @@ import { updateProfile } from './users.service';
 import { requestEmailChange, verifyEmailChange } from './users.email.service';
 import { changePassword } from './users.password.service';
 import { linkGoogleAccount } from './users.google.service';
-import type { UpdateProfileInput, RequestEmailChangeInput, VerifyEmailChangeInput, ChangePasswordInput } from './users.schema';
+import type {
+  UpdateProfileInput,
+  RequestEmailChangeInput,
+  VerifyEmailChangeInput,
+  ChangePasswordInput,
+} from './users.schema';
 
 export async function handleGetProfile(req: Request, res: Response) {
   const userId = req.user!.sub;
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, avatarUrl: true, role: true, isVerified: true, provider: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+      role: true,
+      isVerified: true,
+      provider: true,
+    },
   });
   sendSuccess(res, user, 'Berhasil mengambil profil');
 }

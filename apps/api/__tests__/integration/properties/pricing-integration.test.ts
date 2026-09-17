@@ -20,18 +20,18 @@ describe('Pricing Calendar Integration', () => {
         name: 'Test Tenant',
         passwordHash: 'hash',
         role: 'TENANT',
-        isVerified: true
-      }
+        isVerified: true,
+      },
     });
-    
+
     await prisma.tenantProfile.create({
-      data: { id: tenantId, userId: user.id, companyName: 'Test Company' }
+      data: { id: tenantId, userId: user.id, companyName: 'Test Company' },
     });
-    
+
     const category = await prisma.propertyCategory.create({
-      data: { name: 'Villa', slug: 'villa', tenantId }
+      data: { name: 'Villa', slug: 'villa', tenantId },
     });
-    
+
     const property = await prisma.property.create({
       data: {
         tenantId,
@@ -41,8 +41,8 @@ describe('Pricing Calendar Integration', () => {
         description: 'A test property',
         address: 'Test Address',
         city: 'Test City',
-        province: 'Test State'
-      }
+        province: 'Test State',
+      },
     });
     propertySlug = property.slug;
 
@@ -53,8 +53,8 @@ describe('Pricing Calendar Integration', () => {
         description: 'Nice room',
         basePrice: 500000,
         capacity: 2,
-        totalUnits: 5
-      }
+        totalUnits: 5,
+      },
     });
     roomId = room.id;
 
@@ -66,8 +66,8 @@ describe('Pricing Calendar Integration', () => {
         startDate: new Date('2026-12-24'),
         endDate: new Date('2026-12-26'), // 3 days
         adjustmentType: 'NOMINAL',
-        adjustmentValue: 100000 // +100k
-      }
+        adjustmentValue: 100000, // +100k
+      },
     });
 
     // Create availability block
@@ -75,22 +75,23 @@ describe('Pricing Calendar Integration', () => {
       data: {
         roomId,
         date: new Date('2026-12-25'),
-        isAvailable: false
-      }
+        isAvailable: false,
+      },
     });
   });
 
   describe('GET /api/properties/:slug/calendar', () => {
     it('should return computed pricing reflecting base price, peak rates, and availability', async () => {
-      const res = await request(app)
-        .get(`/api/properties/${propertySlug}/calendar?roomId=${roomId}&month=12&year=2026`);
-      
+      const res = await request(app).get(
+        `/api/properties/${propertySlug}/calendar?roomId=${roomId}&month=12&year=2026`,
+      );
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
       const nights = res.body.data;
       expect(nights).toBeInstanceOf(Array);
-      
+
       // Dec 24: Holiday rate (+100k), available
       const dec24 = nights.find((n: { date: string }) => n.date.startsWith('2026-12-24'));
       expect(dec24).toBeDefined();

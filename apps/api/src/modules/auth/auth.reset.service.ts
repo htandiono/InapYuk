@@ -27,15 +27,23 @@ export async function requestPasswordReset(input: ResetPasswordInput): Promise<v
     to: user.email,
     subject: 'Reset Password Anda',
     template: 'password-reset',
-    context: { name: user.name, resetLink: `${env.WEB_BASE_URL}/reset-password/confirm?token=${rawToken}` },
+    context: {
+      name: user.name,
+      resetLink: `${env.WEB_BASE_URL}/reset-password/confirm?token=${rawToken}`,
+    },
   });
 }
 export async function confirmPasswordReset(input: ConfirmResetPasswordInput): Promise<void> {
   const token = await prisma.verificationToken.findFirst({
-    where: { tokenHash: hashToken(input.token), type: 'PASSWORD_RESET', usedAt: null, expiresAt: { gt: new Date() } },
+    where: {
+      tokenHash: hashToken(input.token),
+      type: 'PASSWORD_RESET',
+      usedAt: null,
+      expiresAt: { gt: new Date() },
+    },
   });
   if (!token) throw badRequest('Token tidak valid atau kedaluwarsa');
-  
+
   const hashedPassword = await hashPassword(input.password);
   await prisma.$transaction([
     prisma.user.update({ where: { id: token.userId }, data: { passwordHash: hashedPassword } }),

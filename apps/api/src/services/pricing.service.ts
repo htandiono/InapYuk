@@ -78,10 +78,20 @@ async function loadRoom(roomId: string) {
 }
 
 /** Bookings that hold a unit on a given night, keyed by date. */
-async function countBookedUnits(roomId: string, from: Date, to: Date): Promise<Map<string, number>> {
+async function countBookedUnits(
+  roomId: string,
+  from: Date,
+  to: Date,
+): Promise<Map<string, number>> {
   const rows = await prisma.bookingNight.groupBy({
     by: ['date'],
-    where: { date: { gte: from, lt: to }, booking: { roomId, status: { in: ['WAITING_PAYMENT', 'WAITING_CONFIRMATION', 'PROCESSED', 'COMPLETED'] } } },
+    where: {
+      date: { gte: from, lt: to },
+      booking: {
+        roomId,
+        status: { in: ['WAITING_PAYMENT', 'WAITING_CONFIRMATION', 'PROCESSED', 'COMPLETED'] },
+      },
+    },
     _count: { _all: true },
   });
   return new Map(rows.map((row) => [formatDateKey(row.date), row._count._all]));
@@ -113,7 +123,11 @@ async function loadRates(roomId: string, from: Date, to: Date): Promise<RateWind
  * Resolves the nightly price and remaining capacity for every night between
  * check-in and check-out. Check-out day is excluded.
  */
-export async function resolveRoomPricing(params: { roomId: string; checkIn: Date | string; checkOut: Date | string }): Promise<RoomPricing> {
+export async function resolveRoomPricing(params: {
+  roomId: string;
+  checkIn: Date | string;
+  checkOut: Date | string;
+}): Promise<RoomPricing> {
   const room = await loadRoom(params.roomId);
   const nights = eachNight(params.checkIn, params.checkOut);
   if (nights.length === 0) throw notFound('Check-out must be at least one night after check-in');
@@ -125,7 +139,9 @@ export async function resolveRoomPricing(params: { roomId: string; checkIn: Date
     loadRates(room.id, from, to),
   ]);
   const basePrice = toNumber(room.basePrice);
-  const resolved = nights.map((date) => buildNightlyRate({ date, basePrice, room, overrides, booked, rates }));
+  const resolved = nights.map((date) =>
+    buildNightlyRate({ date, basePrice, room, overrides, booked, rates }),
+  );
   return summarise(room, resolved);
 }
 
@@ -148,18 +164,28 @@ function buildNightlyRate(args: BuildNightArgs): NightlyRate {
   return {
     date: args.date,
     basePrice: args.basePrice,
-    finalPrice: rate ? applyAdjustment(args.basePrice, rate.adjustmentType, rate.adjustmentValue) : args.basePrice,
+    finalPrice: rate
+      ? applyAdjustment(args.basePrice, rate.adjustmentType, rate.adjustmentValue)
+      : args.basePrice,
     peakSeasonRateName: rate?.name ?? null,
     isAvailable: override?.isAvailable !== false && remaining > 0,
     availableUnits: remaining,
   };
 }
 
-function summarise(room: { id: string; propertyId: string; capacity: number }, nights: NightlyRate[]): RoomPricing {
+function summarise(
+  room: { id: string; propertyId: string; capacity: number },
+  nights: NightlyRate[],
+): RoomPricing {
   const unavailableDates = nights.filter((n) => !n.isAvailable).map((n) => formatDateKey(n.date));
   return {
-    roomId: room.id, propertyId: room.propertyId, capacity: room.capacity, nights,
-    nightCount: nights.length, totalPrice: nights.reduce((s, n) => s + n.finalPrice, 0),
-    isAvailable: unavailableDates.length === 0, unavailableDates,
+    roomId: room.id,
+    propertyId: room.propertyId,
+    capacity: room.capacity,
+    nights,
+    nightCount: nights.length,
+    totalPrice: nights.reduce((s, n) => s + n.finalPrice, 0),
+    isAvailable: unavailableDates.length === 0,
+    unavailableDates,
   };
 }

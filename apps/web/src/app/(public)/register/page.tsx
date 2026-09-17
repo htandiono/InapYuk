@@ -1,200 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { api, ApiError } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
-import { toast } from 'sonner';
-import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
-import { Separator } from '@/components/ui/separator';
-
-const registerSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(3, 'Nama minimal 3 karakter')
-    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
-  email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import { SuccessView } from './SuccessView';
+import { useRegisterCooldown, useRegisterForm, useRegisterResend } from './RegisterHooks';
+import { RegisterFormFields, RegisterFormActions } from './RegisterFormUI';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [isResending, setIsResending] = useState(false);
+  const { cooldown, setCooldown } = useRegisterCooldown();
+  const { form, isSubmitting, serverError, onSubmit } = useRegisterForm(setCooldown, setSuccess);
+  const { isResending, onResend } = useRegisterResend(form.getValues, setCooldown);
 
-  useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldown]);
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    getValues,
-    formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-  });
-
-  const onSubmit = async (data: RegisterFormValues) => {
-    setIsSubmitting(true);
-    setServerError(null);
-
-    try {
-      await api.post('/auth/register/user', data);
-      setSuccess(true);
-      setCooldown(60);
-      toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message);
-        if (error.fieldErrors && error.fieldErrors.length > 0) {
-          error.fieldErrors.forEach((fe) => {
-            setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message });
-          });
-        }
-      } else {
-        setServerError('Terjadi kesalahan yang tidak diketahui.');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const onResend = async () => {
-    const email = getValues('email');
-    if (!email) return;
-
-    setIsResending(true);
-    try {
-      await api.post('/auth/resend-verification', { email });
-      toast.success('Email verifikasi baru telah dikirim!');
-      setCooldown(60);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        toast.error(error.message);
-      } else {
-        toast.error('Terjadi kesalahan yang tidak diketahui.');
-      }
-    } finally {
-      setIsResending(false);
-    }
-  };
-
-  if (success) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-primary">Berhasil!</CardTitle>
-            <CardDescription>
-              Pendaftaran berhasil. Silakan cek email kamu untuk link verifikasi.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex flex-col gap-3 justify-center">
-            <Button onClick={() => router.push('/')} variant="outline" className="w-full">
-              Kembali ke Beranda
-            </Button>
-            <Button 
-              onClick={onResend} 
-              variant="link" 
-              className="text-sm text-primary p-0 h-auto"
-              disabled={isResending || cooldown > 0}
-            >
-              {isResending 
-                ? 'Mengirim...' 
-                : cooldown > 0 
-                ? `Kirim ulang email (${cooldown}s)` 
-                : 'Belum menerima email? Kirim ulang'}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+  if (success) return <SuccessView cooldown={cooldown} isResending={isResending} onResend={onResend} />;
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center pb-2">
-          <Logo className="mb-2 text-3xl" />
-          <CardTitle className="text-xl font-bold">Daftar Akun</CardTitle>
-          <CardDescription>Mulai cari dan bandingkan penginapan terbaik</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {serverError && (
-              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                {serverError}
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Lengkap</Label>
-              <Input
-                id="name"
-                placeholder="Budi Santoso"
-                {...register('name')}
-                disabled={isSubmitting}
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="budi@example.com"
-                {...register('email')}
-                disabled={isSubmitting}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 rounded-xl transition-all" disabled={isSubmitting}>
-              {isSubmitting ? 'Mendaftar...' : 'Daftar Sekarang'}
-            </Button>
-          </form>
-
-          <div className="mt-6 flex items-center space-x-2">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">Atau daftar dengan</span>
-            <Separator className="flex-1" />
-          </div>
-
-          <div className="mt-6">
-            <GoogleLoginButton />
-          </div>
-
-          <div className="mt-4 text-center text-sm">
-            Punya properti?{' '}
-            <Link href="/tenant/register" className="text-primary hover:underline">
-              Daftar sebagai Tenant
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4"><Card className="w-full max-w-md">
+        <CardHeader className="flex flex-col items-center text-center pb-2"><Logo className="mb-2 text-3xl" /><CardTitle className="text-xl font-bold">Daftar Akun</CardTitle><CardDescription>Mulai cari dan bandingkan penginapan terbaik</CardDescription></CardHeader>
+        <CardContent><form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {serverError && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{serverError}</div>}
+            <RegisterFormFields register={form.register} errors={form.formState.errors} isSubmitting={isSubmitting} />
+            <RegisterFormActions isSubmitting={isSubmitting} />
+        </form></CardContent>
+    </Card></div>
   );
 }

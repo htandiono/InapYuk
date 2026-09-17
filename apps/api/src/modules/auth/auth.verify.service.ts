@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { sendMail } from '../../libs/mailer';
+import { logger } from '../../libs/logger';
 import { hashPassword, hashToken } from '../../libs/password';
 import { prisma } from '../../libs/prisma';
 import { badRequest } from '../../utils/app-error';
@@ -82,8 +83,12 @@ export async function resendVerification(input: ResendVerificationInput) {
     to: user.email,
     subject: 'Verifikasi Akun InapYuk',
     template: 'email-verification',
-    context: { name: user.name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
+    context: {
+      name: user.name,
+      verificationUrl,
+      expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
+    },
   }).catch((err) => {
-    console.error(`[MailError] Failed to resend verification email to ${user.email}`, err);
+    logger.error(`[MailError] Failed to resend verification email to ${user.email}`, err);
   });
 }

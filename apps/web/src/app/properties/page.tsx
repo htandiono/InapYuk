@@ -14,7 +14,11 @@ export default async function PropertiesPage() {
       <Navbar isAuthenticated={isAuthenticated} />
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 pt-8 pb-16 sm:px-8">
-        <Suspense fallback={<div className="py-20 text-center text-sm text-muted-foreground">Memuat...</div>}>
+        <Suspense
+          fallback={
+            <div className="py-20 text-center text-sm text-muted-foreground">Memuat...</div>
+          }
+        >
           <PropertyCatalog />
         </Suspense>
       </main>

@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import { isProduction } from '../../config/env';
 import { sendCreated, sendSuccess } from '../../utils/api-response';
 import type {
   LoginInput,

@@ -45,7 +45,7 @@ export function PeakSeasonForm({ rates, loading, onSubmit }: PeakSeasonFormProps
 
     if (overlappedRate) {
       toast.warning(
-        `Tanggal ini tumpang tindih dengan '${overlappedRate.name}'. Harga yang baru ditambahkan akan digunakan.`
+        `Tanggal ini tumpang tindih dengan '${overlappedRate.name}'. Harga yang baru ditambahkan akan digunakan.`,
       );
     }
 

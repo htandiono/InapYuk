@@ -24,7 +24,10 @@ export function PeakSeasonList({ rates, fetching, onDelete }: PeakSeasonListProp
   return (
     <div className="space-y-3">
       {rates.map((rate) => (
-        <div key={rate.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+        <div
+          key={rate.id}
+          className="flex items-center justify-between p-3 border rounded-lg bg-card"
+        >
           <div>
             <p className="font-semibold text-sm">{rate.name}</p>
             <p className="text-xs text-muted-foreground">

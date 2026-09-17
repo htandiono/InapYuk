@@ -8,7 +8,12 @@ import { signAccessToken } from '../../../src/libs/jwt';
 describe('Peak Season Rates CRUD', () => {
   const app = createApp();
   const tenantId = 'test-tenant-id';
-  const token = signAccessToken({ sub: 'test-user-id', email: 'tenant@test.com', role: 'TENANT', isVerified: true });
+  const token = signAccessToken({
+    sub: 'test-user-id',
+    email: 'tenant@test.com',
+    role: 'TENANT',
+    isVerified: true,
+  });
   let roomId: string;
   let rateId: string;
 
@@ -22,18 +27,18 @@ describe('Peak Season Rates CRUD', () => {
         name: 'Test Tenant',
         passwordHash: 'hash',
         role: 'TENANT',
-        isVerified: true
-      }
+        isVerified: true,
+      },
     });
-    
+
     await prisma.tenantProfile.create({
-      data: { id: tenantId, userId: user.id, companyName: 'Test Company' }
+      data: { id: tenantId, userId: user.id, companyName: 'Test Company' },
     });
-    
+
     const category = await prisma.propertyCategory.create({
-      data: { name: 'Villa', slug: 'villa', tenantId }
+      data: { name: 'Villa', slug: 'villa', tenantId },
     });
-    
+
     const property = await prisma.property.create({
       data: {
         tenantId,
@@ -43,8 +48,8 @@ describe('Peak Season Rates CRUD', () => {
         description: 'A test property',
         address: 'Test Address',
         city: 'Test City',
-        province: 'Test State'
-      }
+        province: 'Test State',
+      },
     });
 
     const room = await prisma.room.create({
@@ -54,8 +59,8 @@ describe('Peak Season Rates CRUD', () => {
         description: 'Nice room',
         basePrice: 500000,
         capacity: 2,
-        totalUnits: 5
-      }
+        totalUnits: 5,
+      },
     });
     roomId = room.id;
 
@@ -66,8 +71,8 @@ describe('Peak Season Rates CRUD', () => {
         startDate: new Date('2026-12-01'),
         endDate: new Date('2026-12-31'),
         adjustmentType: 'NOMINAL',
-        adjustmentValue: 100000
-      }
+        adjustmentValue: 100000,
+      },
     });
     rateId = rate.id;
   });
@@ -77,7 +82,7 @@ describe('Peak Season Rates CRUD', () => {
       const res = await request(app)
         .get(`/api/rooms/tenant/rooms/${roomId}/peak-season`)
         .set('Authorization', `Bearer ${token}`);
-      
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.length).toBe(1);
@@ -95,9 +100,9 @@ describe('Peak Season Rates CRUD', () => {
           startDate: '2027-01-01',
           endDate: '2027-01-05',
           adjustmentType: 'PERCENTAGE',
-          adjustmentValue: 20
+          adjustmentValue: 20,
         });
-      
+
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe('New Year');
@@ -111,9 +116,9 @@ describe('Peak Season Rates CRUD', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           name: 'Updated Rate',
-          adjustmentValue: 150000
+          adjustmentValue: 150000,
         });
-      
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe('Updated Rate');
@@ -126,7 +131,7 @@ describe('Peak Season Rates CRUD', () => {
       const res = await request(app)
         .delete(`/api/rooms/tenant/peak-season/${rateId}`)
         .set('Authorization', `Bearer ${token}`);
-      
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 

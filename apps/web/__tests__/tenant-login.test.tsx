@@ -37,31 +37,33 @@ describe('Tenant Login Page', () => {
 
   it('shows validation errors for empty fields', async () => {
     render(<TenantLoginPage />);
-    
+
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
       expect(screen.getByText(/password wajib diisi/i)).toBeInTheDocument();
     });
-    
+
     expect(api.post).not.toHaveBeenCalled();
   });
 
   it('submits form successfully and redirects USER to homepage', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<
+      typeof useRouter
+    >);
     vi.mocked(api.post).mockResolvedValueOnce({
-      role: 'USER'
+      role: 'USER',
     });
 
     render(<TenantLoginPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'user@example.com',
@@ -74,18 +76,20 @@ describe('Tenant Login Page', () => {
 
   it('submits form successfully and redirects TENANT to /tenant/properties', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<
+      typeof useRouter
+    >);
     vi.mocked(api.post).mockResolvedValueOnce({
-      role: 'TENANT'
+      role: 'TENANT',
     });
 
     render(<TenantLoginPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'tenant@example.com',
@@ -97,17 +101,15 @@ describe('Tenant Login Page', () => {
   });
 
   it('shows error from API on invalid credentials', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(
-      new ApiError(401, 'Email atau password salah')
-    );
+    vi.mocked(api.post).mockRejectedValueOnce(new ApiError(401, 'Email atau password salah'));
 
     render(<TenantLoginPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpass' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /masuk/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'wrong@example.com',

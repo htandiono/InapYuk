@@ -5,23 +5,51 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Logo } from '@/components/ui/logo';
 import { useTenantRegister } from './useTenantRegister';
 
-function SuccessView({ onResend, isResending, cooldown }: { onResend: () => void, isResending: boolean, cooldown: number }) {
+function SuccessView({
+  onResend,
+  isResending,
+  cooldown,
+}: {
+  onResend: () => void;
+  isResending: boolean;
+  cooldown: number;
+}) {
   const router = useRouter();
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-primary">Berhasil!</CardTitle>
-          <CardDescription>Pendaftaran berhasil. Silakan cek email kamu untuk link verifikasi.</CardDescription>
+          <CardDescription>
+            Pendaftaran berhasil. Silakan cek email kamu untuk link verifikasi.
+          </CardDescription>
         </CardHeader>
         <CardFooter className="flex flex-col gap-3 justify-center">
-          <Button onClick={() => router.push('/')} variant="outline" className="w-full">Kembali ke Beranda</Button>
-          <Button onClick={onResend} variant="link" className="text-sm text-primary p-0 h-auto" disabled={isResending || cooldown > 0}>
-            {isResending ? 'Mengirim...' : cooldown > 0 ? `Kirim ulang email (${cooldown}s)` : 'Belum menerima email? Kirim ulang'}
+          <Button onClick={() => router.push('/')} variant="outline" className="w-full">
+            Kembali ke Beranda
+          </Button>
+          <Button
+            onClick={onResend}
+            variant="link"
+            className="text-sm text-primary p-0 h-auto"
+            disabled={isResending || cooldown > 0}
+          >
+            {isResending
+              ? 'Mengirim...'
+              : cooldown > 0
+                ? `Kirim ulang email (${cooldown}s)`
+                : 'Belum menerima email? Kirim ulang'}
           </Button>
         </CardFooter>
       </Card>
@@ -30,8 +58,13 @@ function SuccessView({ onResend, isResending, cooldown }: { onResend: () => void
 }
 
 export default function RegisterTenantPage() {
-  const { form, isSubmitting, serverError, success, cooldown, isResending, onSubmit, onResend } = useTenantRegister();
-  const { register, handleSubmit, formState: { errors } } = form;
+  const { form, isSubmitting, serverError, success, cooldown, isResending, onSubmit, onResend } =
+    useTenantRegister();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
   if (success) {
     return <SuccessView onResend={onResend} isResending={isResending} cooldown={cooldown} />;
@@ -47,30 +80,59 @@ export default function RegisterTenantPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {serverError && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{serverError}</div>}
-            
+            {serverError && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                {serverError}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="name">Nama Lengkap</Label>
-              <Input id="name" placeholder="Tenant Bali" {...register('name')} disabled={isSubmitting} />
+              <Input
+                id="name"
+                placeholder="Tenant Bali"
+                {...register('name')}
+                disabled={isSubmitting}
+              />
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="bali@example.com" {...register('email')} disabled={isSubmitting} />
+              <Input
+                id="email"
+                type="email"
+                placeholder="bali@example.com"
+                {...register('email')}
+                disabled={isSubmitting}
+              />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="companyName">Nama Perusahaan</Label>
-              <Input id="companyName" placeholder="PT Bali Villas" {...register('companyName')} disabled={isSubmitting} />
-              {errors.companyName && <p className="text-sm text-destructive">{errors.companyName.message}</p>}
+              <Input
+                id="companyName"
+                placeholder="PT Bali Villas"
+                {...register('companyName')}
+                disabled={isSubmitting}
+              />
+              {errors.companyName && (
+                <p className="text-sm text-destructive">{errors.companyName.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="companyAddress">Alamat Perusahaan</Label>
-              <Input id="companyAddress" placeholder="Jl. Pantai Kuta No. 1" {...register('companyAddress')} disabled={isSubmitting} />
-              {errors.companyAddress && <p className="text-sm text-destructive">{errors.companyAddress.message}</p>}
+              <Input
+                id="companyAddress"
+                placeholder="Jl. Pantai Kuta No. 1"
+                {...register('companyAddress')}
+                disabled={isSubmitting}
+              />
+              {errors.companyAddress && (
+                <p className="text-sm text-destructive">{errors.companyAddress.message}</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -79,7 +141,9 @@ export default function RegisterTenantPage() {
 
             <div className="mt-4 text-center text-sm">
               Mencari penginapan?{' '}
-              <Link href="/register" className="text-primary hover:underline">Daftar sebagai Tamu</Link>
+              <Link href="/register" className="text-primary hover:underline">
+                Daftar sebagai Tamu
+              </Link>
             </div>
           </form>
         </CardContent>

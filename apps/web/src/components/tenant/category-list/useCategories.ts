@@ -23,6 +23,8 @@ export function useCategories() {
     }
   }, []);
 
-  useEffect(() => { void Promise.resolve().then(() => fetchCategories(page)); }, [page, fetchCategories]);
+  useEffect(() => {
+    void Promise.resolve().then(() => fetchCategories(page));
+  }, [page, fetchCategories]);
   return { categories, page, setPage, totalPages, loading, fetchCategories };
 }

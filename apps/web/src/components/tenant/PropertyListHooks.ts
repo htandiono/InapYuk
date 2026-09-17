@@ -21,9 +21,12 @@ export function useProperties(page: number): UsePropertiesResult {
   const fetchProps = useCallback(async (p: number) => {
     setState((s) => ({ ...s, loading: true }));
     try {
-      const res = await fetch(`/api/properties/tenant/properties?page=${p}&limit=10&t=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
+      const res = await fetch(
+        `/api/properties/tenant/properties?page=${p}&limit=10&t=${Date.now()}`,
+        {
+          headers: { 'Cache-Control': 'no-cache' },
+        },
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
       setState({
@@ -45,4 +48,30 @@ export function useProperties(page: number): UsePropertiesResult {
 export async function delProp(id: string) {
   const res = await fetch(`/api/properties/tenant/properties/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error((await res.json()).message);
+}
+
+export function useFullProperty(p: Property | null) {
+  const [fullProp, setFullProp] = useState<Property | null>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
+  useEffect(() => {
+    if (!p) return;
+    const c = new AbortController();
+    (async () => {
+      await Promise.resolve();
+      setLoadingFull(true);
+      try {
+        const r = await fetch(`/api/properties/tenant/properties/${p.id}?t=${Date.now()}`, {
+          headers: { 'Cache-Control': 'no-cache' },
+          signal: c.signal,
+        });
+        setFullProp((await r.json()).data || p);
+      } catch {
+        if (!c.signal.aborted) setFullProp(p);
+      } finally {
+        if (!c.signal.aborted) setLoadingFull(false);
+      }
+    })();
+    return () => c.abort();
+  }, [p]);
+  return { fullProp, loadingFull };
 }

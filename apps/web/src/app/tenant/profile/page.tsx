@@ -12,17 +12,16 @@ export default function TenantProfilePlaceholder() {
             <Wrench className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Profil Tenant</CardTitle>
-          <CardDescription>
-            Pembaruan profil dan password
-          </CardDescription>
+          <CardDescription>Pembaruan profil dan password</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
             <p>
-              Fitur manajemen profil (termasuk unggah foto dan ubah password) dijadwalkan untuk dikerjakan pada <strong>Sprint Berikutnya</strong>.
+              Fitur manajemen profil (termasuk unggah foto dan ubah password) dijadwalkan untuk
+              dikerjakan pada <strong>Sprint Berikutnya</strong>.
             </p>
           </div>
-          
+
           <Link href="/tenant/properties" className="block">
             <Button variant="outline" className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />

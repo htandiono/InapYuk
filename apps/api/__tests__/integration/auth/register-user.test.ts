@@ -77,7 +77,7 @@ describe('POST /api/auth/register/user', () => {
         name: 'First',
         role: 'USER',
         isVerified: true,
-      }
+      },
     });
 
     // Duplicate registration

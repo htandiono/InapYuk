@@ -1,9 +1,14 @@
 import { prisma } from '../../libs/prisma';
 import { uploadImage, deleteImage } from '../../libs/cloudinary';
+import { logger } from '../../libs/logger';
 import { badRequest } from '../../utils/app-error';
 import type { UpdateProfileInput } from './users.schema';
 
-export async function updateProfile(userId: string, input: UpdateProfileInput, file?: Express.Multer.File) {
+export async function updateProfile(
+  userId: string,
+  input: UpdateProfileInput,
+  file?: Express.Multer.File,
+) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw badRequest('Pengguna tidak ditemukan');
 
@@ -12,7 +17,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput, f
   if (file) {
     newAvatarUrl = await uploadImage(file, 'avatars');
     if (user.avatarUrl) {
-      await deleteImage(user.avatarUrl).catch(console.error);
+      await deleteImage(user.avatarUrl).catch((err) => logger.error('[AvatarDeleteError]', err));
     }
   }
 

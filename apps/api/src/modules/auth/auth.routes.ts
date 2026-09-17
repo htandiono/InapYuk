@@ -72,8 +72,23 @@ router.post(
 router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
 router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
-router.post('/password/reset', authRateLimiter, validateBody(resetPasswordSchema), asyncHandler(handleResetPasswordRequest));
-router.post('/password/confirm', authRateLimiter, validateBody(confirmResetPasswordSchema), asyncHandler(handleConfirmResetPassword));
-router.post('/google', authRateLimiter, validateBody(googleAuthSchema), asyncHandler(handleGoogleAuth));
+router.post(
+  '/password/reset',
+  authRateLimiter,
+  validateBody(resetPasswordSchema),
+  asyncHandler(handleResetPasswordRequest),
+);
+router.post(
+  '/password/confirm',
+  authRateLimiter,
+  validateBody(confirmResetPasswordSchema),
+  asyncHandler(handleConfirmResetPassword),
+);
+router.post(
+  '/google',
+  authRateLimiter,
+  validateBody(googleAuthSchema),
+  asyncHandler(handleGoogleAuth),
+);
 
 export default router;

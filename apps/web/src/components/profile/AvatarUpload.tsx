@@ -12,36 +12,42 @@ interface AvatarUploadProps {
   disabled?: boolean;
 }
 
-export function AvatarUpload({ currentUrl, name, onFileSelect, disabled }: AvatarUploadProps) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+const MAX_SIZE = 1024 * 1024;
 
-  const initials = name
+function getInitials(name: string): string {
+  return name
     .split(' ')
     .map((n) => n[0])
     .join('')
     .substring(0, 2)
     .toUpperCase();
+}
 
+function validateFile(file: File, inputRef: React.RefObject<HTMLInputElement | null>): boolean {
+  if (file.size > MAX_SIZE) {
+    alert('Ukuran file maksimal 1MB');
+    if (inputRef.current) inputRef.current.value = '';
+    return false;
+  }
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    alert('Format file tidak didukung');
+    if (inputRef.current) inputRef.current.value = '';
+    return false;
+  }
+  return true;
+}
+
+export function AvatarUpload({ currentUrl, name, onFileSelect, disabled }: AvatarUploadProps) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const initials = getInitials(name);
   const displayUrl = preview || currentUrl;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 1024 * 1024) {
-      alert('Ukuran file maksimal 1MB');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      alert('Format file tidak didukung');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
+    if (!file || !validateFile(file, fileInputRef)) return;
     setPreview(URL.createObjectURL(file));
     onFileSelect(file);
   };
@@ -62,7 +68,6 @@ export function AvatarUpload({ currentUrl, name, onFileSelect, disabled }: Avata
             <AvatarFallback className="text-2xl">{initials || 'U'}</AvatarFallback>
           )}
         </Avatar>
-        
         <div className="absolute -bottom-2 -right-2 flex space-x-1">
           <Button
             type="button"
@@ -88,7 +93,6 @@ export function AvatarUpload({ currentUrl, name, onFileSelect, disabled }: Avata
           )}
         </div>
       </div>
-      
       <input
         type="file"
         ref={fileInputRef}
@@ -96,9 +100,7 @@ export function AvatarUpload({ currentUrl, name, onFileSelect, disabled }: Avata
         accept="image/jpeg, image/png, image/gif"
         className="hidden"
       />
-      <p className="text-xs text-muted-foreground">
-        Format JPEG, PNG, GIF. Maks. 1MB.
-      </p>
+      <p className="text-xs text-muted-foreground">Format JPEG, PNG, GIF. Maks. 1MB.</p>
     </div>
   );
 }
