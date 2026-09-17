@@ -4,7 +4,7 @@ import { TenantFooter } from '@/components/layout/TenantFooter';
 
 export default function TenantLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/20">
+    <div className="flex h-screen min-w-[320px] overflow-hidden bg-muted/20">
       <TenantSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TenantTopbar />
