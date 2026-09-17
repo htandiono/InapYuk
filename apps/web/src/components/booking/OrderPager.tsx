@@ -10,7 +10,7 @@ export function OrderPager({
 }) {
   if (meta.totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 text-sm">
       <PagerButton
         label="Sebelumnya"
         disabled={!meta.hasPreviousPage}
@@ -38,7 +38,7 @@ function PagerButton({
   onClick: () => void;
 }) {
   return (
-    <Button type="button" variant="outline" className="rounded-full" disabled={disabled} onClick={onClick}>
+    <Button type="button" variant="outline" className="h-10 min-w-0 rounded-full px-4" disabled={disabled} onClick={onClick}>
       {label}
     </Button>
   );

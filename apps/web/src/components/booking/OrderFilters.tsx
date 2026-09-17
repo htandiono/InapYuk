@@ -51,7 +51,7 @@ function StatusTabs({ current, onChange }: { current: string; onChange: (status:
           type="button"
           size="sm"
           variant={current === tab.value ? 'default' : 'outline'}
-          className="shrink-0 rounded-full"
+          className="h-10 shrink-0 rounded-full px-4"
           onClick={() => onChange(tab.value)}
         >
           {tab.label}

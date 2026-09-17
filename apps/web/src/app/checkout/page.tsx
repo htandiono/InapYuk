@@ -24,7 +24,7 @@ export default async function CheckoutPage({
   return (
     <BookingChrome>
       <p className="text-sm text-accent">Satu langkah lagi</p>
-      <h1 className="font-heading mt-2 text-3xl tracking-tight">Cek harga, baru deh pesan.</h1>
+      <h1 className="font-heading mt-2 text-2xl tracking-tight sm:text-3xl">Cek harga, baru deh pesan.</h1>
       <p className="mt-2 mb-8 text-sm text-muted-foreground">
         Harga di bawah sudah termasuk naik-turun peak season, per malam.
       </p>

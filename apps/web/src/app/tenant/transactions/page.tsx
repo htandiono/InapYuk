@@ -6,7 +6,7 @@ export default function TenantTransactionsPage() {
   return (
     <TenantChrome current="/tenant/transactions">
       <p className="text-sm text-accent">Transaksi masuk</p>
-      <h1 className="font-heading mt-2 text-3xl tracking-tight">Cek bukti, terima, atau tolak.</h1>
+      <h1 className="font-heading mt-2 text-2xl tracking-tight sm:text-3xl">Cek bukti, terima, atau tolak.</h1>
       <p className="mt-2 mb-8 text-sm text-muted-foreground">
         Filter status dan nama tamu nanya ke server, bukan nyaring di layar aja.
       </p>

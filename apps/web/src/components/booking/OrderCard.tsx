@@ -18,7 +18,7 @@ export function OrderCard({ item }: { item: BookingListItemDto }) {
         <p className="text-xs text-muted-foreground">
           {formatDateRange(item.checkIn, item.checkOut)}
         </p>
-        <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="mt-1 flex min-w-0 flex-wrap items-center justify-between gap-2">
           <StatusBadge status={item.status} />
           <span className="text-sm font-medium">{formatRupiah(item.totalPrice)}</span>
         </div>

@@ -5,7 +5,7 @@ export function NightBreakdown({ nights }: { nights: BookingNightDto[] }) {
   return (
     <ul className="divide-y divide-border rounded-xl border border-border bg-card">
       {nights.map((night) => (
-        <li key={night.date} className="flex items-start justify-between gap-3 px-4 py-3">
+        <li key={night.date} className="flex min-w-0 items-start justify-between gap-3 px-4 py-3">
           <div>
             <p className="text-sm font-medium">{formatDate(night.date)}</p>
             {night.peakSeasonRateName ? (

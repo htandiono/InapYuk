@@ -9,7 +9,7 @@ export default async function OrderDetailPage({
   return (
     <>
       <p className="text-sm text-accent">Detail pesanan</p>
-      <h1 className="font-heading mt-2 text-3xl tracking-tight">{orderNumber}</h1>
+      <h1 className="font-heading mt-2 break-all text-2xl tracking-tight sm:text-3xl">{orderNumber}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Cek harga per malam, unggah bukti transfer, atau batalin sebelum bayar.
       </p>
