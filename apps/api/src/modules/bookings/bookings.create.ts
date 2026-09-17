@@ -126,5 +126,5 @@ function isOrderNumberClash(error: unknown): boolean {
 }
 
 function guestCaller(userId: string): JwtPayload {
-  return { sub: userId, email: '', role: 'USER', isVerified: true };
+  return { sub: userId, name: '', email: '', role: 'USER', isVerified: true };
 }

@@ -17,7 +17,13 @@ import { Router } from 'express';
  */
 import { asyncHandler } from '../../utils/async-handler';
 import { validateBody } from '../../middlewares/validate.middleware';
-import { authRateLimiter, resendRateLimiter } from '../../middlewares/rate-limit.middleware';
+import {
+  authRateLimiter,
+  loginRateLimiter,
+  registerRateLimiter,
+  resendVerificationLimiter,
+  resetPasswordLimiter,
+} from '../../middlewares/rate-limit.middleware';
 import {
   registerUserSchema,
   registerTenantSchema,
@@ -40,19 +46,20 @@ import {
   handleResetPasswordRequest,
   handleConfirmResetPassword,
   handleGoogleAuth,
+  handleCheckResetToken,
 } from './auth.controller';
 
 const router = Router();
 
 router.post(
   '/register/user',
-  authRateLimiter,
+  registerRateLimiter,
   validateBody(registerUserSchema),
   asyncHandler(handleRegisterUser),
 );
 router.post(
   '/register/tenant',
-  authRateLimiter,
+  registerRateLimiter,
   validateBody(registerTenantSchema),
   asyncHandler(handleRegisterTenant),
 );
@@ -65,16 +72,17 @@ router.post(
 );
 router.post(
   '/resend-verification',
-  resendRateLimiter,
+  resendVerificationLimiter,
   validateBody(resendVerificationSchema),
   asyncHandler(handleResendVerification),
 );
-router.post('/login', authRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
+router.post('/login', loginRateLimiter, validateBody(loginSchema), asyncHandler(handleLogin));
 router.post('/refresh', handleRefreshToken);
 router.post('/logout', asyncHandler(handleLogout));
+router.get('/password/check', asyncHandler(handleCheckResetToken));
 router.post(
   '/password/reset',
-  authRateLimiter,
+  resetPasswordLimiter,
   validateBody(resetPasswordSchema),
   asyncHandler(handleResetPasswordRequest),
 );
@@ -86,7 +94,7 @@ router.post(
 );
 router.post(
   '/google',
-  authRateLimiter,
+  loginRateLimiter,
   validateBody(googleAuthSchema),
   asyncHandler(handleGoogleAuth),
 );

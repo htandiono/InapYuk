@@ -6,8 +6,8 @@ import { api, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(3, 'Nama minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
-  email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
+  name: z.string().trim().min(3, 'Nama minimal 3 karakter').max(50, 'Nama maksimal 50 karakter').regex(/^[a-zA-Z\s\.,'-]+$/, 'Nama hanya boleh berisi huruf dan tanda baca umum (.,\'-), tanpa angka'),
+  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Email tidak valid'),
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -25,26 +25,17 @@ export function useRegisterCooldown() {
 }
 
 export function useRegisterForm(setCooldown: (v: number) => void, setSuccess: (v: boolean) => void) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false), [serverError, setServerError] = useState<string | null>(null);
   const form = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
-
   const onSubmit = async (data: RegisterFormValues) => {
-    setIsSubmitting(true);
-    setServerError(null);
+    setIsSubmitting(true); setServerError(null);
     try {
       await api.post('/auth/register/user', data);
-      setSuccess(true);
-      setCooldown(60);
-      toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setServerError(error.message);
-        error.fieldErrors?.forEach((fe) => form.setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message }));
-      } else setServerError(REGISTER_ERROR_MSG);
-    } finally {
-      setIsSubmitting(false);
-    }
+      setSuccess(true); setCooldown(60); toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
+    } catch (err) {
+      setServerError(err instanceof ApiError ? err.message : REGISTER_ERROR_MSG);
+      if (err instanceof ApiError) err.fieldErrors?.forEach((fe) => form.setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message }));
+    } finally { setIsSubmitting(false); }
   };
   return { form, isSubmitting, serverError, onSubmit };
 }
@@ -57,14 +48,8 @@ export function useRegisterResend(getValues: () => RegisterFormValues, setCooldo
     setIsResending(true);
     try {
       await api.post('/auth/resend-verification', { email });
-      toast.success('Email verifikasi baru telah dikirim!');
-      setCooldown(60);
-    } catch (error) {
-      if (error instanceof ApiError) toast.error(error.message);
-      else toast.error(REGISTER_ERROR_MSG);
-    } finally {
-      setIsResending(false);
-    }
+      toast.success('Email verifikasi baru telah dikirim!'); setCooldown(60);
+    } catch (err) { toast.error(err instanceof ApiError ? err.message : REGISTER_ERROR_MSG); } finally { setIsResending(false); }
   };
   return { isResending, onResend };
 }

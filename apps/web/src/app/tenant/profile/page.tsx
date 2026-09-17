@@ -1,35 +1,33 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Wrench } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ProfileView } from '@/components/profile/ProfileView';
+import { clientEnv } from '@/lib/env';
 
-export default function TenantProfilePlaceholder() {
+export const metadata = {
+  title: 'Profil Tenant | InapYuk',
+};
+
+async function getProfile(token: string) {
+  try {
+    const res = await fetch(`${clientEnv.apiBaseUrl}/users/profile`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }, cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch { return null; }
+}
+
+export default async function TenantProfilePage() {
+  const cookieStore = await cookies(), token = cookieStore.get('accessToken')?.value;
+  if (!token) redirect('/tenant/login');
+  const user = await getProfile(token);
+  if (!user) redirect('/tenant/login');
   return (
-    <div className="flex-1 space-y-6 p-6 lg:p-8 flex items-center justify-center min-h-[80vh]">
-      <Card className="max-w-md w-full text-center border-border/40 shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <Wrench className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Profil Tenant</CardTitle>
-          <CardDescription>Pembaruan profil dan password</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-            <p>
-              Fitur manajemen profil (termasuk unggah foto dan ubah password) dijadwalkan untuk
-              dikerjakan pada <strong>Sprint Berikutnya</strong>.
-            </p>
-          </div>
-
-          <Link href="/tenant/properties" className="block">
-            <Button variant="outline" className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Kembali ke Dashboard
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+    <div className="p-6 lg:p-8 w-full max-w-5xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Profil Tenant</h1>
+        <p className="text-muted-foreground mt-2">Kelola informasi profil, email, dan password Anda.</p>
+      </div>
+      <ProfileView user={user} />
     </div>
   );
 }

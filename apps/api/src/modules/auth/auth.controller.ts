@@ -12,7 +12,7 @@ import type {
 import { registerTenant, registerUser } from './auth.service';
 import { resendVerification, verifyEmail, checkToken } from './auth.verify.service';
 import { login, logout, refreshAccessToken } from './auth.session.service';
-import { requestPasswordReset, confirmPasswordReset } from './auth.reset.service';
+import { requestPasswordReset, confirmPasswordReset, checkResetToken } from './auth.reset.service';
 import { loginWithGoogle } from './auth.google.service';
 import type { GoogleAuthInput } from './auth.schema';
 
@@ -102,10 +102,18 @@ export async function handleResetPasswordRequest(req: Request, res: Response) {
   sendSuccess(res, null, 'Jika email terdaftar, kami telah mengirimkan link reset');
 }
 
+export async function handleCheckResetToken(req: Request, res: Response) {
+  if (!req.query.token) {
+    return res.status(400).json({ success: false, message: 'Token is required' });
+  }
+  await checkResetToken(req.query.token as string);
+  sendSuccess(res, null, 'Token valid');
+}
+
 export async function handleConfirmResetPassword(req: Request, res: Response) {
-  await confirmPasswordReset(req.body as ConfirmResetPasswordInput);
+  const { role } = await confirmPasswordReset(req.body as ConfirmResetPasswordInput);
   clearAuthCookies(res);
-  sendSuccess(res, null, 'Password berhasil diubah, silakan login');
+  sendSuccess(res, { role }, 'Password berhasil diubah, silakan login');
 }
 
 export async function handleGoogleAuth(req: Request, res: Response) {

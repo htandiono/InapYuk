@@ -41,30 +41,44 @@ function serialiseBody(body: unknown): BodyInit | undefined {
   return JSON.stringify(body);
 }
 
+function buildFetchOptions({ body, token, revalidate, headers, ...rest }: RequestOptions): RequestInit {
+  return {
+    ...rest,
+    credentials: 'include' as RequestCredentials,
+    headers: buildHeaders(body, token, headers),
+    body: serialiseBody(body),
+    ...(revalidate !== undefined ? { next: { revalidate } } : {}),
+  };
+}
+
+function parseApiError<T>(response: Response, payload: ApiResponse<T> | null): ApiError {
+  const message = payload && !payload.success ? payload.message : response.statusText;
+  const errors = payload && !payload.success ? (payload.errors ?? []) : [];
+  return new ApiError(response.status, message || 'Request failed', errors);
+}
+
 // Keep track of refresh promise to avoid multiple simultaneous refresh calls
 let refreshPromise: Promise<boolean> | null = null;
 
 async function attemptRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
-
   refreshPromise = fetch(`${clientEnv.apiBaseUrl}/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { Accept: 'application/json' },
+    method: 'POST', credentials: 'include', headers: { Accept: 'application/json' },
   })
     .then(async (res) => {
-      if (res.ok) {
-        const payload = await res.json().catch(() => null);
-        return payload?.success === true;
-      }
-      return false;
+      const p = await res.json().catch(() => null);
+      return res.ok && p?.success === true;
     })
     .catch(() => false)
-    .finally(() => {
-      refreshPromise = null;
-    });
-
+    .finally(() => { refreshPromise = null; });
   return refreshPromise;
+}
+
+async function retryAfterRefresh<T>(path: string, options: RequestOptions): Promise<T | null> {
+  if (options._retry || path === '/auth/refresh') return null;
+  const refreshed = await attemptRefresh();
+  if (refreshed) return apiFetch<T>(path, { ...options, _retry: true });
+  return null;
 }
 
 /**
@@ -72,31 +86,15 @@ async function attemptRefresh(): Promise<boolean> {
  * envelope so callers get `data` directly and failures throw ApiError.
  */
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, token, revalidate, headers, _retry, ...rest } = options;
-
-  const response = await fetch(`${clientEnv.apiBaseUrl}${path}`, {
-    ...rest,
-    credentials: 'include',
-    headers: buildHeaders(body, token, headers),
-    body: serialiseBody(body),
-    ...(revalidate !== undefined ? { next: { revalidate } } : {}),
-  });
-
+  const response = await fetch(`${clientEnv.apiBaseUrl}${path}`, buildFetchOptions(options));
   const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!response.ok || !payload || payload.success === false) {
-    // Silent Refresh Interceptor
-    if (response.status === 401 && !_retry && path !== '/auth/refresh') {
-      const refreshed = await attemptRefresh();
-      if (refreshed) {
-        // Retry original request
-        return apiFetch<T>(path, { ...options, _retry: true });
-      }
+    if (response.status === 401) {
+      const retry = await retryAfterRefresh<T>(path, options);
+      if (retry !== null) return retry;
     }
-
-    const message = payload && !payload.success ? payload.message : response.statusText;
-    const errors = payload && !payload.success ? (payload.errors ?? []) : [];
-    throw new ApiError(response.status, message || 'Request failed', errors);
+    throw parseApiError(response, payload);
   }
 
   return payload.data;

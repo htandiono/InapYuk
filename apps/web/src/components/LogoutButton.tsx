@@ -12,25 +12,17 @@ interface LogoutButtonProps {
     'link' | 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | null | undefined;
 }
 
-export function LogoutButton({ className, variant = 'outline' }: LogoutButtonProps) {
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+function useLogout() {
+  const router = useRouter(), [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    try {
-      await api.post('/auth/logout');
-      toast.success('Berhasil keluar');
-      router.push('/');
-    } catch {
-      toast.error('Gagal keluar. Silakan coba lagi.');
-      setIsLoggingOut(false);
-    }
+    try { await api.post('/auth/logout'); toast.success('Berhasil keluar'); router.push('/'); }
+    catch { toast.error('Gagal keluar. Silakan coba lagi.'); setIsLoggingOut(false); }
   };
+  return { isLoggingOut, handleLogout };
+}
 
-  return (
-    <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>
-      {isLoggingOut ? 'Keluar...' : 'Keluar'}
-    </Button>
-  );
+export function LogoutButton({ className, variant = 'outline' }: LogoutButtonProps) {
+  const { isLoggingOut, handleLogout } = useLogout();
+  return <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>{isLoggingOut ? 'Keluar...' : 'Keluar'}</Button>;
 }

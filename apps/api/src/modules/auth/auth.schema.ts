@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
 export const registerUserSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
   name: z
     .string()
     .trim()
     .min(3, 'Nama minimal 3 karakter')
-    .regex(/^[a-zA-Z0-9\s.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
+    .max(50, 'Nama maksimal 50 karakter')
+    .regex(/^[a-zA-Z\s.,'-]+$/, 'Nama hanya boleh berisi huruf dan tanda baca umum (.,\'-), tanpa angka'),
 });
 
 export const registerTenantSchema = registerUserSchema.extend({
@@ -21,6 +22,7 @@ export const registerTenantSchema = registerUserSchema.extend({
 const passwordSchema = z
   .string()
   .min(8, 'Password minimal 8 karakter')
+  .max(72, 'Password maksimal 72 karakter')
   .regex(/[A-Z]/, 'Password harus mengandung huruf besar')
   .regex(/[a-z]/, 'Password harus mengandung huruf kecil')
   .regex(/[0-9]/, 'Password harus mengandung angka')
@@ -38,17 +40,17 @@ export const verifyEmailSchema = z
   });
 
 export const resendVerificationSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
   password: z.string().min(1, 'Password tidak boleh kosong'),
   role: z.enum(['USER', 'TENANT']).optional(),
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
 });
 
 export const confirmResetPasswordSchema = z
@@ -64,6 +66,7 @@ export const confirmResetPasswordSchema = z
 
 export const googleAuthSchema = z.object({
   token: z.string().min(1, 'Google token wajib ada'),
+  role: z.enum(['USER', 'TENANT']).optional(),
 });
 
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
