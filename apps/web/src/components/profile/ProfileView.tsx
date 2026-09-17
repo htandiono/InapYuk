@@ -30,7 +30,7 @@ function ProfileTabContents({ user }: { user: UserProfile }) {
 function ProfileTabs({ user }: { user: UserProfile }) {
   return (
     <Tabs defaultValue="profile" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="flex h-auto flex-wrap w-full sm:grid sm:grid-cols-3">
         <TabsTrigger value="profile">Profil</TabsTrigger>
         <TabsTrigger value="email">Email</TabsTrigger>
         <TabsTrigger value="password">Password</TabsTrigger>

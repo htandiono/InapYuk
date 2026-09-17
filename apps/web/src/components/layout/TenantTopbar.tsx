@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 import { LogoutButton } from '../LogoutButton';
+import { TenantMobileNav } from './TenantMobileNav';
 
 async function getTenantName(): Promise<string> {
   try {
@@ -31,11 +32,20 @@ function TenantAvatarLink({ displayName, initial }: { displayName: string; initi
   );
 }
 
+function TenantMobileNavBrand() {
+  return (
+    <div className="md:hidden flex items-center gap-2">
+      <TenantMobileNav />
+      <Link href="/tenant/properties" className="hover:opacity-90 transition-opacity"><Logo isTenant className="text-xl" /></Link>
+    </div>
+  );
+}
+
 function TenantTopbarHeader({ displayName, initial }: { displayName: string; initial: string }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-border/40 bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      <div className="md:hidden flex items-center gap-2"><Link href="/tenant/properties" className="hover:opacity-90 transition-opacity"><Logo isTenant className="text-xl" /></Link></div>
-      <div className="h-6 w-px bg-border/40 md:hidden" aria-hidden="true" />
+      <TenantMobileNavBrand />
+      <div className="h-6 w-px bg-border/40 md:hidden ml-2" aria-hidden="true" />
       <div className="flex flex-1 gap-x-2 self-stretch lg:gap-x-4 justify-end items-center">
         <TenantAvatarLink displayName={displayName} initial={initial} />
         <div className="hidden sm:block h-6 w-px bg-border/60 mx-2" aria-hidden="true" />

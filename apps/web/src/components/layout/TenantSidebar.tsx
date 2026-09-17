@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Building2, Tags, FileText, PieChart, CalendarDays } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 
-const navigation = [
+export const navigation = [
   { name: 'Properti', href: '/tenant/properties', icon: Building2 },
   { name: 'Kategori', href: '/tenant/categories', icon: Tags },
   { name: 'Pesanan', href: '/tenant/orders', icon: FileText },
