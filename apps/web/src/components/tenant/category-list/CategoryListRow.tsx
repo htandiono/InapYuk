@@ -15,7 +15,6 @@ export function CategoryListRow({ c, onEdit, onDelete }: { c: Category; onEdit: 
   return (
     <tr className="hover:bg-muted/30 transition-colors group border-b border-border/40">
       <td className="font-medium text-foreground py-4 px-4">{c.name}</td>
-      <td className="text-sm text-muted-foreground hidden sm:table-cell py-4 px-4">{c.slug}</td>
       <td className="text-right py-3 px-4"><CategoryActionButtons onEdit={onEdit} onDelete={onDelete} /></td>
     </tr>
   );
