@@ -8,11 +8,7 @@ interface Search {
   guests?: string;
 }
 
-export default async function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<Search>;
-}) {
+export default async function CheckoutPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = await searchParams;
   const stay = {
     roomId: query.roomId ?? '',

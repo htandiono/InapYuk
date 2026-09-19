@@ -40,33 +40,39 @@ describe('Tenant Registration Page', () => {
 
   it('shows validation errors for empty fields', async () => {
     render(<RegisterTenantPage />);
-    
+
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/nama minimal 3 karakter/i)).toBeInTheDocument();
       expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
       expect(screen.getByText(/nama perusahaan minimal 3 karakter/i)).toBeInTheDocument();
       expect(screen.getByText(/alamat perusahaan minimal 5 karakter/i)).toBeInTheDocument();
     });
-    
+
     expect(api.post).not.toHaveBeenCalled();
   });
 
   it('submits form successfully to tenant endpoint', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<
+      typeof useRouter
+    >);
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<RegisterTenantPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant Bali' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'bali@example.com' } });
-    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Bali Villas' } });
-    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl. Kuta No 1' } });
-    
+    fireEvent.change(screen.getByLabelText(/nama perusahaan/i), {
+      target: { value: 'PT Bali Villas' },
+    });
+    fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), {
+      target: { value: 'Jl. Kuta No 1' },
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/register/tenant', {
         name: 'Tenant Bali',
@@ -80,18 +86,18 @@ describe('Tenant Registration Page', () => {
 
   it('shows error from API', async () => {
     vi.mocked(api.post).mockRejectedValueOnce(
-      new ApiError(400, 'Email sudah digunakan oleh user lain')
+      new ApiError(400, 'Email sudah digunakan oleh user lain'),
     );
 
     render(<RegisterTenantPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/nama lengkap/i), { target: { value: 'Tenant' } });
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'tenant@example.com' } });
     fireEvent.change(screen.getByLabelText(/nama perusahaan/i), { target: { value: 'PT Test' } });
     fireEvent.change(screen.getByLabelText(/alamat perusahaan/i), { target: { value: 'Jl Test' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: /daftar/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/email sudah digunakan/i)).toBeInTheDocument();
     });

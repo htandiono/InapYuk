@@ -38,7 +38,13 @@ function PagerButton({
   onClick: () => void;
 }) {
   return (
-    <Button type="button" variant="outline" className="rounded-full" disabled={disabled} onClick={onClick}>
+    <Button
+      type="button"
+      variant="outline"
+      className="rounded-full"
+      disabled={disabled}
+      onClick={onClick}
+    >
       {label}
     </Button>
   );

@@ -1,12 +1,8 @@
 import type { PrismaClient } from '../../src/generated/prisma/client';
 import { dayjs, toDateOnly } from '../../src/utils/date';
-import {
-  CATEGORIES,
-  PROPERTY_IMAGES,
-  TENANT_ONE_PROPERTIES,
-  TENANT_TWO_PROPERTIES,
-  type PropertySeed,
-} from './data';
+import { CATEGORIES, PROPERTY_IMAGES, type PropertySeed } from './data';
+import { TENANT_ONE_PROPERTIES } from './data-tenant1';
+import { TENANT_TWO_PROPERTIES } from './data-tenant2';
 
 const AVAILABILITY_DAYS = 90;
 
@@ -45,7 +41,9 @@ async function seedRooms(prisma: PrismaClient, propertyId: string, seed: Propert
           basePrice: room.basePrice,
           capacity: room.capacity,
           totalUnits: room.totalUnits,
-          images: { create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }] },
+          images: {
+            create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }],
+          },
         },
       }));
     roomIds.push(record.id);
@@ -53,7 +51,6 @@ async function seedRooms(prisma: PrismaClient, propertyId: string, seed: Propert
   return roomIds;
 }
 
-/** Opens the next 90 days, then blocks a short maintenance window. */
 async function seedAvailability(prisma: PrismaClient, roomId: string, offset: number) {
   const rows = Array.from({ length: AVAILABILITY_DAYS }, (_, index) => {
     const date = toDateOnly(dayjs().add(index, 'day').format('YYYY-MM-DD'));
@@ -63,11 +60,9 @@ async function seedAvailability(prisma: PrismaClient, roomId: string, offset: nu
   await prisma.roomAvailability.createMany({ data: rows, skipDuplicates: true });
 }
 
-/** One percentage window and one nominal window per room. */
 async function seedPeakSeason(prisma: PrismaClient, roomId: string) {
   const existing = await prisma.peakSeasonRate.count({ where: { roomId } });
   if (existing > 0) return;
-
   await prisma.peakSeasonRate.createMany({
     data: [
       {
@@ -109,12 +104,9 @@ async function seedProperty(
       city: seed.city,
       province: seed.province,
       address: seed.address,
-      images: {
-        create: PROPERTY_IMAGES.map((url, sortOrder) => ({ url, sortOrder })),
-      },
+      images: { create: PROPERTY_IMAGES.map((url, sortOrder) => ({ url, sortOrder })) },
     },
   });
-
   const roomIds = await seedRooms(prisma, property.id, seed);
   for (const roomId of roomIds) {
     await seedAvailability(prisma, roomId, index);
@@ -127,17 +119,15 @@ export async function seedProperties(
   prisma: PrismaClient,
   tenantProfileIds: string[],
 ): Promise<string[]> {
-  const groups = [TENANT_ONE_PROPERTIES, TENANT_TWO_PROPERTIES];
-  const allRoomIds: string[] = [];
-
+  const groups = [TENANT_ONE_PROPERTIES, TENANT_TWO_PROPERTIES],
+    allRoomIds: string[] = [];
   for (const [groupIndex, tenantId] of tenantProfileIds.entries()) {
-    const categories = await seedCategories(prisma, tenantId);
-    const properties = groups[groupIndex] ?? [];
+    const categories = await seedCategories(prisma, tenantId),
+      properties = groups[groupIndex] ?? [];
     for (const [index, seed] of properties.entries()) {
       const roomIds = await seedProperty(prisma, tenantId, categories, seed, index);
       allRoomIds.push(...roomIds);
     }
   }
-
   return allRoomIds;
 }

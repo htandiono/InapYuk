@@ -6,6 +6,7 @@ import { SearchForm } from '../home/SearchForm';
 import { CatalogFilters } from './CatalogFilters';
 import { useCatalogSearch } from './useCatalogSearch';
 import { useCatalogData } from './useCatalogData';
+import type { Property } from './useCatalogData';
 import type { PaginationMeta } from '@inapyuk/types';
 
 function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
@@ -16,19 +17,6 @@ function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
     </div>
   );
 }
-
-interface Property {
-  id: string;
-  slug: string;
-  name: string;
-  city: string;
-  province: string;
-  categoryName: string;
-  imageUrl: string | null;
-  cheapestPrice: number;
-  tenantName?: string | null;
-}
-
 function CatalogGrid({
   properties,
   searchParams,
@@ -48,7 +36,12 @@ function CatalogGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {properties.map((prop) => (
-        <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />
+        <PropertyCard
+          key={prop.id}
+          {...prop}
+          imageUrls={prop.imageUrl ? [prop.imageUrl] : []}
+          queryString={searchParams.toString()}
+        />
       ))}
     </div>
   );
@@ -59,13 +52,11 @@ export function PropertyCatalog() {
   const searchParams = useSearchParams();
   const { name, setName, debouncedName } = useCatalogSearch(searchParams, router);
   const { properties, meta, isLoading } = useCatalogData(searchParams, debouncedName);
-
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
     router.push(`/properties?${params.toString()}`);
   };
-
   return (
     <div className="w-full">
       <div className="mb-10 w-full max-w-5xl mx-auto">

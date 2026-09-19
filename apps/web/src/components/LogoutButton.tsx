@@ -5,16 +5,18 @@ import { api } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { LogOut } from 'lucide-react';
 
 interface LogoutButtonProps {
   className?: string;
-  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+  variant?:
+    'link' | 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | null | undefined;
+  iconOnly?: boolean;
 }
 
-export function LogoutButton({ className, variant = "outline" }: LogoutButtonProps) {
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+function useLogout() {
+  const router = useRouter(),
+    [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -26,10 +28,14 @@ export function LogoutButton({ className, variant = "outline" }: LogoutButtonPro
       setIsLoggingOut(false);
     }
   };
+  return { isLoggingOut, handleLogout };
+}
 
+export function LogoutButton({ className, variant = 'outline', iconOnly }: LogoutButtonProps) {
+  const { isLoggingOut, handleLogout } = useLogout();
   return (
     <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>
-      {isLoggingOut ? 'Keluar...' : 'Keluar'}
+      {iconOnly ? <LogOut className="h-4 w-4" /> : isLoggingOut ? 'Keluar...' : 'Keluar'}
     </Button>
   );
 }

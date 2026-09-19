@@ -6,7 +6,11 @@ import { env, hasSmtp } from '../config/env';
 import { logger } from './logger';
 
 export type MailTemplate =
-  'email-verification' | 'password-reset' | 'booking-confirmed' | 'checkin-reminder';
+  | 'email-verification'
+  | 'password-reset'
+  | 'email-change'
+  | 'booking-confirmed'
+  | 'checkin-reminder';
 
 export interface SendMailOptions {
   to: string;

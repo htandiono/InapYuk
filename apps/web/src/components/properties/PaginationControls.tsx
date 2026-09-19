@@ -7,7 +7,6 @@ interface PaginationControlsProps {
 
 export function PaginationControls({ meta, onPageChange }: PaginationControlsProps) {
   if (meta.totalPages <= 1) return null;
-
   return (
     <div className="flex items-center justify-center gap-4 mt-8">
       <button
@@ -17,11 +16,9 @@ export function PaginationControls({ meta, onPageChange }: PaginationControlsPro
       >
         Sebelumnya
       </button>
-
       <span className="text-sm font-medium text-muted-foreground">
         Halaman {meta.page} dari {meta.totalPages}
       </span>
-
       <button
         onClick={() => onPageChange(meta.page + 1)}
         disabled={!meta.hasNextPage}

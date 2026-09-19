@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/input';
-import { useWatch } from 'react-hook-form';
+import { useWatch, type UseFormRegister } from 'react-hook-form';
 import { RoomFormData } from './RoomFormSchema';
 import { UseFormReturn } from 'react-hook-form';
 
@@ -17,6 +17,49 @@ export function RoomFormFields({ form }: { form: UseFormReturn<RoomFormData> }) 
   );
 }
 
+function NameFieldLabelAndInput({
+  register,
+  isSubmitting,
+  errors,
+}: {
+  register: UseFormRegister<RoomFormData>;
+  isSubmitting: boolean;
+  errors: import('react-hook-form').FieldErrors<RoomFormData>;
+}) {
+  return (
+    <>
+      <label className="block text-sm font-medium mb-1">Nama</label>
+      <Input
+        {...register('name')}
+        disabled={isSubmitting}
+        maxLength={100}
+        className={errors.name ? 'border-destructive' : ''}
+      />
+    </>
+  );
+}
+
+function NameFieldFeedback({
+  errors,
+  val,
+}: {
+  errors: import('react-hook-form').FieldErrors<RoomFormData>;
+  val: string;
+}) {
+  return (
+    <div className="flex justify-between text-xs mt-1">
+      {errors.name ? (
+        <span className="text-destructive font-medium">⚠ {errors.name.message as string}</span>
+      ) : (
+        <span className="text-muted-foreground">Minimal 3 karakter.</span>
+      )}
+      <span className={val.length > 100 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+        {val.length} / 100
+      </span>
+    </div>
+  );
+}
+
 function NameField({ form }: { form: UseFormReturn<RoomFormData> }) {
   const {
     register,
@@ -26,25 +69,55 @@ function NameField({ form }: { form: UseFormReturn<RoomFormData> }) {
   const val = useWatch({ control, name: 'name', defaultValue: '' });
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">Nama</label>
-      <Input
-        {...register('name')}
+      <NameFieldLabelAndInput register={register} isSubmitting={isSubmitting} errors={errors} />
+      <NameFieldFeedback errors={errors} val={val} />
+    </div>
+  );
+}
+
+function DescFieldLabelAndInput({
+  register,
+  isSubmitting,
+  errors,
+}: {
+  register: UseFormRegister<RoomFormData>;
+  isSubmitting: boolean;
+  errors: import('react-hook-form').FieldErrors<RoomFormData>;
+}) {
+  return (
+    <>
+      <label className="block text-sm font-medium mb-1">Deskripsi</label>
+      <textarea
+        {...register('description')}
         disabled={isSubmitting}
-        maxLength={100}
-        className={errors.name ? 'border-destructive' : ''}
+        maxLength={1000}
+        className={`w-full min-h-20 rounded border border-input px-3 py-2 text-sm bg-transparent ${errors.description ? 'border-destructive' : ''}`}
       />
-      <div className="flex justify-between text-xs mt-1">
-        {errors.name ? (
-          <span className="text-destructive font-medium">⚠ {errors.name.message as string}</span>
-        ) : (
-          <span className="text-muted-foreground">Minimal 3 karakter.</span>
-        )}
-        <span
-          className={val.length > 100 ? 'text-destructive font-medium' : 'text-muted-foreground'}
-        >
-          {val.length} / 100
+    </>
+  );
+}
+
+function DescFieldFeedback({
+  errors,
+  val,
+}: {
+  errors: import('react-hook-form').FieldErrors<RoomFormData>;
+  val: string;
+}) {
+  return (
+    <div className="flex justify-between text-xs mt-1">
+      {errors.description ? (
+        <span className="text-destructive font-medium">
+          ⚠ {errors.description.message as string}
         </span>
-      </div>
+      ) : (
+        <span className="text-muted-foreground">Fasilitas dan keunggulan.</span>
+      )}
+      <span
+        className={val.length > 1000 ? 'text-destructive font-medium' : 'text-muted-foreground'}
+      >
+        {val.length} / 1000
+      </span>
     </div>
   );
 }
@@ -58,27 +131,8 @@ function DescriptionField({ form }: { form: UseFormReturn<RoomFormData> }) {
   const val = useWatch({ control, name: 'description', defaultValue: '' });
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">Deskripsi</label>
-      <textarea
-        {...register('description')}
-        disabled={isSubmitting}
-        maxLength={1000}
-        className={`w-full min-h-20 rounded border border-input px-3 py-2 text-sm bg-transparent ${errors.description ? 'border-destructive' : ''}`}
-      />
-      <div className="flex justify-between text-xs mt-1">
-        {errors.description ? (
-          <span className="text-destructive font-medium">
-            ⚠ {errors.description.message as string}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">Fasilitas dan keunggulan.</span>
-        )}
-        <span
-          className={val.length > 1000 ? 'text-destructive font-medium' : 'text-muted-foreground'}
-        >
-          {val.length} / 1000
-        </span>
-      </div>
+      <DescFieldLabelAndInput register={register} isSubmitting={isSubmitting} errors={errors} />
+      <DescFieldFeedback errors={errors} val={val} />
     </div>
   );
 }

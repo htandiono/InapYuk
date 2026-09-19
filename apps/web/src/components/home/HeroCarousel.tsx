@@ -108,7 +108,11 @@ export function HeroCarousel() {
             ))}
           </div>
         </div>
-        <CarouselIndicators count={slides.length} selectedIndex={selectedIndex} onSelect={scrollTo} />
+        <CarouselIndicators
+          count={slides.length}
+          selectedIndex={selectedIndex}
+          onSelect={scrollTo}
+        />
       </div>
     </section>
   );

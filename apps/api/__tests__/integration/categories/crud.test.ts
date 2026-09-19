@@ -22,7 +22,7 @@ describe('Categories CRUD', () => {
         name: 'Tenant Bali',
         role: 'TENANT',
         isVerified: true,
-      }
+      },
     });
 
     const tenantProfile = await prisma.tenantProfile.create({
@@ -30,11 +30,16 @@ describe('Categories CRUD', () => {
         id: 'tenant-profile-1',
         userId: user.id,
         companyName: 'Bali Co',
-      }
+      },
     });
 
     tenantId = tenantProfile.id;
-    tenantToken = signAccessToken({ sub: user.id, email: user.email, role: user.role, isVerified: user.isVerified });
+    tenantToken = signAccessToken({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    });
 
     const user2 = await prisma.user.create({
       data: {
@@ -44,9 +49,14 @@ describe('Categories CRUD', () => {
         name: 'Budi',
         role: 'USER',
         isVerified: true,
-      }
+      },
     });
-    userToken = signAccessToken({ sub: user2.id, email: user2.email, role: user2.role, isVerified: user2.isVerified });
+    userToken = signAccessToken({
+      sub: user2.id,
+      email: user2.email,
+      role: user2.role,
+      isVerified: user2.isVerified,
+    });
   });
 
   describe('POST /api/categories/tenant/categories', () => {
@@ -94,7 +104,7 @@ describe('Categories CRUD', () => {
         .post('/api/categories/tenant/categories')
         .set('Cookie', `accessToken=${tenantToken}`)
         .send({ name: 'Vila 1' });
-      
+
       await request(app)
         .post('/api/categories/tenant/categories')
         .set('Cookie', `accessToken=${tenantToken}`)
@@ -173,7 +183,12 @@ describe('Categories CRUD', () => {
         .send({ name: 'My Kos' });
 
       // Use isolated token
-      const jogjaToken = signAccessToken({ sub: 'tenant-jogja-id', email: 'j@j.com', role: 'TENANT', isVerified: true });
+      const jogjaToken = signAccessToken({
+        sub: 'tenant-jogja-id',
+        email: 'j@j.com',
+        role: 'TENANT',
+        isVerified: true,
+      });
 
       const res = await request(app)
         .patch(`/api/categories/tenant/categories/${created.body.data.id}`)
@@ -199,7 +214,7 @@ describe('Categories CRUD', () => {
       expect(res.body.data.deletedAt).toBeDefined();
 
       const dbCheck = await prisma.propertyCategory.findUnique({
-        where: { id: created.body.data.id }
+        where: { id: created.body.data.id },
       });
       expect(dbCheck?.deletedAt).not.toBeNull();
     });

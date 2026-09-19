@@ -6,10 +6,8 @@ import { SearchForm } from '@/components/home/SearchForm';
 import { PropertyListPreview } from '@/components/home/PropertyListPreview';
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('accessToken')?.value;
-  const isAuthenticated = !!token;
-
+  const cookieStore = await cookies(),
+    isAuthenticated = !!cookieStore.get('accessToken')?.value;
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar isAuthenticated={isAuthenticated} />

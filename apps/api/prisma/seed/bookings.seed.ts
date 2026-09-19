@@ -57,18 +57,15 @@ async function createBooking(
   guestIds: string[],
   roomIds: string[],
 ) {
-  const roomId = roomIds[plan.roomIndex % roomIds.length] as string;
-  const userId = guestIds[plan.guestIndex % guestIds.length] as string;
-  const checkIn = toDateOnly(dayjs().add(plan.checkInOffsetDays, 'day').format('YYYY-MM-DD'));
-  const checkOut = toDateOnly(dayjs(checkIn).add(plan.nights, 'day').format('YYYY-MM-DD'));
-
+  const roomId = roomIds[plan.roomIndex % roomIds.length] as string,
+    userId = guestIds[plan.guestIndex % guestIds.length] as string;
+  const checkIn = toDateOnly(dayjs().add(plan.checkInOffsetDays, 'day').format('YYYY-MM-DD')),
+    checkOut = toDateOnly(dayjs(checkIn).add(plan.nights, 'day').format('YYYY-MM-DD'));
   const orderNumber = buildOrderNumber(checkIn, sequence);
   const existing = await prisma.booking.findUnique({ where: { orderNumber } });
   if (existing) return existing;
-
-  const pricing = await resolveRoomPricing({ roomId, checkIn, checkOut });
-  const createdAt = dayjs(checkIn).subtract(3, 'day').toDate();
-
+  const pricing = await resolveRoomPricing({ roomId, checkIn, checkOut }),
+    createdAt = dayjs(checkIn).subtract(3, 'day').toDate();
   return prisma.booking.create({
     data: {
       orderNumber,
@@ -102,30 +99,22 @@ async function addReview(
 ) {
   const existing = await prisma.review.findUnique({ where: { bookingId } });
   if (existing) return;
-
   const review = await prisma.review.create({
     data: {
       bookingId,
       userId,
       propertyId,
       rating: 5,
-      comment:
-        'Kamarnya bersih, tuan rumah responsif, dan lokasinya dekat ke mana-mana. Pasti menginap di sini lagi.',
+      comment: 'Kamarnya bersih, responsif, mantap.',
     },
   });
-
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
     select: { tenantId: true },
   });
   if (!property) return;
-
   await prisma.reviewReply.create({
-    data: {
-      reviewId: review.id,
-      tenantId: property.tenantId,
-      comment: 'Terima kasih banyak atas ulasannya! Kami tunggu kedatangan berikutnya.',
-    },
+    data: { reviewId: review.id, tenantId: property.tenantId, comment: 'Terima kasih banyak!' },
   });
 }
 

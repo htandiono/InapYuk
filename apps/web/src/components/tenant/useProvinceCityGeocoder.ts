@@ -6,7 +6,9 @@ import { autocompleteAddress } from './geocoding-utils';
 import { PropertyFormValues } from './property-schema';
 
 function logUI(msg: string, addDebugLog?: (m: string) => void) {
-  try { addDebugLog?.('[GeoSync] ' + msg); } catch {}
+  try {
+    addDebugLog?.('[GeoSync] ' + msg);
+  } catch {}
 }
 
 export function useProvinceCityGeocoder({
@@ -39,7 +41,10 @@ export function useProvinceCityGeocoder({
       return;
     }
     lastProvinceCityRef.current = provinceCityKey;
-    logUI(`PROV/CITY EFFECT triggered: prov=${selectedProvinceId}, city=${watchedCity}`, addDebugLog);
+    logUI(
+      `PROV/CITY EFFECT triggered: prov=${selectedProvinceId}, city=${watchedCity}`,
+      addDebugLog,
+    );
 
     const timer = setTimeout(async () => {
       try {
@@ -55,7 +60,10 @@ export function useProvinceCityGeocoder({
           setValue('latitude', first.lat);
           setValue('longitude', first.lng);
           setSelectedGeo({ lat: first.lat, lng: first.lng });
-          logUI(`Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`, addDebugLog);
+          logUI(
+            `Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`,
+            addDebugLog,
+          );
           if (!lastGeocodedAddressRef.current) {
             const formatted = `${watchedCity || province}, ${province}, Indonesia`;
             setValue('address', formatted, { shouldValidate: true });
@@ -72,6 +80,6 @@ export function useProvinceCityGeocoder({
       }
     }, 800);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }

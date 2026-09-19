@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
+import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -28,51 +28,59 @@ interface CategoryFormProps {
   onCancel?: () => void;
 }
 
-export default function CategoryForm({ initialData, onSuccess, onCancel }: CategoryFormProps) {
-  const [loading, setLoading] = useState(false);
+async function submitCategory(
+  values: CategoryFormValues,
+  initialData: CategoryFormProps['initialData'],
+  router: ReturnType<typeof useRouter>,
+  setLoading: (v: boolean) => void,
+  onSuccess?: () => void,
+) {
+  setLoading(true);
+  try {
+    const url = initialData
+      ? `/api/categories/tenant/categories/${initialData.id}`
+      : '/api/categories/tenant/categories';
+    const res = await fetch(url, {
+      method: initialData ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Terjadi kesalahan');
+    toast.success(initialData ? 'Kategori diperbarui' : 'Kategori ditambahkan');
+    if (onSuccess) onSuccess();
+    router.refresh();
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : String(err));
+  } finally {
+    setLoading(false);
+  }
+}
+
+function useCategoryFormSubmit(
+  initialData: { id: string; name: string } | undefined,
+  onSuccess?: () => void,
+) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const onSubmit = (values: CategoryFormValues) =>
+    submitCategory(values, initialData, router, setLoading, onSuccess);
+  return { loading, onSubmit };
+}
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: {
-      name: initialData?.name || '',
-    },
-  });
-
-  const onSubmit = async (values: CategoryFormValues) => {
-    setLoading(true);
-    try {
-      const url = initialData
-        ? `/api/categories/tenant/categories/${initialData.id}`
-        : '/api/categories/tenant/categories';
-
-      const method = initialData ? 'PATCH' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Terjadi kesalahan');
-
-      toast.success(initialData ? 'Kategori diperbarui' : 'Kategori ditambahkan');
-      if (onSuccess) onSuccess();
-      router.refresh();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function CategoryFormFields({
+  register,
+  errors,
+  loading,
+  onCancel,
+}: {
+  register: UseFormRegister<CategoryFormValues>;
+  errors: FieldErrors<CategoryFormValues>;
+  loading: boolean;
+  onCancel?: () => void;
+}) {
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <>
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
           Nama Kategori
@@ -100,6 +108,28 @@ export default function CategoryForm({ initialData, onSuccess, onCancel }: Categ
           {loading ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>
+    </>
+  );
+}
+
+export default function CategoryForm({ initialData, onSuccess, onCancel }: CategoryFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CategoryFormValues>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: { name: initialData?.name || '' },
+  });
+  const { loading, onSubmit } = useCategoryFormSubmit(initialData, onSuccess);
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <CategoryFormFields
+        register={register}
+        errors={errors}
+        loading={loading}
+        onCancel={onCancel}
+      />
     </form>
   );
 }

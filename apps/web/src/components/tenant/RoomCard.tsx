@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Users, LayoutGrid, Image as ImageIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Edit, Trash2, Users, CalendarDays, CalendarClock, ImageIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 
 export interface Room {
   id: string;
@@ -13,103 +14,173 @@ export interface Room {
   images?: { id: string; url: string }[];
 }
 
-type RoomCardProps = { r: Room; onEdit: (r: Room) => void; onDelete: (id: string) => void };
+type RoomCardProps = {
+  r: Room;
+  onEdit: (r: Room) => void;
+  onDelete: (id: string) => void;
+  onManageAvailability?: (id: string) => void;
+  onManagePeakSeason?: (id: string) => void;
+};
 
-export function RoomCard({ r, onEdit, onDelete }: RoomCardProps) {
+function RoomCardHeader({ r }: { r: Room }) {
+  return (
+    <CardHeader className="pb-3 pt-4 px-5 space-y-1 relative pr-10">
+      <div className="flex flex-col gap-1.5 pr-2">
+        <div className="flex items-center gap-2">
+          <CardTitle className="font-semibold text-base leading-tight line-clamp-1 wrap-break-word">
+            {r.name}
+          </CardTitle>
+          <Badge
+            variant="outline"
+            className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full"
+          >
+            {r.totalUnits} Unit
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground line-clamp-2 wrap-break-word leading-relaxed">
+          {r.description}
+        </p>
+      </div>
+    </CardHeader>
+  );
+}
+
+function RoomCardContent({ r }: { r: Room }) {
+  return (
+    <CardContent className="px-5 pb-4 grow">
+      <div className="bg-muted/40 rounded-lg p-3 mb-3 space-y-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+          <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+            Harga Dasar
+          </span>
+          <span className="font-bold text-base md:text-lg text-primary whitespace-nowrap">
+            Rp {Number(r.basePrice).toLocaleString('id-ID')}
+          </span>
+        </div>
+        <div className="flex items-center gap-4 pt-1 border-t border-border/30">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+            <span className="font-medium">{r.capacity} Orang</span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  );
+}
+
+function RoomCardActionsPrimary({
+  r,
+  onManageAvailability,
+  onManagePeakSeason,
+}: {
+  r: Room;
+  onManageAvailability?: (id: string) => void;
+  onManagePeakSeason?: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button
+        size="sm"
+        className="flex-1 min-w-32.5 h-9 px-3 rounded-full text-xs font-medium bg-[#0f6d5e] hover:bg-[#0b5649] border-transparent text-white"
+        onClick={() => onManageAvailability?.(r.id)}
+      >
+        <CalendarDays className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        <span>Ketersediaan</span>
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1 min-w-32.5 h-9 px-3 rounded-full text-xs font-medium border-[#0f6d5e]/30 text-[#0f6d5e] hover:bg-[#0f6d5e]/10 hover:border-[#0f6d5e]/50"
+        onClick={() => onManagePeakSeason?.(r.id)}
+      >
+        <CalendarClock className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        <span>Harga Musiman</span>
+      </Button>
+    </div>
+  );
+}
+
+function RoomCardActionsSecondary({
+  r,
+  onEdit,
+  onDelete,
+}: {
+  r: Room;
+  onEdit: (r: Room) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1 h-8 rounded-full text-xs font-medium border-border/60 hover:bg-muted/50"
+        onClick={() => onEdit(r)}
+      >
+        <Edit className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        <span>Edit</span>
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        className="h-8 rounded-full text-xs font-medium shadow-sm shrink-0 bg-destructive/10 text-destructive hover:bg-destructive/20"
+        onClick={() => onDelete(r.id)}
+      >
+        <Trash2 className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        <span>Hapus</span>
+      </Button>
+    </div>
+  );
+}
+
+export function RoomCard({
+  r,
+  onEdit,
+  onDelete,
+  onManageAvailability,
+  onManagePeakSeason,
+}: RoomCardProps) {
   return (
     <Card className="overflow-hidden bg-card transition-all hover:shadow-md border-border/40 group flex flex-col h-full pt-0 gap-0">
       <RoomImage r={r} />
-      <CardContent className="p-5 flex flex-col grow mt-4">
-        <RoomHeader r={r} />
-        <RoomMetrics r={r} />
-        <RoomActions r={r} onEdit={onEdit} onDelete={onDelete} />
-      </CardContent>
+      <RoomCardHeader r={r} />
+      <RoomCardContent r={r} />
+      <CardFooter className="flex flex-col gap-2 px-5 pt-6 pb-4 border-t border-border/30 bg-muted/20">
+        <RoomCardActionsPrimary
+          r={r}
+          onManageAvailability={onManageAvailability}
+          onManagePeakSeason={onManagePeakSeason}
+        />
+        <RoomCardActionsSecondary r={r} onEdit={onEdit} onDelete={onDelete} />
+      </CardFooter>
     </Card>
+  );
+}
+
+function RoomEmptyImage() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-50">
+      <ImageIcon className="h-10 w-10 mb-2" />
+      <span className="text-xs font-medium">Tidak ada foto</span>
+    </div>
   );
 }
 
 function RoomImage({ r }: { r: Room }) {
   const mainImage = r.images && r.images.length > 0 ? r.images[0].url : null;
   return (
-    <div className="relative aspect-video w-full bg-muted/30 overflow-hidden">
+    <div className="relative aspect-4/3 w-full bg-muted/20 overflow-hidden">
       {mainImage ? (
         <Image
           src={mainImage}
           alt={r.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-          <ImageIcon className="h-8 w-8 mb-2" />
-          <span className="text-xs font-medium">Tidak ada foto</span>
-        </div>
+        <RoomEmptyImage />
       )}
-    </div>
-  );
-}
-
-function RoomHeader({ r }: { r: Room }) {
-  return (
-    <div className="mb-4">
-      <h3
-        className="font-semibold text-lg text-foreground leading-tight line-clamp-2 break-all"
-        title={r.name}
-      >
-        {r.name}
-      </h3>
-      <p
-        className="line-clamp-2 text-sm text-muted-foreground mt-1.5 wrap-break-word"
-        title={r.description}
-      >
-        {r.description}
-      </p>
-    </div>
-  );
-}
-
-function RoomMetrics({ r }: { r: Room }) {
-  return (
-    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-muted-foreground mb-5 mt-auto">
-      <div className="col-span-2 flex items-center justify-between bg-muted/50 p-2.5 rounded-md">
-        <span className="font-medium text-foreground">Harga Dasar</span>
-        <span className="font-bold text-primary">
-          Rp {Number(r.basePrice).toLocaleString('id-ID')}
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <Users className="h-4 w-4 shrink-0 text-accent" />
-        <span className="truncate">{r.capacity} Orang</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <LayoutGrid className="h-4 w-4 shrink-0 text-accent" />
-        <span className="truncate">{r.totalUnits} Unit</span>
-      </div>
-    </div>
-  );
-}
-
-function RoomActions({ r, onEdit, onDelete }: RoomCardProps) {
-  return (
-    <div className="flex gap-2 pt-4 border-t border-border/50">
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex-1 rounded-full border-border/60 hover:bg-muted/50"
-        onClick={() => onEdit(r)}
-      >
-        <Edit className="h-3.5 w-3.5 mr-2" />
-        Edit
-      </Button>
-      <Button
-        variant="destructive"
-        size="sm"
-        className="flex-none px-3 rounded-full shadow-sm"
-        onClick={() => onDelete(r.id)}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
     </div>
   );
 }

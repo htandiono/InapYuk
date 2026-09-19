@@ -8,18 +8,15 @@ export const autocompleteAddress = async (
 ): Promise<void> => {
   try {
     const { q, province, city } = req.query;
-
     if (!q || typeof q !== 'string') {
       res.status(400).json({ success: false, message: 'Query parameter q is required' });
       return;
     }
-
     const suggestions = await searchAddress(
       q,
       typeof province === 'string' ? province : undefined,
       typeof city === 'string' ? city : undefined,
     );
-
     res.status(200).json({ success: true, data: suggestions });
   } catch (error) {
     next(error);
