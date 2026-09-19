@@ -6,6 +6,7 @@ import { SearchForm } from '../home/SearchForm';
 import { CatalogFilters } from './CatalogFilters';
 import { useCatalogSearch } from './useCatalogSearch';
 import { useCatalogData } from './useCatalogData';
+import type { Property } from './useCatalogData';
 import type { PaginationMeta } from '@inapyuk/types';
 
 function CatalogHeader({ meta }: { meta: PaginationMeta | null }) {
