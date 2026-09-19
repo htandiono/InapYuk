@@ -71,9 +71,14 @@ describe('POST /api/auth/register/user', () => {
     const app = createTestApp();
 
     // First registration
-    await app
-      .post('/api/auth/register/user')
-      .send({ email: 'dup@example.com', name: 'First' });
+    await prisma.user.create({
+      data: {
+        email: 'dup@example.com',
+        name: 'First',
+        role: 'USER',
+        isVerified: true,
+      }
+    });
 
     // Duplicate registration
     const res = await app

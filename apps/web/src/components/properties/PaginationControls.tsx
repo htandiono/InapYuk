@@ -17,7 +17,7 @@ export function PaginationControls({ meta, onPageChange }: PaginationControlsPro
       >
         Sebelumnya
       </button>
-      
+
       <span className="text-sm font-medium text-muted-foreground">
         Halaman {meta.page} dari {meta.totalPages}
       </span>

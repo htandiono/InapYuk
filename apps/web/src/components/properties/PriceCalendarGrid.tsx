@@ -68,7 +68,9 @@ export function PriceCalendarGrid({
                     : 'text-foreground group-hover:bg-muted-foreground/10'
               }`}
             >
-              <span className={`text-sm ${isPast || !night.isAvailable ? 'line-through decoration-muted-foreground/40' : 'font-semibold'}`}>
+              <span
+                className={`text-sm ${isPast || !night.isAvailable ? 'line-through decoration-muted-foreground/40' : 'font-semibold'}`}
+              >
                 {dateObj.getDate()}
               </span>
             </div>

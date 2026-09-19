@@ -11,6 +11,9 @@ export const PROFILE_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif'];
 /** Payment proof - spec is stricter: only .jpg and .png, max 1MB. */
 export const PAYMENT_PROOF_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
+/** Property images - spec strictly only .jpg and .png */
+export const PROPERTY_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
 function buildFileFilter(allowed: string[]) {
   return (_req: Request, file: Express.Multer.File, callback: FileFilterCallback): void => {
     const extension = path.extname(file.originalname).toLowerCase();
@@ -26,14 +29,14 @@ function buildFileFilter(allowed: string[]) {
  * Files are kept in memory so the size and extension rules run before anything
  * touches disk or Cloudinary.
  */
-function buildUploader(allowed: string[]) {
+function buildUploader(allowed: string[], maxSizeBytes: number = MAX_FILE_SIZE_BYTES) {
   return multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: MAX_FILE_SIZE_BYTES, files: 10 },
+    limits: { fileSize: maxSizeBytes, files: 10 },
     fileFilter: buildFileFilter(allowed),
   });
 }
 
 export const uploadProfileImage = buildUploader(PROFILE_IMAGE_EXTENSIONS);
 export const uploadPaymentProof = buildUploader(PAYMENT_PROOF_EXTENSIONS);
-export const uploadPropertyImages = buildUploader(PROFILE_IMAGE_EXTENSIONS);
+export const uploadPropertyImages = buildUploader(PROPERTY_IMAGE_EXTENSIONS, 5 * 1024 * 1024);

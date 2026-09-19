@@ -6,7 +6,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+  className?: string;
+  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+}
+
+export function LogoutButton({ className, variant = "outline" }: LogoutButtonProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -23,7 +28,7 @@ export function LogoutButton() {
   };
 
   return (
-    <Button variant="outline" onClick={handleLogout} disabled={isLoggingOut}>
+    <Button variant={variant} className={className} onClick={handleLogout} disabled={isLoggingOut}>
       {isLoggingOut ? 'Keluar...' : 'Keluar'}
     </Button>
   );

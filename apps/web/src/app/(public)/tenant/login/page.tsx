@@ -8,8 +8,10 @@ import * as z from 'zod';
 import { api, ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 
 const loginSchema = z.object({
@@ -61,8 +63,9 @@ export default function TenantLoginPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold font-heading text-primary">Masuk sebagai Tenant</CardTitle>
+        <CardHeader className="flex flex-col items-center text-center pb-2">
+          <Logo isTenant className="mb-2 text-3xl" />
+          <CardTitle className="text-xl font-bold">Masuk sebagai Tenant</CardTitle>
           <CardDescription>Kelola properti dan pesanan kamu</CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,10 +92,9 @@ export default function TenantLoginPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
-                placeholder="••••••••"
+                placeholder="Masukkan password"
                 {...register('password')}
                 disabled={isSubmitting}
               />

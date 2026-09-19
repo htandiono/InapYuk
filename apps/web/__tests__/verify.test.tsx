@@ -28,6 +28,7 @@ vi.mock('next/navigation', () => ({
 describe('Verify Page', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.mocked(api.get).mockResolvedValue({ success: true });
   });
 
   it('shows error if token is missing', () => {
@@ -40,11 +41,9 @@ describe('Verify Page', () => {
     vi.mocked(useSearchParams).mockReturnValue({ get: () => 'valid-token' } as unknown as ReturnType<typeof useSearchParams>);
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     render(<VerifyPage />);
-    
-    await waitFor(() => {
-      expect(screen.getByLabelText(/password baru/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /verifikasi/i })).toBeInTheDocument();
-    });
+    const passwordInput = await screen.findByLabelText(/password baru/i);
+    expect(passwordInput).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /verifikasi/i })).toBeInTheDocument();
   });
 
   it('shows validation errors for short password', async () => {
@@ -52,12 +51,8 @@ describe('Verify Page', () => {
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     render(<VerifyPage />);
     
-    await waitFor(() => {
-      expect(screen.getByLabelText(/password baru/i)).toBeInTheDocument();
-    });
-    
-    fireEvent.change(screen.getByLabelText(/password baru/i), { target: { value: 'Short1!' } });
-    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'Short1!' } });
+    const passwordInput = await screen.findByLabelText(/password baru/i);
+    fireEvent.change(passwordInput, { target: { value: 'short' } });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
     
     await waitFor(() => {
@@ -76,19 +71,16 @@ describe('Verify Page', () => {
 
     render(<VerifyPage />);
     
-    await waitFor(() => {
-      expect(screen.getByLabelText(/password baru/i)).toBeInTheDocument();
-    });
-    
-    fireEvent.change(screen.getByLabelText(/password baru/i), { target: { value: 'StrongPass1!' } });
-    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongPass1!' } });
+    const passwordInput = await screen.findByLabelText(/password baru/i);
+    fireEvent.change(passwordInput, { target: { value: 'StrongP@ssw0rd!' } });
+    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongP@ssw0rd!' } });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
     
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/verify', {
         token: 'valid-token',
-        password: 'StrongPass1!',
-        confirmPassword: 'StrongPass1!',
+        password: 'StrongP@ssw0rd!',
+        confirmPassword: 'StrongP@ssw0rd!',
       });
       expect(pushMock).toHaveBeenCalledWith('/login');
     });
@@ -103,12 +95,9 @@ describe('Verify Page', () => {
 
     render(<VerifyPage />);
     
-    await waitFor(() => {
-      expect(screen.getByLabelText(/password baru/i)).toBeInTheDocument();
-    });
-    
-    fireEvent.change(screen.getByLabelText(/password baru/i), { target: { value: 'StrongPass1!' } });
-    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongPass1!' } });
+    const passwordInput = await screen.findByLabelText(/password baru/i);
+    fireEvent.change(passwordInput, { target: { value: 'StrongP@ssw0rd!' } });
+    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongP@ssw0rd!' } });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
     
     await waitFor(() => {

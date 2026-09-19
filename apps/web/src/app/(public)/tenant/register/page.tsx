@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Logo } from '@/components/ui/logo';
 import { useTenantRegister } from './useTenantRegister';
 
 function SuccessView({ onResend, isResending, cooldown }: { onResend: () => void, isResending: boolean, cooldown: number }) {
@@ -39,9 +40,10 @@ export default function RegisterTenantPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold font-heading text-primary">Daftar sebagai Tenant</CardTitle>
-          <CardDescription>Mulai kelola penginapan kamu dengan InapYuk</CardDescription>
+        <CardHeader className="flex flex-col items-center text-center pb-2">
+          <Logo isTenant className="mb-2 text-3xl" />
+          <CardTitle className="text-xl font-bold">Daftar sebagai Tenant</CardTitle>
+          <CardDescription>Mulai kelola penginapan kamu</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

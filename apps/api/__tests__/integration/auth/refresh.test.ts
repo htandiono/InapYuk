@@ -52,8 +52,8 @@ describe('POST /api/auth/refresh', () => {
     expect(cookies).toBeDefined();
     expect(cookies.some((c: string) => c.startsWith('accessToken='))).toBe(true);
     
-    // Refresh token shouldn't be rotated
-    expect(cookies.some((c: string) => c.startsWith('refreshToken='))).toBe(false);
+    // Refresh token should be rotated
+    expect(cookies.some((c: string) => c.startsWith('refreshToken='))).toBe(true);
   });
 
   it('should return 401 and clear cookies if no refresh token provided', async () => {

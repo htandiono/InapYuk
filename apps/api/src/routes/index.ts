@@ -9,6 +9,7 @@ import reviewsRoutes from '../modules/reviews/reviews.routes';
 import reportsRoutes from '../modules/reports/reports.routes';
 import notificationsRoutes from '../modules/notifications/notifications.routes';
 import cronRoutes from '../modules/cron/cron.routes';
+import geoRoutes from '../modules/geo/geo.routes';
 import { sendSuccess } from '../utils/api-response';
 
 const router = Router();
@@ -23,6 +24,7 @@ router.use('/users', usersRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/rooms', roomsRoutes);
 router.use('/properties', propertiesRoutes);
+router.use('/geo', geoRoutes);
 
 // Feature 2 - htandiono
 router.use('/bookings', bookingsRoutes);

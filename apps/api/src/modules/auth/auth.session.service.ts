@@ -16,14 +16,19 @@ async function validateUserCredentials(input: LoginInput) {
   return user;
 }
 
-async function createSessionTokens(user: { id: string; role: UserRole; email: string; isVerified: boolean }) {
+async function createSessionTokens(user: {
+  id: string;
+  role: UserRole;
+  email: string;
+  isVerified: boolean;
+}) {
   const tokens = issueTokens({
     sub: user.id,
     role: user.role,
     email: user.email,
     isVerified: user.isVerified,
   });
-  
+
   const days = parseInt(env.JWT_REFRESH_EXPIRES_IN.replace('d', ''), 10) || 7;
   const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
@@ -56,7 +61,10 @@ async function verifyAndFindToken(token: string) {
   return tokenRecord;
 }
 
-async function rotateTokens(tokenRecord: { id: string; user: { id: string; role: UserRole; email: string; isVerified: boolean } }) {
+async function rotateTokens(tokenRecord: {
+  id: string;
+  user: { id: string; role: UserRole; email: string; isVerified: boolean };
+}) {
   const tokens = issueTokens({
     sub: tokenRecord.user.id,
     role: tokenRecord.user.role,
@@ -70,7 +78,11 @@ async function rotateTokens(tokenRecord: { id: string; user: { id: string; role:
   await prisma.$transaction([
     prisma.refreshToken.delete({ where: { id: tokenRecord.id } }),
     prisma.refreshToken.create({
-      data: { userId: tokenRecord.user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt: newExpiresAt },
+      data: {
+        userId: tokenRecord.user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        expiresAt: newExpiresAt,
+      },
     }),
   ]);
   return tokens;
