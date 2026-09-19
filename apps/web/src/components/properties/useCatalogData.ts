@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api-client';
 import type { PaginationMeta } from '@inapyuk/types';
 
-interface Property {
+export interface Property {
   id: string;
   slug: string;
   name: string;

@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Figtree } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { clientEnv } from '@/lib/env';
 import { UnverifiedBanner } from '@/components/UnverifiedBanner';
 import './globals.css';
 
-const figtree = Figtree({ variable: '--font-figtree', subsets: ['latin'] });
-const fraunces = Fraunces({ variable: '--font-fraunces', subsets: ['latin'] });
+// Use system font fallback to avoid build-time Google Fonts fetching
+const figtree = { variable: '--font-figtree' };
+const fraunces = { variable: '--font-fraunces' };
 
 export const metadata: Metadata = {
   metadataBase: new URL(clientEnv.siteUrl),
