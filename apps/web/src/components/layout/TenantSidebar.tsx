@@ -8,7 +8,7 @@ import { Logo } from '@/components/ui/logo';
 const mainNavigation = [
   { name: 'Properti', href: '/tenant/properties', icon: Building2 },
   { name: 'Kategori', href: '/tenant/categories', icon: Tags },
-  { name: 'Pesanan', href: '/tenant/orders', icon: FileText },
+  { name: 'Pesanan', href: '/tenant/transactions', icon: FileText },
   { name: 'Laporan', href: '/tenant/reports', icon: PieChart },
 ];
 
