@@ -93,11 +93,16 @@ function reorderNewUploadsMain(newUploads: { url: string; sortOrder: number }[],
 }
 
 async function handleMainImageIndexForNewUploads(
-  tx: Prisma.TransactionClient, propertyId: string,
-  data: UpdatePropertyInput, newUploads: { url: string; sortOrder: number }[],
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  data: UpdatePropertyInput,
+  newUploads: { url: string; sortOrder: number }[],
 ) {
   if (data.mainImageIndex !== undefined && newUploads[data.mainImageIndex]) {
-    await tx.propertyImage.updateMany({ where: { propertyId }, data: { sortOrder: { increment: 1 } } });
+    await tx.propertyImage.updateMany({
+      where: { propertyId },
+      data: { sortOrder: { increment: 1 } },
+    });
     reorderNewUploadsMain(newUploads, data.mainImageIndex);
   }
 }
@@ -112,9 +117,14 @@ async function handleNewUploadsCreation(
 }
 
 async function handleExistingMainImageReorder(
-  tx: Prisma.TransactionClient, propertyId: string, mainImageId: string
+  tx: Prisma.TransactionClient,
+  propertyId: string,
+  mainImageId: string,
 ) {
-  const imgs = await tx.propertyImage.findMany({ where: { propertyId }, orderBy: { sortOrder: 'asc' } });
+  const imgs = await tx.propertyImage.findMany({
+    where: { propertyId },
+    orderBy: { sortOrder: 'asc' },
+  });
   let order = 1;
   for (const img of imgs) {
     const newOrder = img.id === mainImageId ? 0 : order++;
@@ -124,15 +134,22 @@ async function handleExistingMainImageReorder(
 }
 
 export async function executeUpdatePropertyQuery(
-  pId: string, data: UpdatePropertyInput, geo: { lat: number; lng: number } | null | undefined,
-  deletedIds: string[], newUploads: { url: string; sortOrder: number }[]
+  pId: string,
+  data: UpdatePropertyInput,
+  geo: { lat: number; lng: number } | null | undefined,
+  deletedIds: string[],
+  newUploads: { url: string; sortOrder: number }[],
 ) {
   return prisma.$transaction(async (tx) => {
     await handleDeleteImages(tx, pId, deletedIds);
     await handleMainImageIndexForNewUploads(tx, pId, data, newUploads);
     await handleNewUploadsCreation(tx, pId, newUploads);
     if (data.mainImageId) await handleExistingMainImageReorder(tx, pId, data.mainImageId);
-    return tx.property.update({ where: { id: pId }, data: buildUpdateData(data, geo), include: { images: true } });
+    return tx.property.update({
+      where: { id: pId },
+      data: buildUpdateData(data, geo),
+      include: { images: true },
+    });
   });
 }
 

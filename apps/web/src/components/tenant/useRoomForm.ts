@@ -14,22 +14,52 @@ function getInitialFormValues(initialData?: RoomFormInitData) {
   };
 }
 
-export function useRoomForm(propertyId: string, initialData?: RoomFormInitData, onSuccess?: () => void): RoomFormState {
+export function useRoomForm(
+  propertyId: string,
+  initialData?: RoomFormInitData,
+  onSuccess?: () => void,
+): RoomFormState {
   const [images, setImages] = useState<File[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
   const [mainId, setMainId] = useState<string | null>(initialData?.images?.[0]?.id || null);
   const [mainIdx, setMainIdx] = useState<number | null>(null);
   const ref = useRef<HTMLInputElement>(null!);
 
-  const form = useForm<RoomFormData>({ resolver: zodResolver(RoomFormSchema), defaultValues: getInitialFormValues(initialData) });
+  const form = useForm<RoomFormData>({
+    resolver: zodResolver(RoomFormSchema),
+    defaultValues: getInitialFormValues(initialData),
+  });
 
-  return { form, images, setImages, deleted, setDeleted, mainId, setMainId, mainIdx, setMainIdx, ref, propertyId, initialData, onSuccess };
+  return {
+    form,
+    images,
+    setImages,
+    deleted,
+    setDeleted,
+    mainId,
+    setMainId,
+    mainIdx,
+    setMainIdx,
+    ref,
+    propertyId,
+    initialData,
+    onSuccess,
+  };
 }
 
 function checkValidFile(f: File) {
-  if (!['image/jpeg', 'image/png'].includes(f.type)) { toast.error(`${f.name}: Format tidak didukung.`); return false; }
-  if (f.size < 50 * 1024) { toast.error(`${f.name}: Terlalu kecil (min. 50KB).`); return false; }
-  if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name}: Terlalu besar (maks. 5MB).`); return false; }
+  if (!['image/jpeg', 'image/png'].includes(f.type)) {
+    toast.error(`${f.name}: Format tidak didukung.`);
+    return false;
+  }
+  if (f.size < 50 * 1024) {
+    toast.error(`${f.name}: Terlalu kecil (min. 50KB).`);
+    return false;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    toast.error(`${f.name}: Terlalu besar (maks. 5MB).`);
+    return false;
+  }
   return true;
 }
 
@@ -39,14 +69,20 @@ function filterValidFiles(files: File[]) {
   return valid;
 }
 
-export function handleImageFiles(e: React.ChangeEvent<HTMLInputElement>, state: RoomFormState, previewsCount: number) {
+export function handleImageFiles(
+  e: React.ChangeEvent<HTMLInputElement>,
+  state: RoomFormState,
+  previewsCount: number,
+) {
   if (!e.target.files) return;
   const files = Array.from(e.target.files);
-  if (files.length + state.images.length + previewsCount - state.deleted.length > 5) return toast.error('Maksimal 5 foto kamar diperbolehkan');
+  if (files.length + state.images.length + previewsCount - state.deleted.length > 5)
+    return toast.error('Maksimal 5 foto kamar diperbolehkan');
   const validFiles = filterValidFiles(files);
   if (validFiles.length > 0) {
     state.setImages((p: File[]) => [...p, ...validFiles]);
-    if (!state.mainId && state.mainIdx === null && previewsCount - state.deleted.length === 0) state.setMainIdx(0);
+    if (!state.mainId && state.mainIdx === null && previewsCount - state.deleted.length === 0)
+      state.setMainIdx(0);
   }
   if (state.ref.current) state.ref.current.value = '';
 }
@@ -78,10 +114,16 @@ async function performRoomSubmit(url: string, method: string, form: FormData) {
 
 export async function submitForm(data: RoomFormData, state: RoomFormState) {
   try {
-    const url = state.initialData?.id ? `/api/rooms/tenant/rooms/${state.initialData.id}` : `/api/rooms/tenant/properties/${state.propertyId}/rooms`;
+    const url = state.initialData?.id
+      ? `/api/rooms/tenant/rooms/${state.initialData.id}`
+      : `/api/rooms/tenant/properties/${state.propertyId}/rooms`;
     const form = buildFormData(data, state);
     await performRoomSubmit(url, state.initialData?.id ? 'PATCH' : 'POST', form);
-    toast.success(state.initialData?.id ? 'Kamar berhasil diperbarui' : 'Kamar berhasil ditambahkan');
+    toast.success(
+      state.initialData?.id ? 'Kamar berhasil diperbarui' : 'Kamar berhasil ditambahkan',
+    );
     if (state.onSuccess) state.onSuccess();
-  } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)); }
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : String(err));
+  }
 }

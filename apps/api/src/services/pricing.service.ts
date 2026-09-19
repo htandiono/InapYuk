@@ -70,13 +70,20 @@ async function getBookingGroups(roomId: string, from: Date, to: Date) {
     by: ['date'],
     where: {
       date: { gte: from, lt: to },
-      booking: { roomId, status: { in: ['WAITING_PAYMENT', 'WAITING_CONFIRMATION', 'PROCESSED', 'COMPLETED'] } },
+      booking: {
+        roomId,
+        status: { in: ['WAITING_PAYMENT', 'WAITING_CONFIRMATION', 'PROCESSED', 'COMPLETED'] },
+      },
     },
     _count: { _all: true },
   });
 }
 
-async function countBookedUnits(roomId: string, from: Date, to: Date): Promise<Map<string, number>> {
+async function countBookedUnits(
+  roomId: string,
+  from: Date,
+  to: Date,
+): Promise<Map<string, number>> {
   const rows = await getBookingGroups(roomId, from, to);
   return new Map(rows.map((r) => [formatDateKey(r.date), r._count._all]));
 }
@@ -124,7 +131,8 @@ function buildNightlyRate(args: BuildNightArgs): NightlyRate {
   const rate = findRateForDate(args.rates, args.date);
 
   return {
-    date: args.date, basePrice: args.basePrice,
+    date: args.date,
+    basePrice: args.basePrice,
     finalPrice: calcFinalPrice(args.basePrice, rate),
     peakSeasonRateName: rate?.name ?? null,
     isAvailable: override?.isAvailable !== false && remaining > 0,
@@ -133,12 +141,16 @@ function buildNightlyRate(args: BuildNightArgs): NightlyRate {
 }
 
 function summarise(
-  room: { id: string; propertyId: string; capacity: number }, nights: NightlyRate[]
+  room: { id: string; propertyId: string; capacity: number },
+  nights: NightlyRate[],
 ): RoomPricing {
   const unavailableDates = nights.filter((n) => !n.isAvailable).map((n) => formatDateKey(n.date));
   return {
-    roomId: room.id, propertyId: room.propertyId, capacity: room.capacity,
-    nights, nightCount: nights.length,
+    roomId: room.id,
+    propertyId: room.propertyId,
+    capacity: room.capacity,
+    nights,
+    nightCount: nights.length,
     totalPrice: nights.reduce((s, n) => s + n.finalPrice, 0),
     isAvailable: unavailableDates.length === 0,
     unavailableDates,
@@ -153,15 +165,17 @@ async function fetchPricingData(roomId: string, from: Date, to: Date) {
   ]);
 }
 
-export async function resolveRoomPricing(
-  p: { roomId: string; checkIn: Date | string; checkOut: Date | string }
-): Promise<RoomPricing> {
+export async function resolveRoomPricing(p: {
+  roomId: string;
+  checkIn: Date | string;
+  checkOut: Date | string;
+}): Promise<RoomPricing> {
   const room = await loadRoom(p.roomId);
   const nights = eachNight(p.checkIn, p.checkOut);
   if (nights.length === 0) throw notFound('Check-out must be at least one night after check-in');
   const from = toDateOnly(p.checkIn);
   const to = toDateOnly(p.checkOut);
-  
+
   const [overrides, booked, rates] = await fetchPricingData(room.id, from, to);
   const basePrice = toNumber(room.basePrice);
   const args = { basePrice, room, overrides, booked, rates };

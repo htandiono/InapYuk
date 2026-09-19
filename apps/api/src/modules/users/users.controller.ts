@@ -15,7 +15,15 @@ import type {
 export async function handleGetProfile(req: Request, res: Response) {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.sub },
-    select: { id: true, name: true, email: true, avatarUrl: true, role: true, isVerified: true, provider: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+      role: true,
+      isVerified: true,
+      provider: true,
+    },
   });
   sendSuccess(res, user, 'Berhasil mengambil profil');
 }

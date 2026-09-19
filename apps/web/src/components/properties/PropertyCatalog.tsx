@@ -36,7 +36,12 @@ function CatalogGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {properties.map((prop) => (
-        <PropertyCard key={prop.id} {...prop} queryString={searchParams.toString()} />
+        <PropertyCard
+          key={prop.id}
+          {...prop}
+          imageUrls={prop.imageUrl ? [prop.imageUrl] : []}
+          queryString={searchParams.toString()}
+        />
       ))}
     </div>
   );

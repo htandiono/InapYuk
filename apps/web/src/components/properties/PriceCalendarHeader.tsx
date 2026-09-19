@@ -50,7 +50,13 @@ export function PriceCalendarHeader({ nav }: PriceCalendarHeaderProps) {
 export function PriceCalendarGridHeader() {
   return (
     <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-semibold text-muted-foreground uppercase">
-      <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+      <div>Min</div>
+      <div>Sen</div>
+      <div>Sel</div>
+      <div>Rab</div>
+      <div>Kam</div>
+      <div>Jum</div>
+      <div>Sab</div>
     </div>
   );
 }

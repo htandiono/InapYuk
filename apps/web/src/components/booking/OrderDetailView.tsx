@@ -23,9 +23,7 @@ export function OrderDetailView({ orderNumber }: { orderNumber: string }) {
     void loadDetail(orderNumber, setBooking, setError);
   }, [session, orderNumber]);
 
-  return (
-    <DetailBody session={session} booking={booking} error={error} onDone={setBooking} />
-  );
+  return <DetailBody session={session} booking={booking} error={error} onDone={setBooking} />;
 }
 
 function DetailBody({
@@ -59,7 +57,9 @@ function DetailCard({
         <PaymentCountdown deadline={booking.paymentDeadline} />
       ) : null}
       <NightBreakdown nights={booking.nightBreakdown} />
-      <p className="text-right font-heading text-xl text-primary">{formatRupiah(booking.totalPrice)}</p>
+      <p className="text-right font-heading text-xl text-primary">
+        {formatRupiah(booking.totalPrice)}
+      </p>
       <Actions booking={booking} onDone={onDone} />
     </div>
   );
@@ -105,7 +105,11 @@ function ProofPreview({ url }: { url: string }) {
     <div className="space-y-2">
       <p className="text-sm font-medium">Bukti transfer yang sudah masuk</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="Bukti transfer" className="max-h-64 w-full rounded-xl object-contain bg-muted" />
+      <img
+        src={url}
+        alt="Bukti transfer"
+        className="max-h-64 w-full rounded-xl object-contain bg-muted"
+      />
     </div>
   );
 }

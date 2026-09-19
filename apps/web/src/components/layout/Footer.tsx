@@ -3,9 +3,15 @@ import Link from 'next/link';
 function FooterLinks() {
   return (
     <div className="flex gap-4 sm:mt-0">
-      <Link href="/bantuan" className="hover:text-primary transition-colors">Bantuan</Link>
-      <Link href="/privasi" className="hover:text-primary transition-colors">Privasi</Link>
-      <Link href="/syarat" className="hover:text-primary transition-colors">Syarat</Link>
+      <Link href="/bantuan" className="hover:text-primary transition-colors">
+        Bantuan
+      </Link>
+      <Link href="/privasi" className="hover:text-primary transition-colors">
+        Privasi
+      </Link>
+      <Link href="/syarat" className="hover:text-primary transition-colors">
+        Syarat
+      </Link>
     </div>
   );
 }

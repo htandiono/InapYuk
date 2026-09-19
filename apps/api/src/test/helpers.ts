@@ -18,8 +18,26 @@ export function createTestApp() {
  * Call this in `beforeEach` so every test starts with a clean DB.
  */
 export async function truncateAll(): Promise<void> {
-  const models = ['bookingNight', 'notification', 'reviewReply', 'review', 'booking', 'peakSeasonRate', 'roomAvailability', 'roomImage', 'room', 'propertyImage', 'property', 'propertyCategory', 'tenantProfile', 'verificationToken', 'refreshToken', 'user'] as const;
-  for (const m of models) await (prisma[m] as unknown as { deleteMany: () => Promise<void> }).deleteMany();
+  const models = [
+    'bookingNight',
+    'notification',
+    'reviewReply',
+    'review',
+    'booking',
+    'peakSeasonRate',
+    'roomAvailability',
+    'roomImage',
+    'room',
+    'propertyImage',
+    'property',
+    'propertyCategory',
+    'tenantProfile',
+    'verificationToken',
+    'refreshToken',
+    'user',
+  ] as const;
+  for (const m of models)
+    await (prisma[m] as unknown as { deleteMany: () => Promise<void> }).deleteMany();
 }
 
 /**

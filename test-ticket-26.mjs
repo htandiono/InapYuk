@@ -5,13 +5,7 @@ const BASE_URL = 'http://localhost:3000';
 const VIEWPORT_MOBILE = { width: 360, height: 740 };
 const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
 
-const PAGES_TO_TEST = [
-  '/login',
-  '/register',
-  '/reset-password',
-  '/profile',
-  '/tenant/profile',
-];
+const PAGES_TO_TEST = ['/login', '/register', '/reset-password', '/profile', '/tenant/profile'];
 
 async function checkHorizontalScroll(page) {
   return await page.evaluate(() => {
@@ -21,12 +15,12 @@ async function checkHorizontalScroll(page) {
 
 async function runTests() {
   console.log(pc.cyan('🚀 Starting Responsive Tests for Ticket 26...\n'));
-  
+
   let browser;
   try {
     browser = await puppeteer.launch({ headless: 'new' });
     const page = await browser.newPage();
-    
+
     let allPassed = true;
 
     for (const route of PAGES_TO_TEST) {
@@ -38,12 +32,12 @@ async function runTests() {
 
         // TC-26-01 & TC-26-02: Mobile Viewport
         await page.setViewport(VIEWPORT_MOBILE);
-        
+
         // Give it a moment to reflow
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         const hasMobileScroll = await checkHorizontalScroll(page);
-        
+
         if (hasMobileScroll) {
           console.log(pc.red(`  ❌ FAILED at 360px: Horizontal scrolling detected.`));
           allPassed = false;
@@ -53,10 +47,10 @@ async function runTests() {
 
         // TC-26-02: Desktop Viewport
         await page.setViewport(VIEWPORT_DESKTOP);
-        
+
         // Give it a moment to reflow
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         const hasDesktopScroll = await checkHorizontalScroll(page);
         if (hasDesktopScroll) {
           console.log(pc.red(`  ❌ FAILED at 1280px: Horizontal scrolling detected.`));
@@ -64,7 +58,6 @@ async function runTests() {
         } else {
           console.log(pc.green(`  ✅ PASSED at 1280px: No horizontal scrolling.`));
         }
-
       } catch (err) {
         console.log(pc.red(`  ❌ ERROR visiting ${route}: ${err.message}`));
         allPassed = false;
@@ -75,10 +68,11 @@ async function runTests() {
     if (allPassed) {
       console.log(pc.bgGreen(pc.black('\n 🎉 ALL RESPONSIVE TESTS PASSED (Ticket 26) 🎉 \n')));
     } else {
-      console.log(pc.bgRed(pc.white('\n ⚠️ SOME TESTS FAILED. Please review the output above. ⚠️ \n')));
+      console.log(
+        pc.bgRed(pc.white('\n ⚠️ SOME TESTS FAILED. Please review the output above. ⚠️ \n')),
+      );
       process.exit(1);
     }
-    
   } catch (err) {
     console.error(pc.red(`Failed to launch browser: ${err.message}`));
     console.log(pc.yellow('Make sure the dev server is running on http://localhost:3000'));

@@ -1,7 +1,16 @@
 import { z } from 'zod';
 
 export const updateProfileSchema = z.object({
-  name: z.string().trim().min(3, 'Nama minimal 3 karakter').max(50, 'Nama maksimal 50 karakter').regex(/^[a-zA-Z\s.,'-]+$/, 'Nama hanya boleh berisi huruf dan tanda baca umum (.,-), tanpa angka').optional(),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .max(50, 'Nama maksimal 50 karakter')
+    .regex(
+      /^[a-zA-Z\s.,'-]+$/,
+      'Nama hanya boleh berisi huruf dan tanda baca umum (.,-), tanpa angka',
+    )
+    .optional(),
 });
 
 const passwordSchema = z
@@ -25,7 +34,13 @@ export const changePasswordSchema = z
   });
 
 export const requestEmailChangeSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email wajib diisi')
+    .max(255, 'Email terlalu panjang')
+    .email('Format email tidak valid'),
 });
 
 export const verifyEmailChangeSchema = z.object({

@@ -17,7 +17,11 @@ async function handleAvatarUpload(
   return newAvatarUrl;
 }
 
-export async function updateProfile(userId: string, input: UpdateProfileInput, file?: Express.Multer.File) {
+export async function updateProfile(
+  userId: string,
+  input: UpdateProfileInput,
+  file?: Express.Multer.File,
+) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw badRequest('Pengguna tidak ditemukan');
 
@@ -25,6 +29,14 @@ export async function updateProfile(userId: string, input: UpdateProfileInput, f
   return prisma.user.update({
     where: { id: userId },
     data: { name: input.name ?? user.name, avatarUrl: newAvatarUrl ?? user.avatarUrl },
-    select: { id: true, name: true, email: true, avatarUrl: true, role: true, isVerified: true, provider: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+      role: true,
+      isVerified: true,
+      provider: true,
+    },
   });
 }

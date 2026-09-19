@@ -19,7 +19,7 @@ export function usePriceCalendarNavigation(
   currentDate: Date,
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>,
   y: number,
-  m: number
+  m: number,
 ) {
   const { isPrevDisabled, isNextDisabled } = getDisabledState(y, m);
   const handlePrevMonth = () => !isPrevDisabled && shiftMonth(setCurrentDate, -1);

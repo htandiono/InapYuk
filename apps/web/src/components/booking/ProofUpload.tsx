@@ -18,7 +18,13 @@ export function ProofUpload({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  return <ProofField busy={busy} error={error} onPick={(file) => void pickFile(file, orderNumber, setBusy, setError, onDone)} />;
+  return (
+    <ProofField
+      busy={busy}
+      error={error}
+      onPick={(file) => void pickFile(file, orderNumber, setBusy, setError, onDone)}
+    />
+  );
 }
 
 function ProofField({

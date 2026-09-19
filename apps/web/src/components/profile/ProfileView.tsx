@@ -18,11 +18,19 @@ interface UserProfile {
 function ProfileHeader({ isTenant }: { isTenant?: boolean }) {
   return (
     <div className="space-y-4">
-      <Link href={isTenant ? '/tenant/properties' : '/'} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+      <Link
+        href={isTenant ? '/tenant/properties' : '/'}
+        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
         <ChevronLeft className="mr-1 h-4 w-4" />
         Kembali ke {isTenant ? 'Dashboard' : 'Beranda'}
       </Link>
-      <div><h1 className="text-3xl font-bold tracking-tight">Pengaturan Akun</h1><p className="text-muted-foreground">Kelola profil, email, dan keamanan akun Anda di sini.</p></div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Pengaturan Akun</h1>
+        <p className="text-muted-foreground">
+          Kelola profil, email, dan keamanan akun Anda di sini.
+        </p>
+      </div>
     </div>
   );
 }
@@ -30,9 +38,15 @@ function ProfileHeader({ isTenant }: { isTenant?: boolean }) {
 function ProfileTabContents({ user }: { user: UserProfile }) {
   return (
     <div className="mt-6">
-      <TabsContent value="profile" className="mt-0"><ProfileForm user={user} /></TabsContent>
-      <TabsContent value="email" className="mt-0"><EmailChangeForm /></TabsContent>
-      <TabsContent value="password" className="mt-0"><ChangePasswordForm isSocialLogin={user.provider === 'GOOGLE'} /></TabsContent>
+      <TabsContent value="profile" className="mt-0">
+        <ProfileForm user={user} />
+      </TabsContent>
+      <TabsContent value="email" className="mt-0">
+        <EmailChangeForm />
+      </TabsContent>
+      <TabsContent value="password" className="mt-0">
+        <ChangePasswordForm isSocialLogin={user.provider === 'GOOGLE'} />
+      </TabsContent>
     </div>
   );
 }

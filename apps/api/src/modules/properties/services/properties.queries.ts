@@ -61,8 +61,15 @@ export async function getTenantProperties(tenantId: string, page: number = 1, li
   const where = { tenantId, deletedAt: null };
   const [data, total] = await Promise.all([
     prisma.property.findMany({
-      where, take, skip, orderBy: { createdAt: 'desc' },
-      include: { category: true, images: { orderBy: { sortOrder: 'asc' }, take: 1 }, rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } } },
+      where,
+      take,
+      skip,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } },
+      },
     }),
     prisma.property.count({ where }),
   ]);

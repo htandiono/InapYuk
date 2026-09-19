@@ -20,8 +20,12 @@ async function main(): Promise<void> {
   const bookingCount = await seedBookings(prisma, guestIds, roomIds);
 
   console.log('\nSeed complete');
-  console.log(`  tenants: ${tenantProfileIds.length}\n  guests: ${guestIds.length}\n  rooms: ${roomIds.length}\n  bookings: ${bookingCount}`);
-  console.log(`\n  Password: ${SEED_PASSWORD}\n  Tenant login: ${TENANTS[0]?.email}\n  Guest login: ${GUESTS[0]?.email}`);
+  console.log(
+    `  tenants: ${tenantProfileIds.length}\n  guests: ${guestIds.length}\n  rooms: ${roomIds.length}\n  bookings: ${bookingCount}`,
+  );
+  console.log(
+    `\n  Password: ${SEED_PASSWORD}\n  Tenant login: ${TENANTS[0]?.email}\n  Guest login: ${GUESTS[0]?.email}`,
+  );
 }
 
 main()

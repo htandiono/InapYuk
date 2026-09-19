@@ -53,7 +53,9 @@ function DeleteBtn({ id, onDelete }: { id: string; onDelete: (id: string) => voi
 function PeakRateItem({ rate, onDelete }: { rate: PeakRate; onDelete: (id: string) => void }) {
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg bg-card">
-      <div><RateInfo rate={rate} /></div>
+      <div>
+        <RateInfo rate={rate} />
+      </div>
       <DeleteBtn id={rate.id} onDelete={onDelete} />
     </div>
   );

@@ -9,15 +9,21 @@ export const metadata = {
 
 async function getProfile(token: string) {
   try {
-    const res = await fetch(`${clientEnv.apiBaseUrl}/users/profile`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }, cache: 'no-store' });
+    const res = await fetch(`${clientEnv.apiBaseUrl}/users/profile`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      cache: 'no-store',
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return data.success ? data.data : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export default async function TenantProfilePage() {
-  const cookieStore = await cookies(), token = cookieStore.get('accessToken')?.value;
+  const cookieStore = await cookies(),
+    token = cookieStore.get('accessToken')?.value;
   if (!token) redirect('/tenant/login');
   const user = await getProfile(token);
   if (!user) redirect('/tenant/login');

@@ -17,7 +17,14 @@ interface PasswordFieldProps {
   disabled: boolean;
 }
 
-export function PasswordField({ id, label, placeholder, register, error, disabled }: PasswordFieldProps) {
+export function PasswordField({
+  id,
+  label,
+  placeholder,
+  register,
+  error,
+  disabled,
+}: PasswordFieldProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -32,14 +39,40 @@ export function PasswordField({ id, label, placeholder, register, error, disable
   );
 }
 
-type FCProps = { serverError: string | null; errors: { password?: { message?: string }; confirmPassword?: { message?: string } }; onSubmit: (e: React.FormEvent<HTMLFormElement>) => void; isSubmitting: boolean; register: ReturnType<typeof useForm<ConfirmResetValues>>['register']; };
+type FCProps = {
+  serverError: string | null;
+  errors: { password?: { message?: string }; confirmPassword?: { message?: string } };
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  isSubmitting: boolean;
+  register: ReturnType<typeof useForm<ConfirmResetValues>>['register'];
+};
 export function FormContent({ serverError, errors, onSubmit, isSubmitting, register }: FCProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {serverError && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{serverError}</div>}
-      <PasswordField id="password" label="Password Baru" placeholder="Minimal 8 karakter" register={register} error={errors.password?.message} disabled={isSubmitting} />
-      <PasswordField id="confirmPassword" label="Konfirmasi Password Baru" placeholder="Ketik ulang password" register={register} error={errors.confirmPassword?.message} disabled={isSubmitting} />
-      <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? 'Menyimpan...' : 'Simpan Password Baru'}</Button>
+      {serverError && (
+        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          {serverError}
+        </div>
+      )}
+      <PasswordField
+        id="password"
+        label="Password Baru"
+        placeholder="Minimal 8 karakter"
+        register={register}
+        error={errors.password?.message}
+        disabled={isSubmitting}
+      />
+      <PasswordField
+        id="confirmPassword"
+        label="Konfirmasi Password Baru"
+        placeholder="Ketik ulang password"
+        register={register}
+        error={errors.confirmPassword?.message}
+        disabled={isSubmitting}
+      />
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Menyimpan...' : 'Simpan Password Baru'}
+      </Button>
     </form>
   );
 }

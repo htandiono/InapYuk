@@ -13,7 +13,9 @@ function generateSlug(name: string): string {
 export class CategoriesService {
   static async createCategory(tenantId: string, data: CreateCategoryInput) {
     const slug = generateSlug(data.name);
-    const existing = await prisma.propertyCategory.findFirst({ where: { tenantId, slug, deletedAt: null } });
+    const existing = await prisma.propertyCategory.findFirst({
+      where: { tenantId, slug, deletedAt: null },
+    });
     if (existing) throw conflict('Kategori sudah ada');
     return prisma.propertyCategory.create({ data: { tenantId, name: data.name, slug } });
   }

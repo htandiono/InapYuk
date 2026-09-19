@@ -24,7 +24,9 @@ async function verifyRoomOwnership(roomId: string, tenantId: string) {
 async function fetchRoomsData(where: Prisma.RoomWhereInput, take: number, skip: number) {
   return Promise.all([
     prisma.room.findMany({
-      where, take, skip,
+      where,
+      take,
+      skip,
       orderBy: { createdAt: 'desc' },
       include: { images: { orderBy: { sortOrder: 'asc' } } },
     }),
@@ -57,7 +59,12 @@ async function checkRoomNameExists(pId: string, name: string) {
   if (exists) throw badRequest('Nama kamar sudah ada');
 }
 
-export async function createRoom(tId: string, pId: string, d: CreateRoomInput, f: Express.Multer.File[]) {
+export async function createRoom(
+  tId: string,
+  pId: string,
+  d: CreateRoomInput,
+  f: Express.Multer.File[],
+) {
   await verifyPropertyOwnership(pId, tId);
   await checkRoomNameExists(pId, d.name);
 
@@ -66,8 +73,11 @@ export async function createRoom(tId: string, pId: string, d: CreateRoomInput, f
 
   return prisma.room.create({
     data: {
-      name: d.name, description: d.description,
-      basePrice: d.basePrice, capacity: d.capacity, totalUnits: d.totalUnits,
+      name: d.name,
+      description: d.description,
+      basePrice: d.basePrice,
+      capacity: d.capacity,
+      totalUnits: d.totalUnits,
       propertyId: pId,
       images: { create: urls.map((url, i) => ({ url, sortOrder: i })) },
     },
@@ -135,7 +145,11 @@ async function verifyRoomUpdate(tId: string, roomId: string, newName?: string) {
   await verifyPropertyOwnership(room.propertyId, tId);
   if (newName && newName !== room.name) {
     const exists = await prisma.room.findFirst({
-      where: { propertyId: room.propertyId, name: { equals: newName, mode: 'insensitive' }, deletedAt: null },
+      where: {
+        propertyId: room.propertyId,
+        name: { equals: newName, mode: 'insensitive' },
+        deletedAt: null,
+      },
     });
     if (exists) throw badRequest('Nama kamar sudah ada');
   }
@@ -153,7 +167,10 @@ function buildUpdateData(data: UpdateRoomInput) {
 }
 
 export async function updateRoom(
-  tId: string, roomId: string, data: UpdateRoomInput, files: Express.Multer.File[]
+  tId: string,
+  roomId: string,
+  data: UpdateRoomInput,
+  files: Express.Multer.File[],
 ) {
   await verifyRoomUpdate(tId, roomId, data.name);
   return prisma.$transaction(async (tx) => {

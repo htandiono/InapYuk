@@ -20,7 +20,11 @@ async function createEmailChangeToken(userId: string, newEmail: string): Promise
   return rawToken;
 }
 
-async function sendEmailChangeEmail(user: { name: string; email: string }, rawToken: string, newEmail: string): Promise<void> {
+async function sendEmailChangeEmail(
+  user: { name: string; email: string },
+  rawToken: string,
+  newEmail: string,
+): Promise<void> {
   const verifyLink = `${env.WEB_BASE_URL}/email-change/verify?token=${rawToken}`;
   await sendMail({
     to: newEmail,
@@ -47,14 +51,22 @@ export async function requestEmailChange(userId: string, input: RequestEmailChan
 
 async function validateEmailChangeToken(tokenStr: string) {
   const token = await prisma.verificationToken.findFirst({
-    where: { tokenHash: hashToken(tokenStr), type: 'EMAIL_CHANGE', usedAt: null, expiresAt: { gt: new Date() } },
+    where: {
+      tokenHash: hashToken(tokenStr),
+      type: 'EMAIL_CHANGE',
+      usedAt: null,
+      expiresAt: { gt: new Date() },
+    },
   });
   if (!token || !token.newEmail) throw badRequest('Token tidak valid atau sudah kedaluwarsa');
   const latestToken = await prisma.verificationToken.findFirst({
-    where: { userId: token.userId, type: 'EMAIL_CHANGE' }, orderBy: { createdAt: 'desc' },
+    where: { userId: token.userId, type: 'EMAIL_CHANGE' },
+    orderBy: { createdAt: 'desc' },
   });
   if (latestToken && latestToken.id !== token.id)
-    throw badRequest('Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.');
+    throw badRequest(
+      'Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.',
+    );
   return token;
 }
 

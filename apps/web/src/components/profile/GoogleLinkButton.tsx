@@ -15,7 +15,9 @@ function useGoogleLink() {
       toast.success('Akun Google berhasil ditautkan');
       router.refresh();
     } catch (error: unknown) {
-      toast.error((error instanceof ApiError ? error.message : null) || 'Gagal menautkan akun Google');
+      toast.error(
+        (error instanceof ApiError ? error.message : null) || 'Gagal menautkan akun Google',
+      );
     }
   };
   return { handleSuccess, handleError: () => toast.error('Gagal menautkan akun Google') };
@@ -27,7 +29,13 @@ export function GoogleLinkButton() {
   return (
     <GoogleOAuthProvider clientId={clientEnv.googleClientId}>
       <div className="w-full flex justify-center mt-4">
-        <GoogleLogin onSuccess={handleSuccess} onError={handleError} useOneTap={false} theme="outline" shape="pill" />
+        <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={handleError}
+          useOneTap={false}
+          theme="outline"
+          shape="pill"
+        />
       </div>
     </GoogleOAuthProvider>
   );

@@ -92,11 +92,17 @@ export class TenantPropertiesController {
       if (!req.tenantId) throw forbidden('Akses ditolak');
       const property = await prisma.property.findFirst({
         where: { id: req.params.id as string, tenantId: req.tenantId, deletedAt: null },
-        include: { category: true, images: { orderBy: { sortOrder: 'asc' } }, rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } } },
+        include: {
+          category: true,
+          images: { orderBy: { sortOrder: 'asc' } },
+          rooms: { where: { deletedAt: null }, select: { name: true, basePrice: true } },
+        },
       });
       if (!property) throw forbidden('Properti tidak ditemukan');
       sendSuccess(res, property, 'Success fetching property');
-    } catch (error) { next(error); }
+    } catch (error) {
+      next(error);
+    }
   }
 
   static async create(req: Request, res: Response, next: NextFunction) {

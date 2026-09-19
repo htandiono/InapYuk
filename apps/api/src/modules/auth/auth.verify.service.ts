@@ -9,7 +9,8 @@ import type { ResendVerificationInput, VerifyEmailInput } from './auth.schema';
 import type { User, VerificationToken } from '../../generated/prisma/client';
 
 async function validateTokenRecord(t: (VerificationToken & { user: User }) | null) {
-  if (!t || t.type !== 'EMAIL_VERIFICATION') throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
+  if (!t || t.type !== 'EMAIL_VERIFICATION')
+    throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
   if (t.user.isVerified) throw badRequest('Akun ini sudah diverifikasi sebelumnya');
 
   const latest = await prisma.verificationToken.findFirst({
@@ -17,19 +18,30 @@ async function validateTokenRecord(t: (VerificationToken & { user: User }) | nul
     orderBy: { createdAt: 'desc' },
   });
   if (latest && latest.id !== t.id)
-    throw badRequest('Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.');
+    throw badRequest(
+      'Link ini tidak valid karena Anda telah meminta link baru. Harap gunakan link verifikasi yang paling baru dari email Anda.',
+    );
 
   if (t.usedAt !== null || t.expiresAt < new Date())
     throw badRequest('Link verifikasi tidak valid atau sudah kedaluwarsa');
 }
 
 export async function verifyEmail(input: VerifyEmailInput) {
-  const t = await prisma.verificationToken.findUnique({ where: { tokenHash: hashToken(input.token) }, include: { user: true } });
+  const t = await prisma.verificationToken.findUnique({
+    where: { tokenHash: hashToken(input.token) },
+    include: { user: true },
+  });
   await validateTokenRecord(t);
   const hashedPw = await hashPassword(input.password);
   const [u] = await prisma.$transaction([
-    prisma.user.update({ where: { id: t!.userId }, data: { isVerified: true, passwordHash: hashedPw } }),
-    prisma.verificationToken.updateMany({ where: { userId: t!.userId, type: 'EMAIL_VERIFICATION' }, data: { usedAt: new Date() } }),
+    prisma.user.update({
+      where: { id: t!.userId },
+      data: { isVerified: true, passwordHash: hashedPw },
+    }),
+    prisma.verificationToken.updateMany({
+      where: { userId: t!.userId, type: 'EMAIL_VERIFICATION' },
+      data: { usedAt: new Date() },
+    }),
   ]);
   return { role: u.role };
 }

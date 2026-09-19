@@ -11,14 +11,19 @@ type PeakSeasonDialogProps = {
 
 export function PeakSeasonDialog({ roomId, onClose }: PeakSeasonDialogProps) {
   const { rates, fetching, loading, fetchRates, addRate, deleteRate } = usePeakSeasonRates(roomId);
-  useEffect(() => { if (roomId) void fetchRates(); }, [roomId, fetchRates]);
+  useEffect(() => {
+    if (roomId) void fetchRates();
+  }, [roomId, fetchRates]);
   return (
     <Dialog open={!!roomId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-xl min-w-[320px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Kelola Harga Musiman</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Kelola Harga Musiman</DialogTitle>
+        </DialogHeader>
         <PeakSeasonForm rates={rates} loading={loading} onSubmit={addRate} />
         <div className="mt-6">
-          <h4 className="font-semibold mb-3">Daftar Harga Musiman</h4><PeakSeasonList rates={rates} fetching={fetching} onDelete={deleteRate} />
+          <h4 className="font-semibold mb-3">Daftar Harga Musiman</h4>
+          <PeakSeasonList rates={rates} fetching={fetching} onDelete={deleteRate} />
         </div>
       </DialogContent>
     </Dialog>

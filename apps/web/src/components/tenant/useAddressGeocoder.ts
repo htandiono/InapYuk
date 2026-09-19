@@ -6,11 +6,15 @@ import { autocompleteAddress } from './geocoding-utils';
 import { PropertyFormValues } from './property-schema';
 
 function logUI(msg: string, addDebugLog?: (m: string) => void) {
-  try { addDebugLog?.('[GeoSync] ' + msg); } catch {}
+  try {
+    addDebugLog?.('[GeoSync] ' + msg);
+  } catch {}
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function log(..._args: unknown[]) { /* no-op */ }
+function log(..._args: unknown[]) {
+  /* no-op */
+}
 
 export function useAddressGeocoder({
   addressValue,
@@ -30,7 +34,10 @@ export function useAddressGeocoder({
   addDebugLog?: (msg: string) => void;
 }) {
   useEffect(() => {
-    log('ADDRESS_CHANGE:', { addressValue, lastGeocodedAddressRef: lastGeocodedAddressRef.current });
+    log('ADDRESS_CHANGE:', {
+      addressValue,
+      lastGeocodedAddressRef: lastGeocodedAddressRef.current,
+    });
     if (!addressValue || addressValue === lastGeocodedAddressRef.current || addressValue.length < 5)
       return;
     const timer = setTimeout(async () => {
@@ -45,17 +52,22 @@ export function useAddressGeocoder({
           setValue('longitude', first.lng);
           setSelectedGeo({ lat: first.lat, lng: first.lng });
           lastGeocodedAddressRef.current = addressValue;
-          logUI(`Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`, addDebugLog);
+          logUI(
+            `Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`,
+            addDebugLog,
+          );
         } else {
           logUI('No results from autocomplete', addDebugLog);
           addDebugLog?.('⚠ Address search returned no results');
         }
       } catch (err) {
         console.error('Failed to sync map to typed address', err);
-        addDebugLog?.(`✗ Address geocode error: ${err instanceof Error ? err.message : String(err)}`);
+        addDebugLog?.(
+          `✗ Address geocode error: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     }, 1200);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addressValue, selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
 }

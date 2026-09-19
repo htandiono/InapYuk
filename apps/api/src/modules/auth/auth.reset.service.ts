@@ -27,8 +27,15 @@ async function checkRecentToken(userId: string) {
 
 function sendResetMail(email: string, name: string, token: string) {
   return sendMail({
-    to: email, subject: 'Reset Password Anda', template: 'password-reset',
-    context: { name, appName: 'InapYuk', resetUrl: `${env.WEB_BASE_URL}/reset-password/confirm?token=${token}`, expiresInMinutes: 60 },
+    to: email,
+    subject: 'Reset Password Anda',
+    template: 'password-reset',
+    context: {
+      name,
+      appName: 'InapYuk',
+      resetUrl: `${env.WEB_BASE_URL}/reset-password/confirm?token=${token}`,
+      expiresInMinutes: 60,
+    },
   });
 }
 
@@ -54,13 +61,20 @@ export async function checkResetToken(tokenString: string): Promise<void> {
 
 async function getValidResetToken(tokenStr: string) {
   const token = await prisma.verificationToken.findFirst({
-    where: { tokenHash: hashToken(tokenStr), type: 'PASSWORD_RESET', usedAt: null, expiresAt: { gt: new Date() } },
+    where: {
+      tokenHash: hashToken(tokenStr),
+      type: 'PASSWORD_RESET',
+      usedAt: null,
+      expiresAt: { gt: new Date() },
+    },
   });
   if (!token) throw badRequest('Token tidak valid atau sudah kedaluwarsa');
   return token;
 }
 
-export async function confirmPasswordReset(input: ConfirmResetPasswordInput): Promise<{ role: string }> {
+export async function confirmPasswordReset(
+  input: ConfirmResetPasswordInput,
+): Promise<{ role: string }> {
   const token = await getValidResetToken(input.token);
   const hashedPassword = await hashPassword(input.password);
   const [updatedUser] = await prisma.$transaction([

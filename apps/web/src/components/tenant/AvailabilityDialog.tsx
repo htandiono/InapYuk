@@ -24,7 +24,7 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomId) return;
-    
+
     setLoading(true);
     try {
       await api.put(`/rooms/tenant/rooms/${roomId}/availability`, {
@@ -33,7 +33,7 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
         isAvailable: formData.isAvailable,
         availableUnits: formData.availableUnits ? parseInt(formData.availableUnits) : null,
       });
-      
+
       toast.success('Ketersediaan berhasil diperbarui');
       onClose();
     } catch (err: unknown) {
@@ -71,11 +71,13 @@ export function AvailabilityDialog({ roomId, onClose }: AvailabilityDialogProps)
               />
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
             <div className="space-y-0.5">
               <Label className="text-base">Kamar Tersedia</Label>
-              <p className="text-sm text-muted-foreground">Aktifkan untuk menerima pesanan pada tanggal ini</p>
+              <p className="text-sm text-muted-foreground">
+                Aktifkan untuk menerima pesanan pada tanggal ini
+              </p>
             </div>
             <Switch
               checked={formData.isAvailable}

@@ -46,8 +46,11 @@ export async function registerUser(input: RegisterUserInput) {
 
   const { user } = await prisma.$transaction(async (tx) => {
     const data: Prisma.UserCreateInput = {
-      email: input.email, name: input.name,
-      role: 'USER', provider: 'EMAIL', isVerified: false,
+      email: input.email,
+      name: input.name,
+      role: 'USER',
+      provider: 'EMAIL',
+      isVerified: false,
     };
     return createUserAndToken(tx, data, { tokenHash, expiresAt });
   });
@@ -62,12 +65,19 @@ async function createTenantWithProfile(
   tokenData: { tokenHash: string; expiresAt: Date },
 ) {
   const data: Prisma.UserCreateInput = {
-    email: input.email, name: input.name,
-    role: 'TENANT', provider: 'EMAIL', isVerified: false,
+    email: input.email,
+    name: input.name,
+    role: 'TENANT',
+    provider: 'EMAIL',
+    isVerified: false,
   };
   const result = await createUserAndToken(tx, data, tokenData);
   await tx.tenantProfile.create({
-    data: { userId: result.user.id, companyName: input.companyName, companyAddress: input.companyAddress },
+    data: {
+      userId: result.user.id,
+      companyName: input.companyName,
+      companyAddress: input.companyAddress,
+    },
   });
   return result;
 }

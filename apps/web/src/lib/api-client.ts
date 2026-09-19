@@ -41,7 +41,13 @@ function serialiseBody(body: unknown): BodyInit | undefined {
   return JSON.stringify(body);
 }
 
-function buildFetchOptions({ body, token, revalidate, headers, ...rest }: RequestOptions): RequestInit {
+function buildFetchOptions({
+  body,
+  token,
+  revalidate,
+  headers,
+  ...rest
+}: RequestOptions): RequestInit {
   return {
     ...rest,
     credentials: 'include' as RequestCredentials,
@@ -63,14 +69,18 @@ let refreshPromise: Promise<boolean> | null = null;
 async function attemptRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
   refreshPromise = fetch(`${clientEnv.apiBaseUrl}/auth/refresh`, {
-    method: 'POST', credentials: 'include', headers: { Accept: 'application/json' },
+    method: 'POST',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
   })
     .then(async (res) => {
       const p = await res.json().catch(() => null);
       return res.ok && p?.success === true;
     })
     .catch(() => false)
-    .finally(() => { refreshPromise = null; });
+    .finally(() => {
+      refreshPromise = null;
+    });
   return refreshPromise;
 }
 

@@ -25,10 +25,18 @@ function getRefreshExpiry() {
 
 async function createSessionTokens(user: TokenUser) {
   const tokens = issueTokens({
-    sub: user.id, name: user.name, role: user.role, email: user.email, isVerified: user.isVerified,
+    sub: user.id,
+    name: user.name,
+    role: user.role,
+    email: user.email,
+    isVerified: user.isVerified,
   });
   await prisma.refreshToken.create({
-    data: { userId: user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt: getRefreshExpiry() },
+    data: {
+      userId: user.id,
+      tokenHash: hashToken(tokens.refreshToken),
+      expiresAt: getRefreshExpiry(),
+    },
   });
   return tokens;
 }
@@ -58,13 +66,20 @@ async function verifyAndFindToken(token: string) {
 
 async function rotateTokens(tokenRecord: { id: string; user: TokenUser }) {
   const tokens = issueTokens({
-    sub: tokenRecord.user.id, name: tokenRecord.user.name, role: tokenRecord.user.role, 
-    email: tokenRecord.user.email, isVerified: tokenRecord.user.isVerified,
+    sub: tokenRecord.user.id,
+    name: tokenRecord.user.name,
+    role: tokenRecord.user.role,
+    email: tokenRecord.user.email,
+    isVerified: tokenRecord.user.isVerified,
   });
   await prisma.$transaction([
     prisma.refreshToken.delete({ where: { id: tokenRecord.id } }),
     prisma.refreshToken.create({
-      data: { userId: tokenRecord.user.id, tokenHash: hashToken(tokens.refreshToken), expiresAt: getRefreshExpiry() },
+      data: {
+        userId: tokenRecord.user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        expiresAt: getRefreshExpiry(),
+      },
     }),
   ]);
   return tokens;

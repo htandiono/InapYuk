@@ -32,14 +32,29 @@ async function verifyRateOwnership(rateId: string, tenantId: string) {
   return rate;
 }
 
-type PeakData = { name: string; startDate: string; endDate: string; adjustmentType: 'NOMINAL' | 'PERCENTAGE'; adjustmentValue: number; };
+type PeakData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  adjustmentType: 'NOMINAL' | 'PERCENTAGE';
+  adjustmentValue: number;
+};
 
 export async function createPeakSeason(tenantId: string, roomId: string, data: PeakData) {
   await verifyRoomOwnership(tenantId, roomId);
-  const startDate = toDateOnly(data.startDate), endDate = toDateOnly(data.endDate);
-  if (startDate > endDate) throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
+  const startDate = toDateOnly(data.startDate),
+    endDate = toDateOnly(data.endDate);
+  if (startDate > endDate)
+    throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
   return prisma.peakSeasonRate.create({
-    data: { roomId, name: data.name, startDate, endDate, adjustmentType: data.adjustmentType, adjustmentValue: new Prisma.Decimal(data.adjustmentValue) },
+    data: {
+      roomId,
+      name: data.name,
+      startDate,
+      endDate,
+      adjustmentType: data.adjustmentType,
+      adjustmentValue: new Prisma.Decimal(data.adjustmentValue),
+    },
   });
 }
 
@@ -47,12 +62,15 @@ export async function updatePeakSeason(tenantId: string, rateId: string, data: P
   const rate = await verifyRateOwnership(rateId, tenantId);
   const startDate = data.startDate ? toDateOnly(data.startDate) : rate.startDate;
   const endDate = data.endDate ? toDateOnly(data.endDate) : rate.endDate;
-  if (startDate > endDate) throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
+  if (startDate > endDate)
+    throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
   return prisma.peakSeasonRate.update({
     where: { id: rateId },
     data: {
-      name: data.name, startDate: data.startDate ? toDateOnly(data.startDate) : undefined,
-      endDate: data.endDate ? toDateOnly(data.endDate) : undefined, adjustmentType: data.adjustmentType,
+      name: data.name,
+      startDate: data.startDate ? toDateOnly(data.startDate) : undefined,
+      endDate: data.endDate ? toDateOnly(data.endDate) : undefined,
+      adjustmentType: data.adjustmentType,
       adjustmentValue: data.adjustmentValue ? new Prisma.Decimal(data.adjustmentValue) : undefined,
     },
   });

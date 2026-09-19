@@ -6,9 +6,17 @@ import { api, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(3, 'Nama minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
   email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
-  companyName: z.string().trim().min(3, 'Nama perusahaan minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
+  companyName: z
+    .string()
+    .trim()
+    .min(3, 'Nama perusahaan minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
   companyAddress: z.string().trim().min(5, 'Alamat perusahaan minimal 5 karakter'),
 });
 
@@ -29,7 +37,10 @@ function useCooldown() {
   return { cooldown, startCooldown, isCoolingDown };
 }
 
-function handleApiError(error: unknown, setError: (path: keyof RegisterFormValues, options: { type: string; message: string }) => void) {
+function handleApiError(
+  error: unknown,
+  setError: (path: keyof RegisterFormValues, options: { type: string; message: string }) => void,
+) {
   if (error instanceof ApiError) {
     error.fieldErrors?.forEach((fe) => {
       setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message });
@@ -78,5 +89,14 @@ export function useTenantRegister() {
     }
   };
 
-  return { form, isSubmitting, serverError, success, cooldown: isCoolingDown ? cooldown : 0, isResending, onSubmit, onResend };
+  return {
+    form,
+    isSubmitting,
+    serverError,
+    success,
+    cooldown: isCoolingDown ? cooldown : 0,
+    isResending,
+    onSubmit,
+    onResend,
+  };
 }

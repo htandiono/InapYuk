@@ -10,23 +10,23 @@ import { LogOut } from 'lucide-react';
 interface LogoutButtonProps {
   className?: string;
   variant?:
-    | 'link'
-    | 'default'
-    | 'destructive'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | null
-    | undefined;
+    'link' | 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | null | undefined;
   iconOnly?: boolean;
 }
 
 function useLogout() {
-  const router = useRouter(), [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter(),
+    [isLoggingOut, setIsLoggingOut] = useState(false);
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    try { await api.post('/auth/logout'); toast.success('Berhasil keluar'); router.push('/'); }
-    catch { toast.error('Gagal keluar. Silakan coba lagi.'); setIsLoggingOut(false); }
+    try {
+      await api.post('/auth/logout');
+      toast.success('Berhasil keluar');
+      router.push('/');
+    } catch {
+      toast.error('Gagal keluar. Silakan coba lagi.');
+      setIsLoggingOut(false);
+    }
   };
   return { isLoggingOut, handleLogout };
 }

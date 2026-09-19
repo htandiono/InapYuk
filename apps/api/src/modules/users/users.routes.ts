@@ -45,8 +45,6 @@ router.post(
   asyncHandler(handleRequestEmailChange),
 );
 
-
-
 router.post('/password', validateBody(changePasswordSchema), asyncHandler(handleChangePassword));
 
 router.post('/google-link', asyncHandler(handleLinkGoogle));

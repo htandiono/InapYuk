@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import type { BookingDetailDto } from '@inapyuk/types';
 import { Button } from '@/components/ui/button';
@@ -14,20 +13,24 @@ import {
 import { ApiError } from '@/lib/api-client';
 import { bookingPatch } from './booking-api';
 
-// Ask once more so a mis-tap does not cancel the stay.
 export function CancelOrderDialog({
   orderNumber,
   onDone,
 }: {
   orderNumber: string;
-  onDone: (booking: BookingDetailDto) => void;
+  onDone: (b: BookingDetailDto) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button type="button" variant="destructive" className="w-full rounded-full" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        variant="destructive"
+        className="w-full rounded-full"
+        onClick={() => setOpen(true)}
+      >
         Batalkan pesanan
       </Button>
       <ConfirmBody
@@ -59,7 +62,7 @@ function ConfirmBody({
           Kamarnya dilepas lagi. Ini cuma bisa selama bukti transfer belum diunggah.
         </DialogDescription>
       </DialogHeader>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <DialogFooter>
         <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
           Tidak jadi
@@ -73,19 +76,19 @@ function ConfirmBody({
 }
 
 async function confirmCancel(
-  orderNumber: string,
-  setBusy: (value: boolean) => void,
-  setError: (message: string | null) => void,
-  setOpen: (value: boolean) => void,
-  onDone: (booking: BookingDetailDto) => void,
+  orderId: string,
+  setBusy: (v: boolean) => void,
+  setErr: (m: string | null) => void,
+  setOpen: (v: boolean) => void,
+  onDone: (b: BookingDetailDto) => void,
 ) {
   setBusy(true);
   try {
-    setError(null);
-    onDone(await bookingPatch<BookingDetailDto>(`/bookings/${orderNumber}/cancel`, {}));
+    setErr(null);
+    onDone(await bookingPatch<BookingDetailDto>(`/bookings/${orderId}/cancel`, {}));
     setOpen(false);
   } catch (error) {
-    setError(error instanceof ApiError ? error.message : 'Gagal membatalkan pesanan');
+    setErr(error instanceof ApiError ? error.message : 'Gagal membatalkan pesanan');
   } finally {
     setBusy(false);
   }

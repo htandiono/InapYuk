@@ -16,7 +16,9 @@ function useGoogleLogin(role: 'USER' | 'TENANT') {
       router.push(role === 'TENANT' ? '/tenant/properties' : '/');
       router.refresh();
     } catch (error: unknown) {
-      toast.error((error instanceof ApiError ? error.message : null) || 'Gagal login dengan Google');
+      toast.error(
+        (error instanceof ApiError ? error.message : null) || 'Gagal login dengan Google',
+      );
     }
   };
   return { handleSuccess, handleError: () => toast.error('Login dengan Google gagal') };
@@ -28,7 +30,13 @@ export function GoogleLoginButton({ role = 'USER' }: { role?: 'USER' | 'TENANT' 
   return (
     <GoogleOAuthProvider clientId={clientEnv.googleClientId}>
       <div className="w-full flex justify-center mt-4">
-        <GoogleLogin onSuccess={handleSuccess} onError={handleError} useOneTap={false} theme="outline" shape="pill" />
+        <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={handleError}
+          useOneTap={false}
+          theme="outline"
+          shape="pill"
+        />
       </div>
     </GoogleOAuthProvider>
   );

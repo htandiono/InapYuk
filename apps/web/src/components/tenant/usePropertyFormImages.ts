@@ -29,24 +29,35 @@ function filterAllowedFiles(files: File[]): File[] {
   });
 }
 
-function useFileRemoval(setFiles: React.Dispatch<React.SetStateAction<File[]>>, mainImageIndex: number | null, setMainImageIndex: React.Dispatch<React.SetStateAction<number | null>>) {
-  return useCallback((index: number) => {
-    setFiles((prev: File[]) => prev.filter((_, i) => i !== index));
-    if (mainImageIndex === index) setMainImageIndex(null);
-    else if (mainImageIndex !== null && mainImageIndex > index) setMainImageIndex(mainImageIndex - 1);
-  }, [mainImageIndex, setFiles, setMainImageIndex]);
+function useFileRemoval(
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>,
+  mainImageIndex: number | null,
+  setMainImageIndex: React.Dispatch<React.SetStateAction<number | null>>,
+) {
+  return useCallback(
+    (index: number) => {
+      setFiles((prev: File[]) => prev.filter((_, i) => i !== index));
+      if (mainImageIndex === index) setMainImageIndex(null);
+      else if (mainImageIndex !== null && mainImageIndex > index)
+        setMainImageIndex(mainImageIndex - 1);
+    },
+    [mainImageIndex, setFiles, setMainImageIndex],
+  );
 }
 
 function useFileAddition(setFiles: React.Dispatch<React.SetStateAction<File[]>>) {
-  return useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const newFiles = Array.from(e.target.files);
-    e.target.value = '';
-    const sizeValid = filterAllowedFiles(newFiles);
-    if (sizeValid.length === 0) return;
-    toast.info('Memverifikasi gambar...');
-    setFiles((prev: File[]) => [...prev, ...sizeValid]);
-  }, [setFiles]);
+  return useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files) return;
+      const newFiles = Array.from(e.target.files);
+      e.target.value = '';
+      const sizeValid = filterAllowedFiles(newFiles);
+      if (sizeValid.length === 0) return;
+      toast.info('Memverifikasi gambar...');
+      setFiles((prev: File[]) => [...prev, ...sizeValid]);
+    },
+    [setFiles],
+  );
 }
 
 export function usePropertyFormImages(initialData?: { images?: { id: string; url: string }[] }) {
@@ -58,11 +69,23 @@ export function usePropertyFormImages(initialData?: { images?: { id: string; url
   const handleFileChange = useFileAddition(setFiles);
   const removeNewFile = useFileRemoval(setFiles, mainImageIndex, setMainImageIndex);
 
-  const existingImages = (initialData?.images || []).filter((img) => !deletedImages.includes(img.id));
+  const existingImages = (initialData?.images || []).filter(
+    (img) => !deletedImages.includes(img.id),
+  );
   const totalSlots = existingImages.length + files.length;
 
   return {
-    files, setFiles, deletedImages, setDeletedImages, mainImageId, setMainImageId,
-    mainImageIndex, setMainImageIndex, existingImages, totalSlots, handleFileChange, removeNewFile,
+    files,
+    setFiles,
+    deletedImages,
+    setDeletedImages,
+    mainImageId,
+    setMainImageId,
+    mainImageIndex,
+    setMainImageIndex,
+    existingImages,
+    totalSlots,
+    handleFileChange,
+    removeNewFile,
   };
 }

@@ -1,13 +1,22 @@
 import { z } from 'zod';
 
 export const registerUserSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email wajib diisi')
+    .max(255, 'Email terlalu panjang')
+    .email('Format email tidak valid'),
   name: z
     .string()
     .trim()
     .min(3, 'Nama minimal 3 karakter')
     .max(50, 'Nama maksimal 50 karakter')
-    .regex(/^[a-zA-Z\s.,'-]+$/, 'Nama hanya boleh berisi huruf dan tanda baca umum (.,\'-), tanpa angka'),
+    .regex(
+      /^[a-zA-Z\s.,'-]+$/,
+      "Nama hanya boleh berisi huruf dan tanda baca umum (.,'-), tanpa angka",
+    ),
 });
 
 export const registerTenantSchema = registerUserSchema.extend({
@@ -40,17 +49,35 @@ export const verifyEmailSchema = z
   });
 
 export const resendVerificationSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email wajib diisi')
+    .max(255, 'Email terlalu panjang')
+    .email('Format email tidak valid'),
 });
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email wajib diisi')
+    .max(255, 'Email terlalu panjang')
+    .email('Format email tidak valid'),
   password: z.string().min(1, 'Password tidak boleh kosong'),
   role: z.enum(['USER', 'TENANT']).optional(),
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().trim().toLowerCase().min(1, 'Email wajib diisi').max(255, 'Email terlalu panjang').email('Format email tidak valid'),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email wajib diisi')
+    .max(255, 'Email terlalu panjang')
+    .email('Format email tidak valid'),
 });
 
 export const confirmResetPasswordSchema = z

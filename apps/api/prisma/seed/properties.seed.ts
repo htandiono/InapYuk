@@ -31,12 +31,21 @@ async function seedRooms(prisma: PrismaClient, propertyId: string, seed: Propert
   const roomIds: string[] = [];
   for (const room of seed.rooms) {
     const existing = await prisma.room.findFirst({ where: { propertyId, name: room.name } });
-    const record = existing ?? (await prisma.room.create({
-      data: {
-        propertyId, name: room.name, description: room.description, basePrice: room.basePrice, capacity: room.capacity,
-        totalUnits: room.totalUnits, images: { create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }] },
-      },
-    }));
+    const record =
+      existing ??
+      (await prisma.room.create({
+        data: {
+          propertyId,
+          name: room.name,
+          description: room.description,
+          basePrice: room.basePrice,
+          capacity: room.capacity,
+          totalUnits: room.totalUnits,
+          images: {
+            create: [{ url: PROPERTY_IMAGES[roomIds.length % PROPERTY_IMAGES.length] as string }],
+          },
+        },
+      }));
     roomIds.push(record.id);
   }
   return roomIds;
@@ -56,29 +65,65 @@ async function seedPeakSeason(prisma: PrismaClient, roomId: string) {
   if (existing > 0) return;
   await prisma.peakSeasonRate.createMany({
     data: [
-      { roomId, name: 'Long Weekend', startDate: toDateOnly(dayjs().add(14, 'day').format('YYYY-MM-DD')), endDate: toDateOnly(dayjs().add(17, 'day').format('YYYY-MM-DD')), adjustmentType: 'PERCENTAGE', adjustmentValue: 25 },
-      { roomId, name: 'Libur Nasional', startDate: toDateOnly(dayjs().add(30, 'day').format('YYYY-MM-DD')), endDate: toDateOnly(dayjs().add(33, 'day').format('YYYY-MM-DD')), adjustmentType: 'NOMINAL', adjustmentValue: 150000 },
+      {
+        roomId,
+        name: 'Long Weekend',
+        startDate: toDateOnly(dayjs().add(14, 'day').format('YYYY-MM-DD')),
+        endDate: toDateOnly(dayjs().add(17, 'day').format('YYYY-MM-DD')),
+        adjustmentType: 'PERCENTAGE',
+        adjustmentValue: 25,
+      },
+      {
+        roomId,
+        name: 'Libur Nasional',
+        startDate: toDateOnly(dayjs().add(30, 'day').format('YYYY-MM-DD')),
+        endDate: toDateOnly(dayjs().add(33, 'day').format('YYYY-MM-DD')),
+        adjustmentType: 'NOMINAL',
+        adjustmentValue: 150000,
+      },
     ],
   });
 }
 
-async function seedProperty(prisma: PrismaClient, tenantId: string, categories: Map<string, string>, seed: PropertySeed, index: number) {
+async function seedProperty(
+  prisma: PrismaClient,
+  tenantId: string,
+  categories: Map<string, string>,
+  seed: PropertySeed,
+  index: number,
+) {
   const property = await prisma.property.upsert({
-    where: { slug: seed.slug }, update: {},
+    where: { slug: seed.slug },
+    update: {},
     create: {
-      tenantId, categoryId: categories.get(seed.category) as string, name: seed.name, slug: seed.slug, description: seed.description,
-      city: seed.city, province: seed.province, address: seed.address, images: { create: PROPERTY_IMAGES.map((url, sortOrder) => ({ url, sortOrder })) },
+      tenantId,
+      categoryId: categories.get(seed.category) as string,
+      name: seed.name,
+      slug: seed.slug,
+      description: seed.description,
+      city: seed.city,
+      province: seed.province,
+      address: seed.address,
+      images: { create: PROPERTY_IMAGES.map((url, sortOrder) => ({ url, sortOrder })) },
     },
   });
   const roomIds = await seedRooms(prisma, property.id, seed);
-  for (const roomId of roomIds) { await seedAvailability(prisma, roomId, index); await seedPeakSeason(prisma, roomId); }
+  for (const roomId of roomIds) {
+    await seedAvailability(prisma, roomId, index);
+    await seedPeakSeason(prisma, roomId);
+  }
   return roomIds;
 }
 
-export async function seedProperties(prisma: PrismaClient, tenantProfileIds: string[]): Promise<string[]> {
-  const groups = [TENANT_ONE_PROPERTIES, TENANT_TWO_PROPERTIES], allRoomIds: string[] = [];
+export async function seedProperties(
+  prisma: PrismaClient,
+  tenantProfileIds: string[],
+): Promise<string[]> {
+  const groups = [TENANT_ONE_PROPERTIES, TENANT_TWO_PROPERTIES],
+    allRoomIds: string[] = [];
   for (const [groupIndex, tenantId] of tenantProfileIds.entries()) {
-    const categories = await seedCategories(prisma, tenantId), properties = groups[groupIndex] ?? [];
+    const categories = await seedCategories(prisma, tenantId),
+      properties = groups[groupIndex] ?? [];
     for (const [index, seed] of properties.entries()) {
       const roomIds = await seedProperty(prisma, tenantId, categories, seed, index);
       allRoomIds.push(...roomIds);
