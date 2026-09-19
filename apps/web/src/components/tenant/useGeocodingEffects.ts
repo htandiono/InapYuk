@@ -16,7 +16,8 @@ interface Props {
 }
 
 // Module-level log helpers
-function log(_msg: string, _data?: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function log(..._args: unknown[]) {
   // no-op — retained for future debugging
 }
 
