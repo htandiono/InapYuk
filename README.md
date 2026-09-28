@@ -100,8 +100,33 @@ Starting Feature 1? Read [docs/HANDOFF-FEATURE-1.md](docs/HANDOFF-FEATURE-1.md) 
 
 ## Scheduled jobs
 
-Booking auto-cancellation and check-in reminders are plain functions in
-`apps/api/src/jobs`, exposed at `POST /api/cron/:job` behind `CRON_SECRET`. Locally an
-in-process `node-cron` runner triggers them; on Vercel the schedule in
-`apps/api/vercel.json` does. Serverless functions cannot hold a long-lived timer, so the
-job logic never depends on one.
+Booking auto-cancellation, the check-in reminder, and marking a stay finished live in
+`apps/api/src/jobs`. The host calls `GET /api/cron/:job` with `CRON_SECRET`. `POST` still
+works if you want to trigger one by hand. Locally a small timer runs the same functions.
+On Vercel the schedule is `apps/api/vercel.json`, because a serverless function cannot
+keep its own timer.
+
+## Deploy
+
+Two Vercel projects from this repo.
+
+| App | Root directory | Domain              |
+| --- | -------------- | ------------------- |
+| Web | `apps/web`     | `inapyuk.space`     |
+| API | `apps/api`     | `api.inapyuk.space` |
+
+On the web project set `NEXT_PUBLIC_API_BASE_URL` to `https://api.inapyuk.space/api` and
+`NEXT_PUBLIC_SITE_URL` to `https://inapyuk.space`. Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` when
+Google login is turned on.
+
+On the API project, copy `apps/api/.env.example`. Point the database at the production
+Neon branch, set real JWT secrets, and set `CRON_SECRET` to the value Vercel sends with
+the schedule. `CORS_ORIGIN` and `WEB_BASE_URL` should be `https://inapyuk.space`.
+
+After the first deploy, from `apps/api` run `npm run db:deploy` and then `npm run db:seed`
+against that database so the demo accounts exist.
+
+The unpaid-booking job is every five minutes. That needs a Vercel plan which allows it.
+The check-in reminder and the finished-stay job run once a day.
+
+Feature 2 demo notes: [docs/DEMO-FEATURE-2.md](docs/DEMO-FEATURE-2.md).
