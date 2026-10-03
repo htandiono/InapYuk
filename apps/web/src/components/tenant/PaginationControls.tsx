@@ -9,7 +9,7 @@ type PaginationProps = {
   loading: boolean;
 };
 
-export function PaginationControls({ page, totalPages, setPage, loading }: PaginationProps) {
+export function PaginationControls({ page, totalPages, setPage, loading }: Readonly<PaginationProps>) {
   if (totalPages <= 1) return null;
   return (
     <div className="flex items-center justify-between px-2 mt-6">
@@ -19,7 +19,7 @@ export function PaginationControls({ page, totalPages, setPage, loading }: Pagin
   );
 }
 
-function PageInfo({ page, totalPages }: { page: number; totalPages: number }) {
+function PageInfo({ page, totalPages }: Readonly<{ page: number; totalPages: number }>) {
   return (
     <div className="text-sm text-muted-foreground hidden sm:block">
       Menampilkan halaman <span className="font-medium text-foreground">{page}</span> dari{' '}
@@ -33,12 +33,12 @@ function PageActions({
   totalPages,
   setPage,
   loading,
-}: {
+}: Readonly<{
   page: number;
   totalPages: number;
   setPage: PaginationProps['setPage'];
   loading: boolean;
-}) {
+}>) {
   return (
     <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end">
       <PrevButton page={page} loading={loading} setPage={setPage} />
@@ -52,11 +52,11 @@ function PrevButton({
   page,
   loading,
   setPage,
-}: {
+}: Readonly<{
   page: number;
   loading: boolean;
   setPage: PaginationProps['setPage'];
-}) {
+}>) {
   return (
     <Button
       variant="outline"
@@ -75,12 +75,12 @@ function PageNumbers({
   totalPages,
   setPage,
   loading,
-}: {
+}: Readonly<{
   page: number;
   totalPages: number;
   setPage: PaginationProps['setPage'];
   loading: boolean;
-}) {
+}>) {
   if (totalPages <= 5) {
     return (
       <div className="hidden sm:flex items-center gap-1 mx-2">
@@ -137,12 +137,12 @@ function NextButton({
   totalPages,
   loading,
   setPage,
-}: {
+}: Readonly<{
   page: number;
   totalPages: number;
   loading: boolean;
   setPage: PaginationProps['setPage'];
-}) {
+}>) {
   return (
     <Button
       variant="outline"
