@@ -15,31 +15,37 @@ export async function getPeakSeasons(tenantId: string, roomId: string) {
   });
 }
 
-export async function createPeakSeason(
-  tenantId: string,
-  roomId: string,
-  data: {
-    name: string;
-    startDate: string;
-    endDate: string;
-    adjustmentType: 'NOMINAL' | 'PERCENTAGE';
-    adjustmentValue: number;
-  }
-) {
+async function verifyRoomOwnership(tenantId: string, roomId: string) {
   const room = await prisma.room.findFirst({
     where: { id: roomId, property: { tenantId }, deletedAt: null },
   });
   if (!room) throw notFound('Kamar tidak ditemukan');
+}
 
-  const startDate = toDateOnly(data.startDate);
-  const endDate = toDateOnly(data.endDate);
+async function verifyRateOwnership(rateId: string, tenantId: string) {
+  const rate = await prisma.peakSeasonRate.findUnique({
+    where: { id: rateId },
+    include: { room: { include: { property: true } } },
+  });
+  if (!rate) throw notFound('Harga musiman tidak ditemukan');
+  if (rate.room.property.tenantId !== tenantId) throw forbidden('Akses ditolak');
+  return rate;
+}
 
-  if (startDate > endDate) {
+type PeakData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  adjustmentType: 'NOMINAL' | 'PERCENTAGE';
+  adjustmentValue: number;
+};
+
+export async function createPeakSeason(tenantId: string, roomId: string, data: PeakData) {
+  await verifyRoomOwnership(tenantId, roomId);
+  const startDate = toDateOnly(data.startDate),
+    endDate = toDateOnly(data.endDate);
+  if (startDate > endDate)
     throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
-  }
-
-  // Check for exact overlap (UI will warn but we allow overlapping in general; last created wins)
-  // But we can just create it.
   return prisma.peakSeasonRate.create({
     data: {
       roomId,
@@ -52,34 +58,12 @@ export async function createPeakSeason(
   });
 }
 
-export async function updatePeakSeason(
-  tenantId: string,
-  rateId: string,
-  data: {
-    name?: string;
-    startDate?: string;
-    endDate?: string;
-    adjustmentType?: 'NOMINAL' | 'PERCENTAGE';
-    adjustmentValue?: number;
-  }
-) {
-  const rate = await prisma.peakSeasonRate.findUnique({
-    where: { id: rateId },
-    include: { room: { include: { property: true } } },
-  });
-  if (!rate) throw notFound('Harga musiman tidak ditemukan');
-  if (rate.room.property.tenantId !== tenantId) throw forbidden('Akses ditolak');
-
-  let startDate = rate.startDate;
-  let endDate = rate.endDate;
-
-  if (data.startDate) startDate = toDateOnly(data.startDate);
-  if (data.endDate) endDate = toDateOnly(data.endDate);
-
-  if (startDate > endDate) {
+export async function updatePeakSeason(tenantId: string, rateId: string, data: Partial<PeakData>) {
+  const rate = await verifyRateOwnership(rateId, tenantId);
+  const startDate = data.startDate ? toDateOnly(data.startDate) : rate.startDate;
+  const endDate = data.endDate ? toDateOnly(data.endDate) : rate.endDate;
+  if (startDate > endDate)
     throw badRequest('Tanggal akhir harus setelah atau sama dengan tanggal mulai');
-  }
-
   return prisma.peakSeasonRate.update({
     where: { id: rateId },
     data: {
@@ -93,16 +77,7 @@ export async function updatePeakSeason(
 }
 
 export async function deletePeakSeason(tenantId: string, rateId: string) {
-  const rate = await prisma.peakSeasonRate.findUnique({
-    where: { id: rateId },
-    include: { room: { include: { property: true } } },
-  });
-  if (!rate) throw notFound('Harga musiman tidak ditemukan');
-  if (rate.room.property.tenantId !== tenantId) throw forbidden('Akses ditolak');
-
-  await prisma.peakSeasonRate.delete({
-    where: { id: rateId },
-  });
-
+  await verifyRateOwnership(rateId, tenantId);
+  await prisma.peakSeasonRate.delete({ where: { id: rateId } });
   return { message: 'Harga musiman berhasil dihapus' };
 }

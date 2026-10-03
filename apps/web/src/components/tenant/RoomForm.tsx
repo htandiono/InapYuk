@@ -5,6 +5,27 @@ import { RoomFormInitData } from './RoomFormSchema';
 import { RoomFormImages } from './RoomFormImages';
 import { RoomFormFields } from './RoomFormFields';
 
+function RoomFormActions({
+  onCancel,
+  isSubmitting,
+}: {
+  onCancel?: () => void;
+  isSubmitting: boolean;
+}) {
+  return (
+    <div className="flex justify-end space-x-2 pt-4 border-t">
+      {onCancel && (
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          Batal
+        </Button>
+      )}
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+      </Button>
+    </div>
+  );
+}
+
 export default function RoomForm({
   propertyId,
   initialData,
@@ -31,16 +52,7 @@ export default function RoomForm({
         }
       />
       <RoomFormFields form={state.form} />
-      <div className="flex justify-end space-x-2 pt-4 border-t">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Batal
-          </Button>
-        )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-        </Button>
-      </div>
+      <RoomFormActions onCancel={onCancel} isSubmitting={isSubmitting} />
     </form>
   );
 }

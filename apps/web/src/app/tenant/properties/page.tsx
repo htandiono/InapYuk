@@ -9,7 +9,7 @@ export default function TenantPropertiesPage() {
           <p className="text-muted-foreground mt-1">Kelola daftar properti yang Anda sewakan</p>
         </div>
       </div>
-      
+
       <PropertyList />
     </div>
   );

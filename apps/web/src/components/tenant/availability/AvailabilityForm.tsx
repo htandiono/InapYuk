@@ -56,7 +56,9 @@ export function AvailabilityForm({ loading, onSubmit, onCancel }: AvailabilityFo
       <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
         <div className="space-y-0.5">
           <Label className="text-base">Kamar Tersedia</Label>
-          <p className="text-sm text-muted-foreground">Aktifkan untuk menerima pesanan pada tanggal ini</p>
+          <p className="text-sm text-muted-foreground">
+            Aktifkan untuk menerima pesanan pada tanggal ini
+          </p>
         </div>
         <Switch
           checked={formData.isAvailable}

@@ -25,8 +25,8 @@ export const RoomSelector: FC<RoomSelectorProps> = ({
   onSelectRoom,
   selectedNight,
 }) => {
-  const [lightbox, setLightbox] = useState<string | null>(null);
-  const activeRoom = rooms.find((r) => r.id === lightbox);
+  const [lightbox, setLightbox] = useState<string | null>(null),
+    activeRoom = rooms.find((r) => r.id === lightbox);
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-heading text-xl font-bold text-foreground">Pilih Tipe Kamar</h3>

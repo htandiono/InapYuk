@@ -8,11 +8,18 @@ export function useCategoryDelete(fetchCategories: (p: number) => void, page: nu
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/categories/tenant/categories/${deletingId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/categories/tenant/categories/${deletingId}`, {
+        method: 'DELETE',
+      });
       if (!res.ok) throw new Error((await res.json()).message);
       toast.success('Kategori berhasil dihapus');
-      setDeletingId(null); fetchCategories(page);
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : String(err)); } finally { setIsDeleting(false); }
+      setDeletingId(null);
+      fetchCategories(page);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsDeleting(false);
+    }
   };
   return { deletingId, setDeletingId, isDeleting, confirmDelete };
 }

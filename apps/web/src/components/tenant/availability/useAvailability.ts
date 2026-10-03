@@ -11,7 +11,6 @@ export type AvailabilityData = {
 
 export function useAvailability(roomId: string | null, onClose: () => void) {
   const [loading, setLoading] = useState(false);
-
   const updateAvailability = async (data: AvailabilityData) => {
     if (!roomId) return;
     setLoading(true);
@@ -22,7 +21,6 @@ export function useAvailability(roomId: string | null, onClose: () => void) {
         isAvailable: data.isAvailable,
         availableUnits: data.availableUnits ? parseInt(data.availableUnits) : null,
       });
-
       toast.success('Ketersediaan berhasil diperbarui');
       onClose();
     } catch (err: unknown) {
@@ -31,6 +29,5 @@ export function useAvailability(roomId: string | null, onClose: () => void) {
       setLoading(false);
     }
   };
-
   return { loading, updateAvailability };
 }

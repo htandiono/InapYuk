@@ -132,7 +132,13 @@ function CitySelect({
   );
 }
 
-function CityError({ errors, selectedProvinceId }: { errors: FieldErrors<PropertyFormValues>; selectedProvinceId: string }) {
+function CityError({
+  errors,
+  selectedProvinceId,
+}: {
+  errors: FieldErrors<PropertyFormValues>;
+  selectedProvinceId: string;
+}) {
   if (errors?.city) {
     return (
       <p className="flex items-center gap-1 text-destructive text-xs mt-1.5">

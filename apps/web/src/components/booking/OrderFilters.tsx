@@ -42,7 +42,13 @@ export function OrderFilters({
   );
 }
 
-function StatusTabs({ current, onChange }: { current: string; onChange: (status: string) => void }) {
+function StatusTabs({
+  current,
+  onChange,
+}: {
+  current: string;
+  onChange: (status: string) => void;
+}) {
   return (
     <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
       {TABS.map((tab) => (

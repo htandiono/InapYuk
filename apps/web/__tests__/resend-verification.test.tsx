@@ -31,13 +31,13 @@ describe('Resend Verification Page', () => {
 
   it('shows validation errors for empty email', async () => {
     render(<ResendVerificationPage />);
-    
+
     fireEvent.click(screen.getByRole('button', { name: /kirim ulang/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/email wajib diisi/i)).toBeInTheDocument();
     });
-    
+
     expect(api.post).not.toHaveBeenCalled();
   });
 
@@ -45,10 +45,10 @@ describe('Resend Verification Page', () => {
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<ResendVerificationPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /kirim ulang/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/resend-verification', {
         email: 'user@example.com',
@@ -58,15 +58,13 @@ describe('Resend Verification Page', () => {
   });
 
   it('shows error from API on failure', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(
-      new ApiError(400, 'Terlalu banyak permintaan')
-    );
+    vi.mocked(api.post).mockRejectedValueOnce(new ApiError(400, 'Terlalu banyak permintaan'));
 
     render(<ResendVerificationPage />);
-    
+
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /kirim ulang/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/terlalu banyak permintaan/i)).toBeInTheDocument();
     });

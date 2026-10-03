@@ -37,11 +37,19 @@ export const UpdateAvailabilitySchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   isAvailable: z.boolean(),
-  availableUnits: z.coerce.number().min(0, 'Total unit minimal 0').max(100, 'Total unit maksimal 100').optional().nullable(),
+  availableUnits: z.coerce
+    .number()
+    .min(0, 'Total unit minimal 0')
+    .max(100, 'Total unit maksimal 100')
+    .optional()
+    .nullable(),
 });
 
 export const CreatePeakSeasonSchema = z.object({
-  name: z.string().min(3, 'Nama musim minimal 3 karakter').max(100, 'Nama musim maksimal 100 karakter'),
+  name: z
+    .string()
+    .min(3, 'Nama musim minimal 3 karakter')
+    .max(100, 'Nama musim maksimal 100 karakter'),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),
   adjustmentType: z.enum(['NOMINAL', 'PERCENTAGE']),

@@ -32,13 +32,17 @@ describe('Verify Page', () => {
   });
 
   it('shows error if token is missing', () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: () => null } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue({ get: () => null } as unknown as ReturnType<
+      typeof useSearchParams
+    >);
     render(<VerifyPage />);
     expect(screen.getByText(/link verifikasi tidak valid/i)).toBeInTheDocument();
   });
 
   it('renders set password form if token is present', async () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: () => 'valid-token' } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue({
+      get: () => 'valid-token',
+    } as unknown as ReturnType<typeof useSearchParams>);
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     render(<VerifyPage />);
     const passwordInput = await screen.findByLabelText(/password baru/i);
@@ -47,35 +51,43 @@ describe('Verify Page', () => {
   });
 
   it('shows validation errors for short password', async () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: () => 'valid-token' } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue({
+      get: () => 'valid-token',
+    } as unknown as ReturnType<typeof useSearchParams>);
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     render(<VerifyPage />);
-    
+
     const passwordInput = await screen.findByLabelText(/password baru/i);
     fireEvent.change(passwordInput, { target: { value: 'short' } });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/minimal 8 karakter/i)).toBeInTheDocument();
     });
-    
+
     expect(api.post).not.toHaveBeenCalled();
   });
 
   it('submits successfully and redirects to login', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
-    vi.mocked(useSearchParams).mockReturnValue({ get: () => 'valid-token' } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<
+      typeof useRouter
+    >);
+    vi.mocked(useSearchParams).mockReturnValue({
+      get: () => 'valid-token',
+    } as unknown as ReturnType<typeof useSearchParams>);
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<VerifyPage />);
-    
+
     const passwordInput = await screen.findByLabelText(/password baru/i);
     fireEvent.change(passwordInput, { target: { value: 'StrongP@ssw0rd!' } });
-    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongP@ssw0rd!' } });
+    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), {
+      target: { value: 'StrongP@ssw0rd!' },
+    });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/verify', {
         token: 'valid-token',
@@ -87,19 +99,23 @@ describe('Verify Page', () => {
   });
 
   it('shows error from API on invalid token', async () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: () => 'invalid-token' } as unknown as ReturnType<typeof useSearchParams>);
+    vi.mocked(useSearchParams).mockReturnValue({
+      get: () => 'invalid-token',
+    } as unknown as ReturnType<typeof useSearchParams>);
     vi.mocked(api.get).mockResolvedValueOnce({ success: true });
     vi.mocked(api.post).mockRejectedValueOnce(
-      new ApiError(400, 'Token tidak valid atau sudah kadaluarsa')
+      new ApiError(400, 'Token tidak valid atau sudah kadaluarsa'),
     );
 
     render(<VerifyPage />);
-    
+
     const passwordInput = await screen.findByLabelText(/password baru/i);
     fireEvent.change(passwordInput, { target: { value: 'StrongP@ssw0rd!' } });
-    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), { target: { value: 'StrongP@ssw0rd!' } });
+    fireEvent.change(screen.getByLabelText(/konfirmasi password/i), {
+      target: { value: 'StrongP@ssw0rd!' },
+    });
     fireEvent.click(screen.getByRole('button', { name: /verifikasi/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/token tidak valid/i)).toBeInTheDocument();
     });

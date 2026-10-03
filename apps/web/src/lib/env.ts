@@ -19,4 +19,5 @@ export const clientEnv = {
     process.env.NEXT_PUBLIC_SITE_URL,
     'http://localhost:3000',
   ),
+  googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
 };

@@ -35,7 +35,10 @@ export function OrderListView() {
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <OrderResults items={items} />
       {meta ? (
-        <OrderPager meta={meta} onPage={(page) => applyFilters(router, params, { page: String(page) })} />
+        <OrderPager
+          meta={meta}
+          onPage={(page) => applyFilters(router, params, { page: String(page) })}
+        />
       ) : null}
     </div>
   );

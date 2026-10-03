@@ -3,11 +3,10 @@ import { toast } from 'sonner';
 import type { Category } from './types';
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-
+  const [categories, setCategories] = useState<Category[]>([]),
+    [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1),
+    [loading, setLoading] = useState(true);
   const fetchCategories = useCallback(async (currentPage: number) => {
     setLoading(true);
     try {
@@ -22,7 +21,8 @@ export function useCategories() {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => { void Promise.resolve().then(() => fetchCategories(page)); }, [page, fetchCategories]);
+  useEffect(() => {
+    void Promise.resolve().then(() => fetchCategories(page));
+  }, [page, fetchCategories]);
   return { categories, page, setPage, totalPages, loading, fetchCategories };
 }

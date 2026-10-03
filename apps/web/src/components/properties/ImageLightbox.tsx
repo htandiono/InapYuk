@@ -21,8 +21,8 @@ export function ImageLightbox({
   onClose,
   altPrefix = 'Gambar',
 }: ImageLightboxProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex),
+    [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   useResetIndex(isOpen, prevIsOpen, setPrevIsOpen, initialIndex, setCurrentIndex);
   useLightboxKeys(isOpen, images.length, setCurrentIndex);
   if (!images || images.length === 0) return null;

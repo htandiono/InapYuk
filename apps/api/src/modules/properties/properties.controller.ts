@@ -90,9 +90,8 @@ export class TenantPropertiesController {
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.tenantId) throw forbidden('Akses ditolak');
-      const { id } = req.params;
       const property = await prisma.property.findFirst({
-        where: { id: id as string, tenantId: req.tenantId, deletedAt: null },
+        where: { id: req.params.id as string, tenantId: req.tenantId, deletedAt: null },
         include: {
           category: true,
           images: { orderBy: { sortOrder: 'asc' } },

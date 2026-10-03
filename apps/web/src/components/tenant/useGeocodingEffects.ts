@@ -18,7 +18,9 @@ interface Props {
 }
 
 function logUI(msg: string, addDebugLog?: (m: string) => void) {
-  try { addDebugLog?.('[GeoSync] ' + msg); } catch {}
+  try {
+    addDebugLog?.('[GeoSync] ' + msg);
+  } catch {}
 }
 
 export function useGeocodingEffects({
@@ -41,17 +43,28 @@ export function useGeocodingEffects({
       lastProvinceCityRef.current = provinceCityKey;
       lastGeocodedAddressRef.current = '';
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provinceCityKey]);
 
   useAddressGeocoder({
-    addressValue, selectedProvinceId, watchedCity, setValue,
-    setSelectedGeo, lastGeocodedAddressRef, addDebugLog,
+    addressValue,
+    selectedProvinceId,
+    watchedCity,
+    setValue,
+    setSelectedGeo,
+    lastGeocodedAddressRef,
+    addDebugLog,
   });
 
   useProvinceCityGeocoder({
-    selectedProvinceId, watchedCity, setValue, setSelectedGeo,
-    lastGeocodedAddressRef, lastProvinceCityRef, isReverseGeocodingRef, addDebugLog,
+    selectedProvinceId,
+    watchedCity,
+    setValue,
+    setSelectedGeo,
+    lastGeocodedAddressRef,
+    lastProvinceCityRef,
+    isReverseGeocodingRef,
+    addDebugLog,
   });
 
   return {
@@ -88,10 +101,15 @@ export function useGeocodingEffects({
           }
         })
         .catch((err) => {
-          logUI(`Reverse geocode ERROR: ${err instanceof Error ? err.message : String(err)}`, addDebugLog);
+          logUI(
+            `Reverse geocode ERROR: ${err instanceof Error ? err.message : String(err)}`,
+            addDebugLog,
+          );
         })
         .finally(() => {
-          setTimeout(() => { isReverseGeocodingRef.current = false; }, 100);
+          setTimeout(() => {
+            isReverseGeocodingRef.current = false;
+          }, 100);
         });
     },
     lastGeocodedAddressRef,

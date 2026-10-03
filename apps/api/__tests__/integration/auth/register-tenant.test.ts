@@ -20,9 +20,12 @@ describe('POST /api/auth/register/tenant', () => {
   it('should create a user, tenant profile, and verification token (201)', async () => {
     const app = createTestApp();
 
-    const res = await app
-      .post('/api/auth/register/tenant')
-      .send({ email: 'tenant@example.com', name: 'Tenant Owner', companyName: 'InapYuk Hotels', companyAddress: 'Jalan Kenangan 1' });
+    const res = await app.post('/api/auth/register/tenant').send({
+      email: 'tenant@example.com',
+      name: 'Tenant Owner',
+      companyName: 'InapYuk Hotels',
+      companyAddress: 'Jalan Kenangan 1',
+    });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
@@ -60,9 +63,12 @@ describe('POST /api/auth/register/tenant', () => {
   it('should call sendMail once with the verification template', async () => {
     const app = createTestApp();
 
-    await app
-      .post('/api/auth/register/tenant')
-      .send({ email: 'mail-tenant@example.com', name: 'Mail Test', companyName: 'Mails R Us', companyAddress: 'Jalan Kenangan 1' });
+    await app.post('/api/auth/register/tenant').send({
+      email: 'mail-tenant@example.com',
+      name: 'Mail Test',
+      companyName: 'Mails R Us',
+      companyAddress: 'Jalan Kenangan 1',
+    });
 
     expect(sendMail).toHaveBeenCalledOnce();
     expect(sendMail).toHaveBeenCalledWith(
@@ -83,13 +89,16 @@ describe('POST /api/auth/register/tenant', () => {
         name: 'First',
         role: 'TENANT',
         isVerified: true,
-      }
+      },
     });
 
     // Duplicate registration as tenant
-    const res = await app
-      .post('/api/auth/register/tenant')
-      .send({ email: 'dup-tenant@example.com', name: 'Second', companyName: 'Dup Inc', companyAddress: 'Jalan Kenangan 1' });
+    const res = await app.post('/api/auth/register/tenant').send({
+      email: 'dup-tenant@example.com',
+      name: 'Second',
+      companyName: 'Dup Inc',
+      companyAddress: 'Jalan Kenangan 1',
+    });
 
     expect(res.status).toBe(409);
     expect(res.body.success).toBe(false);
