@@ -35,7 +35,8 @@ function decodeToken(token: string): JwtPayload | null {
 }
 
 function isPublicRoute(pathname: string): boolean {
-  return publicRoutes.includes(pathname) || pathname.startsWith('/properties');
+  if (publicRoutes.includes(pathname) || pathname.startsWith('/properties')) return true;
+  return pathname.startsWith('/reset-password') || pathname.startsWith('/email-change');
 }
 
 function isAuthRoute(pathname: string): boolean {
