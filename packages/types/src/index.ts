@@ -5,3 +5,4 @@ export * from './property';
 export * from './booking';
 export * from './review';
 export * from './report';
+export * from './notification';

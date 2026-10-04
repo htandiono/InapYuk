@@ -5,25 +5,38 @@ import { StatusBadge } from './StatusBadge';
 
 export function OrderCard({ item }: { item: BookingListItemDto }) {
   return (
-    <Link
-      href={`/orders/${item.orderNumber}`}
-      className="flex gap-3 rounded-2xl border border-border bg-card p-3"
-    >
+    <Link href={`/orders/${item.orderNumber}`} className="flex gap-3 rounded-2xl border border-border bg-card p-3">
       <Cover url={item.coverImageUrl} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{item.propertyName}</p>
-        <p className="text-xs text-muted-foreground">
-          {item.roomName} · {item.orderNumber}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {formatDateRange(item.checkIn, item.checkOut)}
-        </p>
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <StatusBadge status={item.status} />
-          <span className="text-sm font-medium">{formatRupiah(item.totalPrice)}</span>
-        </div>
-      </div>
+      <CardBody item={item} />
     </Link>
+  );
+}
+
+function CardBody({ item }: { item: BookingListItemDto }) {
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="truncate font-medium">{item.propertyName}</p>
+      <RoomLine item={item} />
+      <DateLine item={item} />
+      <CardFooter item={item} />
+    </div>
+  );
+}
+
+function RoomLine({ item }: { item: BookingListItemDto }) {
+  return <p className="text-xs text-muted-foreground">{item.roomName} · {item.orderNumber}</p>;
+}
+
+function DateLine({ item }: { item: BookingListItemDto }) {
+  return <p className="text-xs text-muted-foreground">{formatDateRange(item.checkIn, item.checkOut)}</p>;
+}
+
+function CardFooter({ item }: { item: BookingListItemDto }) {
+  return (
+    <div className="mt-1 flex min-w-0 flex-wrap items-center justify-between gap-2">
+      <StatusBadge status={item.status} />
+      <span className="text-sm font-medium">{formatRupiah(item.totalPrice)}</span>
+    </div>
   );
 }
 

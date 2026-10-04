@@ -5,7 +5,7 @@ import { jobs } from './registry';
 
 /**
  * Local dev only. On Vercel the same job functions are driven by Vercel Cron
- * hitting POST /api/cron/:job, because a long-lived node-cron timer cannot
+ * hitting GET /api/cron/:job, because a long-lived node-cron timer cannot
  * survive in a serverless function.
  */
 export function startLocalScheduler(): void {

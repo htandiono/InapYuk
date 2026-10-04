@@ -1,14 +1,23 @@
 import { Router } from 'express';
+import { authenticate, requireRole, requireVerified } from '../../middlewares/auth.middleware';
+import { validateBody } from '../../middlewares/validate.middleware';
+import { postReview } from './reviews.controller';
+import { createReviewSchema } from './reviews.schema';
 
 /**
  * Owner: Feature 2 - htandiono (Sprint 4)
  *
- * Planned endpoints:
- *   GET    /properties/:id/reviews    public, paginated
- *   POST   /reviews                   one per completed stay, after check-out
- *   GET    /tenant/reviews
- *   POST   /tenant/reviews/:id/reply
+ *   POST /reviews
  */
 const router = Router();
+
+router.post(
+  '/',
+  authenticate,
+  requireRole('USER'),
+  requireVerified,
+  validateBody(createReviewSchema),
+  postReview,
+);
 
 export default router;

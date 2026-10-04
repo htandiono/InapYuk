@@ -15,7 +15,12 @@ export function computeActions(booking: ActionSource, caller: JwtPayload) {
     canBeCancelled: unpaid && (isGuest || caller.role === 'TENANT'),
     canUploadPaymentProof: isGuest && unpaid && isBeforeDeadline(booking.paymentDeadline),
     canBeReviewed: isGuest && isReviewable(booking),
+    canConfirmPayment: caller.role === 'TENANT' && canDecideProof(booking),
   };
+}
+
+function canDecideProof(booking: ActionSource): boolean {
+  return booking.status === 'WAITING_CONFIRMATION' && booking.paymentProofUploadedAt !== null;
 }
 
 function isUnpaid(booking: ActionSource): boolean {

@@ -16,3 +16,17 @@ export async function loadGuestBooking(
   }
   return booking;
 }
+
+export async function loadTenantBooking(
+  orderNumber: string,
+  tenantId: string,
+): Promise<BookingRecord> {
+  const booking = await prisma.booking.findUnique({
+    where: { orderNumber },
+    include: bookingDetailInclude,
+  });
+  if (!booking || booking.property.tenantId !== tenantId) {
+    throw notFound('Pesanan tidak ditemukan');
+  }
+  return booking;
+}

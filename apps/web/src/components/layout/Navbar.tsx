@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { decodeJwt } from 'jose';
 import { Logo } from '@/components/ui/logo';
+import { NotificationBell } from '@/components/booking/NotificationBell';
+import { NavbarLinks } from './NavbarLinks';
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -30,8 +32,6 @@ async function getNavbarUser(): Promise<{
   }
 }
 
-import { NavbarLinks } from './NavbarLinks';
-
 export async function Navbar({ isAuthenticated, hideSearch, searchHref }: NavbarProps) {
   const { role, displayName, initial } = isAuthenticated
     ? await getNavbarUser()
@@ -42,14 +42,17 @@ export async function Navbar({ isAuthenticated, hideSearch, searchHref }: Navbar
       <Link href="/" className="hover:opacity-90 transition-opacity">
         <Logo className="text-2xl" />
       </Link>
-      <NavbarLinks
-        isAuthenticated={isAuthenticated}
-        role={role}
-        displayName={displayName}
-        initial={initial}
-        hideSearch={hideSearch}
-        searchHref={searchHref}
-      />
+      <div className="flex items-center gap-2">
+        {isAuthenticated ? <NotificationBell /> : null}
+        <NavbarLinks
+          isAuthenticated={isAuthenticated}
+          role={role}
+          displayName={displayName}
+          initial={initial}
+          hideSearch={hideSearch}
+          searchHref={searchHref}
+        />
+      </div>
     </header>
   );
 }

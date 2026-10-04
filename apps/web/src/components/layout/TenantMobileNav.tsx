@@ -1,12 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, CalendarDays } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { navigation } from './TenantSidebar';
@@ -39,22 +38,6 @@ function TenantMobileMenuContent({ pathname }: { pathname: string }) {
       {navigation.map((item) => (
         <TenantMobileMenuItem key={item.name} item={item} pathname={pathname} />
       ))}
-      <DropdownMenuSeparator />
-      <DropdownMenuItem
-        className={
-          pathname.startsWith('/tenant/calendar')
-            ? 'bg-primary/10 text-primary focus:bg-primary/15'
-            : 'text-muted-foreground'
-        }
-      >
-        <Link
-          href="/tenant/calendar"
-          className="flex items-center gap-3 w-full h-full py-1 cursor-pointer"
-        >
-          <CalendarDays className="w-4 h-4" />
-          <span className="font-medium">Kalender Properti</span>
-        </Link>
-      </DropdownMenuItem>
     </DropdownMenuContent>
   );
 }

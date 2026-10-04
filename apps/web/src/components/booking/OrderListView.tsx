@@ -11,60 +11,75 @@ import { OrderFilters, type OrderFiltersValue } from './OrderFilters';
 import { OrderPager } from './OrderPager';
 import { useSession } from './session';
 
+type Session = ReturnType<typeof useSession>;
+type Listed = OrderFiltersValue & { page: string };
+type ItemSetter = (items: BookingListItemDto[]) => void;
+type MetaSetter = (meta: PaginationMeta) => void;
+type ErrorSetter = (message: string | null) => void;
+type ListBag = { items: BookingListItemDto[] | null; meta: PaginationMeta | null; error: string | null };
+type ScreenProps = {
+  router: ReturnType<typeof useRouter>;
+  params: ReturnType<typeof useSearchParams>;
+  list: ListBag;
+};
+
 export function OrderListView() {
   const router = useRouter();
   const params = useSearchParams();
-  const query = params.toString();
-  const filters = readFilters(params);
   const session = useSession();
+  const list = useOrderList(session, params.toString());
+  if (!session) return <NeedLogin />;
+  return <OrderScreen router={router} params={params} list={list} />;
+}
+
+function useOrderList(session: Session, query: string): ListBag {
   const [items, setItems] = useState<BookingListItemDto[] | null>(null);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   // Filters live in the URL so every change hits GET /bookings, not a local list.
   useEffect(() => {
     if (!session) return;
     void fetchOrders(readFilters(new URLSearchParams(query)), setItems, setMeta, setError);
   }, [session, query]);
+  return { items, meta, error };
+}
 
-  if (!session) return <NeedLogin />;
-
+function OrderScreen({ router, params, list }: ScreenProps) {
+  const filters = readFilters(params);
   return (
     <div className="space-y-6">
       <OrderFilters value={filters} onChange={(patch) => applyFilters(router, params, patch)} />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <OrderResults items={items} />
-      {meta ? (
-        <OrderPager
-          meta={meta}
-          onPage={(page) => applyFilters(router, params, { page: String(page) })}
-        />
-      ) : null}
+      {list.error ? <p className="text-sm text-destructive">{list.error}</p> : null}
+      <OrderResults items={list.items} />
+      <ListPager meta={list.meta} router={router} params={params} />
     </div>
   );
 }
 
+function ListPager({ meta, router, params }: Omit<ScreenProps, 'list'> & { meta: PaginationMeta | null }) {
+  if (!meta) return null;
+  return <OrderPager meta={meta} onPage={(page) => applyFilters(router, params, { page: String(page) })} />;
+}
+
 function OrderResults({ items }: { items: BookingListItemDto[] | null }) {
   if (items === null) return <p className="text-sm text-muted-foreground">Memuat pesanan...</p>;
-  if (items.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        Belum ada pesanan yang cocok. Coba ganti filter atau cari nomor lain.
-      </p>
-    );
-  }
+  if (items.length === 0) return <EmptyOrders />;
   return (
     <ul className="space-y-3">
-      {items.map((item) => (
-        <li key={item.id}>
-          <OrderCard item={item} />
-        </li>
-      ))}
+      {items.map((item) => <li key={item.id}><OrderCard item={item} /></li>)}
     </ul>
   );
 }
 
-function readFilters(params: URLSearchParams): OrderFiltersValue & { page: string } {
+function EmptyOrders() {
+  return (
+    <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+      Belum ada pesanan yang cocok. Coba ganti filter atau cari nomor lain.
+    </p>
+  );
+}
+
+function readFilters(params: URLSearchParams): Listed {
   return {
     status: params.get('status') ?? '',
     orderNumber: params.get('orderNumber') ?? '',
@@ -89,12 +104,7 @@ function applyFilters(
   router.replace(qs ? `/orders?${qs}` : '/orders');
 }
 
-async function fetchOrders(
-  filters: OrderFiltersValue & { page: string },
-  setItems: (items: BookingListItemDto[]) => void,
-  setMeta: (meta: PaginationMeta) => void,
-  setError: (message: string | null) => void,
-) {
+async function fetchOrders(filters: Listed, setItems: ItemSetter, setMeta: MetaSetter, setError: ErrorSetter) {
   try {
     setError(null);
     const data = await bookingGet<Paginated<BookingListItemDto>>(listPath(filters));
@@ -106,7 +116,7 @@ async function fetchOrders(
   }
 }
 
-function listPath(filters: OrderFiltersValue & { page: string }) {
+function listPath(filters: Listed) {
   return withQuery('/bookings', {
     status: filters.status,
     orderNumber: filters.orderNumber,

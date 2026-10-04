@@ -39,6 +39,14 @@ export interface BookingDetailDto extends BookingListItemDto {
   canBeCancelled: boolean;
   canUploadPaymentProof: boolean;
   canBeReviewed: boolean;
+  canConfirmPayment: boolean;
+}
+
+export interface TenantBookingListItemDto extends BookingListItemDto {
+  guestName: string;
+  guestEmail: string;
+  awaitingConfirmation: boolean;
+  paymentProofUrl: string | null;
 }
 
 export interface CreateBookingRequest {
@@ -73,6 +81,7 @@ export interface BookingListQuery extends PaginationQuery {
   dateFrom?: string;
   dateTo?: string;
   propertyId?: string;
+  guestName?: string;
   sortBy?: 'createdAt' | 'checkIn' | 'totalPrice';
   sortOrder?: SortOrder;
 }
