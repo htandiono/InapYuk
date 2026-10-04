@@ -60,12 +60,12 @@ describe('POST /api/auth/logout', () => {
 
   it('should return 200 and clear cookies even if no token is provided (idempotent)', async () => {
     const app = createTestApp();
-    
+
     const res = await app.post('/api/auth/logout');
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    
+
     // Verify cookies are cleared
     const cookies = res.headers['set-cookie'] || [];
     expect(cookies.some((c: string) => c.includes('accessToken=;'))).toBe(true);
@@ -79,7 +79,7 @@ describe('POST /api/auth/logout', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    
+
     // Verify cookies are cleared
     const cookies = res.headers['set-cookie'] || [];
     expect(cookies.some((c: string) => c.includes('accessToken=;'))).toBe(true);

@@ -2,9 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createTestApp, truncateAll } from '../../../src/test/helpers';
 import { prisma } from '../../../src/libs/prisma';
 
+// Mock the mailer so we never send real emails in tests.
 vi.mock('../../../src/libs/mailer', () => ({
   sendMail: vi.fn().mockResolvedValue(undefined),
   renderTemplate: vi.fn().mockReturnValue('<html>mock</html>'),
+}));
+
+// Mock rate limiter to avoid 429 in tests
+vi.mock('express-rate-limit', () => ({
+  default: () => (req: unknown, res: unknown, next: () => void) => next(),
 }));
 
 const { sendMail } = await import('../../../src/libs/mailer');
@@ -15,11 +21,12 @@ describe('POST /api/auth/resend-verification', () => {
     await truncateAll();
   });
 
-  const SUCCESS_MESSAGE = 'Jika email terdaftar dan belum terverifikasi, kami sudah mengirim link baru';
+  const SUCCESS_MESSAGE =
+    'Jika email terdaftar dan belum terverifikasi, kami sudah mengirim link baru';
 
   it('should create a new token and send email for unverified user (200)', async () => {
     const app = createTestApp();
-    
+
     const user = await prisma.user.create({
       data: {
         email: 'unverified@example.com',

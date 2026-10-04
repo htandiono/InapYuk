@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -31,16 +30,27 @@ export function CheckoutForm({ initialStay }: { initialStay: Stay }) {
   useEffect(() => {
     void refreshQuote(stay, setQuote, setError);
   }, [stay]);
-
   if (!session) return <NeedLogin />;
   if (!session.isVerified) return <NeedVerify />;
 
   return (
-    <form className="space-y-6" onSubmit={(event) => void onSubmit(event, stay, setBusy, setError, router)}>
+    <form
+      className="space-y-6"
+      onSubmit={(event) => void onSubmit(event, stay, setBusy, setError, router)}
+    >
       <StayFields stay={stay} onChange={setStay} />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {quote ? <QuoteCard quote={quote} /> : <p className="text-sm text-muted-foreground">Menghitung harga...</p>}
-      <Button type="submit" className="w-full rounded-full" disabled={busy || !quote?.isAvailable} size="lg">
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {quote ? (
+        <QuoteCard quote={quote} />
+      ) : (
+        <p className="text-sm text-muted-foreground">Menghitung harga...</p>
+      )}
+      <Button
+        type="submit"
+        className="w-full rounded-full"
+        disabled={busy || !quote?.isAvailable}
+        size="lg"
+      >
         {busy ? 'Memproses...' : 'Konfirmasi pesanan'}
       </Button>
     </form>
@@ -50,8 +60,16 @@ export function CheckoutForm({ initialStay }: { initialStay: Stay }) {
 function StayFields({ stay, onChange }: { stay: Stay; onChange: (stay: Stay) => void }) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <DateField label="Check-in" value={stay.checkIn} onChange={(checkIn) => onChange({ ...stay, checkIn })} />
-      <DateField label="Check-out" value={stay.checkOut} onChange={(checkOut) => onChange({ ...stay, checkOut })} />
+      <DateField
+        label="Check-in"
+        value={stay.checkIn}
+        onChange={(checkIn) => onChange({ ...stay, checkIn })}
+      />
+      <DateField
+        label="Check-out"
+        value={stay.checkOut}
+        onChange={(checkOut) => onChange({ ...stay, checkOut })}
+      />
       <div className="space-y-2">
         <Label htmlFor="guests">Jumlah tamu</Label>
         <Input
@@ -84,25 +102,26 @@ function DateField({
 }
 
 function QuoteCard({ quote }: { quote: BookingQuoteResponse }) {
-  if (!quote.isAvailable) {
+  if (!quote.isAvailable)
     return (
       <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
         Tanggal itu sudah penuh. Coba geser check-in atau check-out.
       </p>
     );
-  }
   return (
     <div className="space-y-3">
       <NightBreakdown nights={quote.nights} />
-      <p className="text-right font-heading text-xl text-primary">{formatRupiah(quote.totalPrice)}</p>
+      <p className="text-right font-heading text-xl text-primary">
+        {formatRupiah(quote.totalPrice)}
+      </p>
     </div>
   );
 }
 
 async function refreshQuote(
   stay: Stay,
-  setQuote: (quote: BookingQuoteResponse | null) => void,
-  setError: (message: string | null) => void,
+  setQuote: (q: BookingQuoteResponse | null) => void,
+  setError: (m: string | null) => void,
 ) {
   if (stay.checkOut <= stay.checkIn) {
     setError('Check-out harus setelah check-in');
@@ -121,8 +140,8 @@ async function refreshQuote(
 async function onSubmit(
   event: React.FormEvent,
   stay: Stay,
-  setBusy: (value: boolean) => void,
-  setError: (message: string | null) => void,
+  setBusy: (v: boolean) => void,
+  setError: (m: string | null) => void,
   router: ReturnType<typeof useRouter>,
 ) {
   event.preventDefault();
@@ -149,7 +168,6 @@ function NeedLogin() {
     />
   );
 }
-
 function NeedVerify() {
   return (
     <Gate

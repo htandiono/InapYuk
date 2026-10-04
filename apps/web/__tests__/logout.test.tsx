@@ -26,15 +26,17 @@ describe('Logout Button', () => {
 
   it('calls logout API and redirects to login on click', async () => {
     const pushMock = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue({ push: pushMock } as unknown as ReturnType<
+      typeof useRouter
+    >);
     vi.mocked(api.post).mockResolvedValueOnce({ success: true });
 
     render(<LogoutButton />);
-    
+
     fireEvent.click(screen.getByRole('button', { name: /keluar/i }));
-    
+
     expect(screen.getByRole('button', { name: /keluar/i })).toBeDisabled();
-    
+
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/logout');
       expect(pushMock).toHaveBeenCalledWith('/');

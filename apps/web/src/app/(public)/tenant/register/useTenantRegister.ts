@@ -6,22 +6,24 @@ import { api, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(3, 'Nama minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Nama minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama mengandung karakter yang tidak valid'),
   email: z.string().min(1, 'Email wajib diisi').email('Email tidak valid'),
-  companyName: z.string().trim().min(3, 'Nama perusahaan minimal 3 karakter').regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
+  companyName: z
+    .string()
+    .trim()
+    .min(3, 'Nama perusahaan minimal 3 karakter')
+    .regex(/^[a-zA-Z0-9\s\.,'-]+$/, 'Nama perusahaan mengandung karakter yang tidak valid'),
   companyAddress: z.string().trim().min(5, 'Alamat perusahaan minimal 5 karakter'),
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export function useTenantRegister() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+function useCooldown() {
   const [cooldown, setCooldown] = useState(0);
-  const [isResending, setIsResending] = useState(false);
-
-  const form = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -29,14 +31,33 @@ export function useTenantRegister() {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const handleApiError = (error: unknown) => {
-    if (error instanceof ApiError) {
-      setServerError(error.message);
-      error.fieldErrors?.forEach((fe) => form.setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message }));
-    } else {
-      setServerError('Terjadi kesalahan yang tidak diketahui.');
-    }
-  };
+  const startCooldown = (seconds: number) => setCooldown(seconds);
+  const isCoolingDown = cooldown > 0;
+
+  return { cooldown, startCooldown, isCoolingDown };
+}
+
+function handleApiError(
+  error: unknown,
+  setError: (path: keyof RegisterFormValues, options: { type: string; message: string }) => void,
+) {
+  if (error instanceof ApiError) {
+    error.fieldErrors?.forEach((fe) => {
+      setError(fe.path as keyof RegisterFormValues, { type: 'server', message: fe.message });
+    });
+    return error.message;
+  }
+  return 'Terjadi kesalahan yang tidak diketahui.';
+}
+
+export function useTenantRegister() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const { cooldown, startCooldown, isCoolingDown } = useCooldown();
+
+  const form = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
@@ -44,10 +65,10 @@ export function useTenantRegister() {
     try {
       await api.post('/auth/register/tenant', data);
       setSuccess(true);
-      setCooldown(60);
+      startCooldown(60);
       toast.success('Pendaftaran berhasil! Silakan cek email kamu.');
     } catch (error) {
-      handleApiError(error);
+      setServerError(handleApiError(error, form.setError));
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +81,7 @@ export function useTenantRegister() {
     try {
       await api.post('/auth/resend-verification', { email });
       toast.success('Email verifikasi baru telah dikirim!');
-      setCooldown(60);
+      startCooldown(60);
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : 'Terjadi kesalahan');
     } finally {
@@ -68,5 +89,14 @@ export function useTenantRegister() {
     }
   };
 
-  return { form, isSubmitting, serverError, success, cooldown, isResending, onSubmit, onResend };
+  return {
+    form,
+    isSubmitting,
+    serverError,
+    success,
+    cooldown: isCoolingDown ? cooldown : 0,
+    isResending,
+    onSubmit,
+    onResend,
+  };
 }

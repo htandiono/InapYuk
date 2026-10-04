@@ -39,6 +39,8 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
 
+  OPENCAGE_API_KEY: z.string().optional(),
+
   CRON_SECRET: z.string().min(8),
   ENABLE_LOCAL_CRON: booleanish,
 });
