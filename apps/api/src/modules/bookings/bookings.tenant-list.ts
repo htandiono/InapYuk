@@ -29,17 +29,21 @@ async function fetchTenantPage(
   query: BookingListQuery,
   pageArgs: ReturnType<typeof toPrismaPageArgs>,
 ) {
-  const orderBy = { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' };
-  return Promise.all([
-    prisma.booking.findMany({
-      where,
-      include: tenantListInclude,
-      orderBy,
-      skip: pageArgs.skip,
-      take: pageArgs.take,
-    }),
-    prisma.booking.count({ where }),
-  ]);
+  return Promise.all([findTenantRows(where, query, pageArgs), prisma.booking.count({ where })]);
+}
+
+function findTenantRows(
+  where: ReturnType<typeof buildTenantWhere>,
+  query: BookingListQuery,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+) {
+  return prisma.booking.findMany({
+    where,
+    include: tenantListInclude,
+    orderBy: { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' },
+    skip: pageArgs.skip,
+    take: pageArgs.take,
+  });
 }
 
 function buildTenantWhere(tenantId: string, query: BookingListQuery) {

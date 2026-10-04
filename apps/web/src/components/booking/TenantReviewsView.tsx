@@ -1,167 +1,104 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import type { ReviewDto, ReviewListResponse } from '@inapyuk/types';
 import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api-client';
 import { NeedTenantLogin } from './AuthGate';
-import { bookingGet, bookingPost, withQuery } from './booking-api';
+import { bookingGet, withQuery } from './booking-api';
 import { OrderPager } from './OrderPager';
+import { TenantReviewList } from './tenant-review-list';
 import { useSession } from './session';
+
+type Session = ReturnType<typeof useSession>;
+type ReviewSetter = Dispatch<SetStateAction<ReviewListResponse | null>>;
+type ErrorSetter = (message: string | null) => void;
+
+type ReviewBag = {
+  waiting: boolean;
+  setWaiting: (value: boolean) => void;
+  page: number;
+  setPage: (page: number) => void;
+  data: ReviewListResponse | null;
+  setData: ReviewSetter;
+  error: string | null;
+};
+
+type LoadArgs = { waiting: boolean; page: number; setData: (data: ReviewListResponse) => void; setError: ErrorSetter };
 
 export function TenantReviewsView() {
   const session = useSession();
+  const bag = useTenantReviews(session);
+  if (!session) return <NeedTenantLogin />;
+  return <ReviewScreen bag={bag} />;
+}
+
+function useTenantReviews(session: Session): ReviewBag {
   const [waiting, setWaiting] = useState(true);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<ReviewListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!session) return;
-    void loadReviews(waiting, page, setData, setError);
+    void loadReviews({ waiting, page, setData, setError });
   }, [session, waiting, page]);
+  return { waiting, setWaiting, page, setPage, data, setData, error };
+}
 
-  if (!session) return <NeedTenantLogin />;
-
+function ReviewScreen({ bag }: { bag: ReviewBag }) {
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 overflow-x-auto">
-        <Button
-          type="button"
-          size="sm"
-          variant={waiting ? 'default' : 'outline'}
-          className="rounded-full"
-          onClick={() => {
-            setWaiting(true);
-            setPage(1);
-          }}
-        >
-          Belum dibalas
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={waiting ? 'outline' : 'default'}
-          className="rounded-full"
-          onClick={() => {
-            setWaiting(false);
-            setPage(1);
-          }}
-        >
-          Semua
-        </Button>
-      </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <TenantReviewList
-        items={data?.items ?? null}
-        onReplied={(review) =>
-          setData((current) =>
-            current
-              ? { ...current, items: current.items.map((item) => (item.id === review.id ? review : item)) }
-              : current,
-          )
-        }
-      />
-      {data ? <OrderPager meta={data.meta} onPage={setPage} /> : null}
+      <WaitingTabs waiting={bag.waiting} onPick={pickWaiting(bag)} />
+      {bag.error ? <p className="text-sm text-destructive">{bag.error}</p> : null}
+      <TenantReviewList items={bag.data?.items ?? null} onReplied={replyHandler(bag.setData)} />
+      {bag.data ? <OrderPager meta={bag.data.meta} onPage={bag.setPage} /> : null}
     </div>
   );
 }
 
-function TenantReviewList({
-  items,
-  onReplied,
-}: {
-  items: ReviewDto[] | null;
-  onReplied: (review: ReviewDto) => void;
-}) {
-  if (items === null) return <p className="text-sm text-muted-foreground">Memuat ulasan...</p>;
-  if (items.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        Tidak ada ulasan di filter ini.
-      </p>
-    );
-  }
+function pickWaiting(bag: ReviewBag) {
+  return (waiting: boolean) => {
+    bag.setWaiting(waiting);
+    bag.setPage(1);
+  };
+}
+
+function replyHandler(setData: ReviewSetter) {
+  return (review: ReviewDto) => setData((current) => mergeReply(current, review));
+}
+
+function mergeReply(current: ReviewListResponse | null, review: ReviewDto) {
+  if (!current) return current;
+  return { ...current, items: current.items.map((item) => (item.id === review.id ? review : item)) };
+}
+
+function WaitingTabs({ waiting, onPick }: { waiting: boolean; onPick: (waiting: boolean) => void }) {
   return (
-    <ul className="space-y-3">
-      {items.map((item) => (
-        <li key={item.id} className="rounded-2xl border border-border bg-card p-4">
-          <p className="font-medium">
-            {item.author.name} · {'★'.repeat(item.rating)}
-          </p>
-          <p className="mt-2 text-sm">{item.comment}</p>
-          {item.reply ? (
-            <p className="mt-3 text-sm text-muted-foreground">Balasan: {item.reply.comment}</p>
-          ) : (
-            <ReplyBox reviewId={item.id} onReplied={onReplied} />
-          )}
-        </li>
-      ))}
-    </ul>
+    <div className="flex gap-2 overflow-x-auto">
+      <WaitButton label="Belum dibalas" active={waiting} onClick={() => onPick(true)} />
+      <WaitButton label="Semua" active={!waiting} onClick={() => onPick(false)} />
+    </div>
   );
 }
 
-function ReplyBox({
-  reviewId,
-  onReplied,
-}: {
-  reviewId: string;
-  onReplied: (review: ReviewDto) => void;
-}) {
-  const [comment, setComment] = useState('');
-  const [error, setError] = useState<string | null>(null);
+function WaitButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
-    <form
-      className="mt-3 space-y-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        void sendReply(reviewId, comment, setError, onReplied);
-      }}
-    >
-      <textarea
-        required
-        minLength={10}
-        value={comment}
-        onChange={(event) => setComment(event.target.value)}
-        placeholder="Balas ulasan tamu..."
-        className="min-h-20 w-full rounded-lg border border-input bg-transparent p-2 text-sm"
-      />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="submit" size="sm" className="rounded-full">
-        Kirim balasan
-      </Button>
-    </form>
+    <Button type="button" size="sm" variant={active ? 'default' : 'outline'} className="rounded-full" onClick={onClick}>
+      {label}
+    </Button>
   );
 }
 
-async function loadReviews(
-  waiting: boolean,
-  page: number,
-  setData: (data: ReviewListResponse) => void,
-  setError: (message: string | null) => void,
-) {
+async function loadReviews(args: LoadArgs) {
   try {
-    setError(null);
-    setData(
-      await bookingGet<ReviewListResponse>(
-        withQuery('/tenant/reviews', { page, hasReply: waiting ? 'false' : undefined }),
-      ),
-    );
+    args.setError(null);
+    args.setData(await fetchTenantReviews(args.waiting, args.page));
   } catch (error) {
-    setError(error instanceof ApiError ? error.message : 'Gagal memuat ulasan');
+    args.setError(error instanceof ApiError ? error.message : 'Gagal memuat ulasan');
   }
 }
 
-async function sendReply(
-  reviewId: string,
-  comment: string,
-  setError: (message: string | null) => void,
-  onReplied: (review: ReviewDto) => void,
-) {
-  try {
-    setError(null);
-    onReplied(await bookingPost<ReviewDto>(`/tenant/reviews/${reviewId}/reply`, { comment }));
-  } catch (error) {
-    setError(error instanceof ApiError ? error.message : 'Gagal kirim balasan');
-  }
+function fetchTenantReviews(waiting: boolean, page: number) {
+  const hasReply = waiting ? 'false' : undefined;
+  return bookingGet<ReviewListResponse>(withQuery('/tenant/reviews', { page, hasReply }));
 }

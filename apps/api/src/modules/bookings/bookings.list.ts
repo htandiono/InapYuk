@@ -19,17 +19,21 @@ async function fetchGuestPage(
   query: BookingListQuery,
   pageArgs: ReturnType<typeof toPrismaPageArgs>,
 ) {
-  const orderBy = { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' };
-  return Promise.all([
-    prisma.booking.findMany({
-      where,
-      include: bookingListInclude,
-      orderBy,
-      skip: pageArgs.skip,
-      take: pageArgs.take,
-    }),
-    prisma.booking.count({ where }),
-  ]);
+  return Promise.all([findGuestRows(where, query, pageArgs), prisma.booking.count({ where })]);
+}
+
+function findGuestRows(
+  where: ReturnType<typeof buildListWhere>,
+  query: BookingListQuery,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+) {
+  return prisma.booking.findMany({
+    where,
+    include: bookingListInclude,
+    orderBy: { [query.sortBy ?? 'createdAt']: query.sortOrder ?? 'desc' },
+    skip: pageArgs.skip,
+    take: pageArgs.take,
+  });
 }
 
 function buildListWhere(userId: string, query: BookingListQuery) {

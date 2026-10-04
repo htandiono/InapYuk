@@ -50,9 +50,12 @@ async function notifyGuestOfCancel(
     userId,
     type: 'BOOKING_CANCELLED',
     title: 'Pesanan dibatalkan pemilik',
-    body: reason
-      ? `Pesanan ${orderNumber} dibatalkan: ${reason}`
-      : `Pemilik membatalkan pesanan ${orderNumber}. Kamarnya sudah dilepas.`,
+    body: guestCancelBody(orderNumber, reason),
     bookingId,
   });
+}
+
+function guestCancelBody(orderNumber: string, reason?: string) {
+  if (reason) return `Pesanan ${orderNumber} dibatalkan: ${reason}`;
+  return `Pemilik membatalkan pesanan ${orderNumber}. Kamarnya sudah dilepas.`;
 }

@@ -6,96 +6,49 @@ import { formatRupiah } from '@/lib/format';
 import { ApiError } from '@/lib/api-client';
 import { NeedTenantLogin } from './AuthGate';
 import { bookingGet, withQuery } from './booking-api';
+import { Filters, SalesTable, type SalesFilters } from './sales-report-panels';
 import { useSession } from './session';
 
-const GROUPS: Array<{ value: SalesReportQuery['groupBy']; label: string }> = [
-  { value: 'property', label: 'Properti' },
-  { value: 'transaction', label: 'Transaksi' },
-  { value: 'user', label: 'Tamu' },
-];
+type Session = ReturnType<typeof useSession>;
+type SalesQuery = { groupBy: SalesReportQuery['groupBy']; dateFrom: string; dateTo: string; sortBy: 'date' | 'total' };
+type SetSales = (data: SalesReportResponse) => void;
+type SetError = (message: string | null) => void;
+type ReportBag = { data: SalesReportResponse | null; error: string | null };
 
 export function SalesReportView() {
   const session = useSession();
+  const filters = useSalesFilters();
+  const report = useSalesReport(session, filters);
+  if (!session) return <NeedTenantLogin />;
+  return <SalesScreen filters={filters} report={report} />;
+}
+
+function useSalesFilters(): SalesFilters {
   const [groupBy, setGroupBy] = useState<SalesReportQuery['groupBy']>('property');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'total'>('total');
+  return { groupBy, setGroupBy, dateFrom, setDateFrom, dateTo, setDateTo, sortBy, setSortBy };
+}
+
+function useSalesReport(session: Session, filters: SalesFilters): ReportBag {
+  const { groupBy, dateFrom, dateTo, sortBy } = filters;
   const [data, setData] = useState<SalesReportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!session) return;
     void loadSales({ groupBy, dateFrom, dateTo, sortBy }, setData, setError);
   }, [session, groupBy, dateFrom, dateTo, sortBy]);
-
-  if (!session) return <NeedTenantLogin />;
-
-  return (
-    <div className="space-y-6">
-      <Filters
-        groupBy={groupBy}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        sortBy={sortBy}
-        onGroup={setGroupBy}
-        onFrom={setDateFrom}
-        onTo={setDateTo}
-        onSort={setSortBy}
-      />
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Summary data={data} />
-      <SalesTable data={data} />
-    </div>
-  );
+  return { data, error };
 }
 
-function Filters({
-  groupBy,
-  dateFrom,
-  dateTo,
-  sortBy,
-  onGroup,
-  onFrom,
-  onTo,
-  onSort,
-}: {
-  groupBy: SalesReportQuery['groupBy'];
-  dateFrom: string;
-  dateTo: string;
-  sortBy: 'date' | 'total';
-  onGroup: (value: SalesReportQuery['groupBy']) => void;
-  onFrom: (value: string) => void;
-  onTo: (value: string) => void;
-  onSort: (value: 'date' | 'total') => void;
-}) {
+function SalesScreen({ filters, report }: { filters: SalesFilters; report: ReportBag }) {
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2 overflow-x-auto">
-        {GROUPS.map((group) => (
-          <button
-            key={group.value}
-            type="button"
-            onClick={() => onGroup(group.value)}
-            className={`h-10 shrink-0 rounded-full px-4 text-sm ${
-              groupBy === group.value ? 'bg-primary text-primary-foreground' : 'border border-border'
-            }`}
-          >
-            {group.label}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <input type="date" value={dateFrom} onChange={(event) => onFrom(event.target.value)} className="h-10 rounded-lg border border-input px-2 text-sm" />
-        <input type="date" value={dateTo} onChange={(event) => onTo(event.target.value)} className="h-10 rounded-lg border border-input px-2 text-sm" />
-        <select
-          value={sortBy}
-          onChange={(event) => onSort(event.target.value as 'date' | 'total')}
-          className="col-span-2 h-10 rounded-lg border border-input px-2 text-sm sm:col-span-1"
-        >
-          <option value="total">Urutkan total</option>
-          <option value="date">Urutkan tanggal</option>
-        </select>
-      </div>
+    <div className="space-y-6">
+      <Filters filters={filters} />
+      {report.error ? <p className="text-sm text-destructive">{report.error}</p> : null}
+      <Summary data={report.data} />
+      <SalesTable data={report.data} />
     </div>
   );
 }
@@ -120,54 +73,15 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SalesTable({ data }: { data: SalesReportResponse | null }) {
-  if (!data) return null;
-  if (data.rows.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        Belum ada penjualan di rentang ini.
-      </p>
-    );
-  }
-  return (
-    <div className="overflow-x-auto rounded-2xl border border-border">
-      <table className="w-full min-w-[28rem] text-left text-sm">
-        <thead className="bg-muted text-muted-foreground">
-          <tr>
-            <th className="px-3 py-2 font-medium">Nama</th>
-            <th className="px-3 py-2 font-medium">Pesanan</th>
-            <th className="px-3 py-2 font-medium">Malam</th>
-            <th className="px-3 py-2 font-medium">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.rows.map((row) => (
-            <tr key={row.key} className="border-t border-border">
-              <td className="px-3 py-2">{row.label}</td>
-              <td className="px-3 py-2">{row.bookingCount}</td>
-              <td className="px-3 py-2">{row.nightCount}</td>
-              <td className="px-3 py-2">{formatRupiah(row.totalRevenue)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-async function loadSales(
-  query: { groupBy: SalesReportQuery['groupBy']; dateFrom: string; dateTo: string; sortBy: 'date' | 'total' },
-  setData: (data: SalesReportResponse) => void,
-  setError: (message: string | null) => void,
-) {
+async function loadSales(query: SalesQuery, setData: SetSales, setError: SetError) {
   try {
     setError(null);
-    setData(
-      await bookingGet<SalesReportResponse>(
-        withQuery('/tenant/reports/sales', { ...query, sortOrder: 'desc' }),
-      ),
-    );
+    setData(await bookingGet<SalesReportResponse>(salesPath(query)));
   } catch (error) {
     setError(error instanceof ApiError ? error.message : 'Gagal memuat laporan');
   }
+}
+
+function salesPath(query: SalesQuery) {
+  return withQuery('/tenant/reports/sales', { ...query, sortOrder: 'desc' });
 }

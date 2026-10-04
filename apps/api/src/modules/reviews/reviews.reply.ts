@@ -11,12 +11,18 @@ export async function replyToReview(
 ): Promise<ReviewDto> {
   const review = await loadOwnedReview(tenantId, reviewId);
   if (review.reply) throw conflict('Ulasan ini sudah dibalas');
-  await prisma.reviewReply.create({
-    data: { reviewId: review.id, tenantId, comment },
-  });
+  await saveReply(review.id, tenantId, comment);
   await notifyReviewer(review);
+  return reloadReview(review.id);
+}
+
+async function saveReply(reviewId: string, tenantId: string, comment: string) {
+  await prisma.reviewReply.create({ data: { reviewId, tenantId, comment } });
+}
+
+async function reloadReview(reviewId: string) {
   const updated = await prisma.review.findUniqueOrThrow({
-    where: { id: review.id },
+    where: { id: reviewId },
     include: reviewInclude,
   });
   return toReviewDto(updated);

@@ -33,22 +33,44 @@ async function paginateReviews(
   query: ReviewListQuery,
 ): Promise<ReviewListResponse> {
   const pageArgs = toPrismaPageArgs(query);
+  const page = await loadReviewPage(where, pageArgs);
+  return toReviewPage(page, pageArgs);
+}
+
+async function loadReviewPage(
+  where: Prisma.ReviewWhereInput,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+) {
   const [rows, total, stats] = await Promise.all([
-    prisma.review.findMany({
-      where,
-      include: reviewInclude,
-      orderBy: { createdAt: 'desc' },
-      skip: pageArgs.skip,
-      take: pageArgs.take,
-    }),
+    findReviewRows(where, pageArgs),
     prisma.review.count({ where }),
     prisma.review.aggregate({ where, _avg: { rating: true }, _count: { _all: true } }),
   ]);
+  return { rows, total, stats };
+}
+
+function findReviewRows(
+  where: Prisma.ReviewWhereInput,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+) {
+  return prisma.review.findMany({
+    where,
+    include: reviewInclude,
+    orderBy: { createdAt: 'desc' as const },
+    skip: pageArgs.skip,
+    take: pageArgs.take,
+  });
+}
+
+function toReviewPage(
+  page: Awaited<ReturnType<typeof loadReviewPage>>,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+): ReviewListResponse {
   return {
-    items: rows.map(toReviewDto),
-    meta: buildPaginationMeta(total, pageArgs.page, pageArgs.limit),
-    averageRating: Number(stats._avg.rating ?? 0),
-    reviewCount: stats._count._all,
+    items: page.rows.map(toReviewDto),
+    meta: buildPaginationMeta(page.total, pageArgs.page, pageArgs.limit),
+    averageRating: Number(page.stats._avg.rating ?? 0),
+    reviewCount: page.stats._count._all,
   };
 }
 

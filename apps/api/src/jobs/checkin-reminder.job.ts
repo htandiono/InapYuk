@@ -52,6 +52,11 @@ async function remindOne(booking: ReminderBooking): Promise<number> {
 }
 
 async function sendReminder(booking: ReminderBooking) {
+  await sendReminderMail(booking);
+  await notifyCheckin(booking);
+}
+
+async function sendReminderMail(booking: ReminderBooking) {
   try {
     await sendMail({
       to: booking.user.email,
@@ -62,6 +67,9 @@ async function sendReminder(booking: ReminderBooking) {
   } catch (error) {
     logger.error('Failed to send check-in reminder', error);
   }
+}
+
+async function notifyCheckin(booking: ReminderBooking) {
   await notifyUser({
     userId: booking.user.id,
     type: 'CHECKIN_REMINDER',

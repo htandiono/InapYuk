@@ -7,7 +7,16 @@ import type { NotificationListQuery } from '@inapyuk/types';
 export async function listNotifications(userId: string, query: NotificationListQuery) {
   const pageArgs = toPrismaPageArgs(query);
   const where = { userId };
-  const [rows, total] = await Promise.all([
+  const [rows, total] = await fetchNotificationPage(where, pageArgs);
+  const orderNumbers = await loadOrderNumbers(rows.map((row) => row.bookingId));
+  return toNotificationPage(rows, total, pageArgs, orderNumbers);
+}
+
+async function fetchNotificationPage(
+  where: { userId: string },
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+) {
+  return Promise.all([
     prisma.notification.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -16,7 +25,14 @@ export async function listNotifications(userId: string, query: NotificationListQ
     }),
     prisma.notification.count({ where }),
   ]);
-  const orderNumbers = await loadOrderNumbers(rows.map((row) => row.bookingId));
+}
+
+function toNotificationPage(
+  rows: NotificationRow[],
+  total: number,
+  pageArgs: ReturnType<typeof toPrismaPageArgs>,
+  orderNumbers: Map<string, string>,
+) {
   return {
     items: rows.map((row) => toDto(row, orderNumbers)),
     meta: buildPaginationMeta(total, pageArgs.page, pageArgs.limit),
@@ -53,26 +69,30 @@ async function loadOrderNumbers(bookingIds: Array<string | null>) {
   return new Map(rows.map((row) => [row.id, row.orderNumber]));
 }
 
-function toDto(
-  row: {
-    id: string;
-    type: NotificationDto['type'];
-    title: string;
-    body: string;
-    bookingId: string | null;
-    readAt: Date | null;
-    createdAt: Date;
-  },
-  orderNumbers: Map<string, string>,
-): NotificationDto {
+type NotificationRow = {
+  id: string;
+  type: NotificationDto['type'];
+  title: string;
+  body: string;
+  bookingId: string | null;
+  readAt: Date | null;
+  createdAt: Date;
+};
+
+function toDto(row: NotificationRow, orderNumbers: Map<string, string>): NotificationDto {
   return {
     id: row.id,
     type: row.type,
     title: row.title,
     body: row.body,
     bookingId: row.bookingId,
-    orderNumber: row.bookingId ? (orderNumbers.get(row.bookingId) ?? null) : null,
+    orderNumber: lookupOrder(row.bookingId, orderNumbers),
     readAt: row.readAt ? row.readAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+function lookupOrder(bookingId: string | null, orderNumbers: Map<string, string>) {
+  if (!bookingId) return null;
+  return orderNumbers.get(bookingId) ?? null;
 }

@@ -16,16 +16,23 @@ export async function occupancyReport(
 ): Promise<PropertyReportResponse> {
   const catalog = await listProperties(tenantId);
   const property = pickProperty(catalog, query.propertyId);
-  const range = monthRange(query.month);
   const rooms = await loadRooms(property.id);
+  return buildOccupancy(property, query.month, rooms, catalog);
+}
+
+async function buildOccupancy(
+  property: { id: string; name: string },
+  month: string,
+  rooms: Array<{ id: string; name: string; totalUnits: number }>,
+  catalog: Array<{ id: string; name: string }>,
+): Promise<PropertyReportResponse> {
+  const range = monthRange(month);
   const mapped = await Promise.all(rooms.map((room) => mapRoom(room, range)));
-  return {
-    propertyId: property.id,
-    propertyName: property.name,
-    month: query.month,
-    rooms: mapped,
-    availableProperties: catalog,
-  };
+  return { ...reportHead(property, month), rooms: mapped, availableProperties: catalog };
+}
+
+function reportHead(property: { id: string; name: string }, month: string) {
+  return { propertyId: property.id, propertyName: property.name, month };
 }
 
 async function listProperties(tenantId: string) {
@@ -108,21 +115,23 @@ function eachDay(range: { start: Date; end: Date }) {
   return days;
 }
 
-function toDay(
-  date: Date,
-  totalUnits: number,
-  stock: {
-    booked: Map<string, number>;
-    overrides: Map<string, { isAvailable: boolean; availableUnits: number | null }>;
-  },
-): PropertyReportDay {
+type DayStock = {
+  booked: Map<string, number>;
+  overrides: Map<string, { isAvailable: boolean; availableUnits: number | null }>;
+};
+
+function toDay(date: Date, totalUnits: number, stock: DayStock): PropertyReportDay {
   const key = formatDateKey(date);
-  const override = stock.overrides.get(key);
+  return dayTotals(key, totalUnits, stock.booked.get(key) ?? 0, stock.overrides.get(key));
+}
+
+type DayOverride = { isAvailable: boolean; availableUnits: number | null };
+
+function dayTotals(date: string, totalUnits: number, bookedUnits: number, override?: DayOverride): PropertyReportDay {
   const blocked = override?.isAvailable === false;
   const capacity = override?.availableUnits ?? totalUnits;
-  const bookedUnits = stock.booked.get(key) ?? 0;
   return {
-    date: key,
+    date,
     totalUnits: capacity,
     bookedUnits,
     availableUnits: blocked ? 0 : Math.max(0, capacity - bookedUnits),

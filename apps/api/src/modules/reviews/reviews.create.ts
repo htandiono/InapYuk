@@ -10,17 +10,33 @@ export async function createReview(
 ): Promise<ReviewDto> {
   const booking = await loadCompletedStay(input.bookingId, caller.sub);
   assertCanReview(booking);
+  return saveReview(caller.sub, booking, input);
+}
+
+async function saveReview(
+  userId: string,
+  booking: { id: string; propertyId: string },
+  input: CreateReviewRequest,
+) {
   const created = await prisma.review.create({
-    data: {
-      bookingId: booking.id,
-      userId: caller.sub,
-      propertyId: booking.propertyId,
-      rating: input.rating,
-      comment: input.comment,
-    },
+    data: reviewData(userId, booking, input),
     include: reviewInclude,
   });
   return toReviewDto(created);
+}
+
+function reviewData(
+  userId: string,
+  booking: { id: string; propertyId: string },
+  input: CreateReviewRequest,
+) {
+  return {
+    bookingId: booking.id,
+    userId,
+    propertyId: booking.propertyId,
+    rating: input.rating,
+    comment: input.comment,
+  };
 }
 
 async function loadCompletedStay(bookingId: string, userId: string) {

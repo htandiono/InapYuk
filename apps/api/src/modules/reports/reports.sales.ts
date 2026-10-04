@@ -29,31 +29,38 @@ export async function salesReport(
 
 async function loadPaidNights(tenantId: string, query: SalesReportQuery) {
   return prisma.bookingNight.findMany({
-    where: {
-      booking: {
-        status: { in: [...PAID] },
-        property: {
-          tenantId,
-          ...(query.propertyId ? { id: query.propertyId } : {}),
-        },
-      },
-      ...nightDateFilter(query.dateFrom, query.dateTo),
-    },
-    select: {
-      finalPrice: true,
-      date: true,
-      booking: {
-        select: {
-          id: true,
-          orderNumber: true,
-          createdAt: true,
-          confirmedAt: true,
-          user: { select: { id: true, name: true } },
-          property: { select: { id: true, name: true } },
-        },
-      },
-    },
+    where: paidNightWhere(tenantId, query),
+    select: nightSelect(),
   });
+}
+
+function paidNightWhere(tenantId: string, query: SalesReportQuery) {
+  return {
+    booking: {
+      status: { in: [...PAID] },
+      property: { tenantId, ...(query.propertyId ? { id: query.propertyId } : {}) },
+    },
+    ...nightDateFilter(query.dateFrom, query.dateTo),
+  };
+}
+
+function nightSelect() {
+  return {
+    finalPrice: true,
+    date: true,
+    booking: { select: bookingSelect() },
+  };
+}
+
+function bookingSelect() {
+  return {
+    id: true,
+    orderNumber: true,
+    createdAt: true,
+    confirmedAt: true,
+    user: { select: { id: true, name: true } },
+    property: { select: { id: true, name: true } },
+  };
 }
 
 function nightDateFilter(dateFrom?: string, dateTo?: string) {
