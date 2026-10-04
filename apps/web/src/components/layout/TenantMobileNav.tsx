@@ -10,25 +10,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { navigation } from './TenantSidebar';
 
-function TenantMobileMenuItem({
-  item,
-  pathname,
-}: {
-  item: (typeof navigation)[0];
-  pathname: string;
-}) {
+type NavItem = (typeof navigation)[0];
+
+function TenantMobileMenuItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
   return (
-    <DropdownMenuItem
-      className={
-        isActive ? 'bg-primary/10 text-primary focus:bg-primary/15' : 'text-muted-foreground'
-      }
-    >
-      <Link href={item.href} className="flex items-center gap-3 w-full h-full py-1 cursor-pointer">
-        <item.icon className="w-4 h-4" />
-        <span className="font-medium">{item.name}</span>
-      </Link>
+    <DropdownMenuItem className={itemClass(isActive)}>
+      <ItemLink item={item} />
     </DropdownMenuItem>
+  );
+}
+
+function itemClass(isActive: boolean) {
+  if (isActive) return 'bg-primary/10 text-primary focus:bg-primary/15';
+  return 'text-muted-foreground';
+}
+
+function ItemLink({ item }: { item: NavItem }) {
+  return (
+    <Link href={item.href} className="flex items-center gap-3 w-full h-full py-1 cursor-pointer">
+      <item.icon className="w-4 h-4" />
+      <span className="font-medium">{item.name}</span>
+    </Link>
   );
 }
 

@@ -11,48 +11,57 @@ interface NavbarProps {
   searchHref?: string;
 }
 
-async function getNavbarUser(): Promise<{
-  role: string | null;
-  displayName: string;
-  initial: string;
-}> {
+type NavUser = { role: string | null; displayName: string; initial: string };
+
+const GUEST: NavUser = { role: null, displayName: 'Pengguna', initial: 'P' };
+
+async function getNavbarUser(): Promise<NavUser> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('accessToken')?.value;
-    if (!token) return { role: null, displayName: 'Pengguna', initial: 'P' };
-    const payload = decodeJwt(token) as { role?: string; name?: string };
-    const displayName = payload.name || 'Pengguna';
-    return {
-      role: payload.role ?? null,
-      displayName,
-      initial: displayName.charAt(0).toUpperCase(),
-    };
+    return userFromToken(await readAccessToken());
   } catch {
-    return { role: null, displayName: 'Pengguna', initial: 'P' };
+    return GUEST;
   }
 }
 
-export async function Navbar({ isAuthenticated, hideSearch, searchHref }: NavbarProps) {
-  const { role, displayName, initial } = isAuthenticated
-    ? await getNavbarUser()
-    : { role: null, displayName: 'Pengguna', initial: 'P' };
+async function readAccessToken() {
+  const cookieStore = await cookies();
+  return cookieStore.get('accessToken')?.value;
+}
 
+function userFromToken(token?: string): NavUser {
+  if (!token) return GUEST;
+  const payload = decodeJwt(token) as { role?: string; name?: string };
+  const displayName = payload.name || GUEST.displayName;
+  return { role: payload.role ?? null, displayName, initial: displayName.charAt(0).toUpperCase() };
+}
+
+export async function Navbar(props: NavbarProps) {
+  const user = props.isAuthenticated ? await getNavbarUser() : GUEST;
+  return <NavbarBar {...props} user={user} />;
+}
+
+function NavbarBar({ isAuthenticated, hideSearch, searchHref, user }: NavbarProps & { user: NavUser }) {
   return (
     <header className="relative z-50 bg-background flex items-center justify-between px-5 py-4 sm:px-8 border-b border-border/40">
-      <Link href="/" className="hover:opacity-90 transition-opacity">
-        <Logo className="text-2xl" />
-      </Link>
-      <div className="flex items-center gap-2">
-        {isAuthenticated ? <NotificationBell /> : null}
-        <NavbarLinks
-          isAuthenticated={isAuthenticated}
-          role={role}
-          displayName={displayName}
-          initial={initial}
-          hideSearch={hideSearch}
-          searchHref={searchHref}
-        />
-      </div>
+      <HomeLink />
+      <NavbarTools user={user} isAuthenticated={isAuthenticated} hideSearch={hideSearch} searchHref={searchHref} />
     </header>
+  );
+}
+
+function HomeLink() {
+  return (
+    <Link href="/" className="hover:opacity-90 transition-opacity">
+      <Logo className="text-2xl" />
+    </Link>
+  );
+}
+
+function NavbarTools({ user, isAuthenticated, hideSearch, searchHref }: NavbarProps & { user: NavUser }) {
+  return (
+    <div className="flex items-center gap-2">
+      {isAuthenticated ? <NotificationBell /> : null}
+      <NavbarLinks {...user} isAuthenticated={isAuthenticated} hideSearch={hideSearch} searchHref={searchHref} />
+    </div>
   );
 }
