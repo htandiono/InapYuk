@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/ui/logo';
 import Link from 'next/link';
 import { LogoutButton } from '../LogoutButton';
+import { NotificationBell } from '@/components/booking/NotificationBell';
 import { TenantMobileNav } from './TenantMobileNav';
 
 async function getTenantName(): Promise<string> {
@@ -56,6 +57,7 @@ function TenantTopbarHeader({ displayName, initial }: { displayName: string; ini
       <TenantMobileNavBrand />
       <div className="h-6 w-px bg-border/40 md:hidden ml-2" aria-hidden="true" />
       <div className="flex flex-1 gap-x-2 self-stretch lg:gap-x-4 justify-end items-center">
+        <NotificationBell />
         <TenantAvatarLink displayName={displayName} initial={initial} />
         <div className="hidden md:block h-6 w-px bg-border/60 mx-2" aria-hidden="true" />
         <LogoutButton

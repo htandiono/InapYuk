@@ -1,15 +1,14 @@
-import { TenantChrome } from '@/components/booking/TenantChrome';
 import { SalesReportView } from '@/components/booking/SalesReportView';
 
 export default function SalesReportPage() {
   return (
-    <TenantChrome current="/tenant/reports/sales">
+    <div className="flex-1 space-y-2 p-6 lg:p-8">
       <p className="text-sm text-accent">Laporan penjualan</p>
       <h1 className="font-heading mt-2 text-2xl tracking-tight sm:text-3xl">Lihat dari mana uangnya datang.</h1>
       <p className="mt-2 mb-8 text-sm text-muted-foreground">
         Grup per properti, per transaksi, atau per tamu. Angkanya dari harga yang terkunci saat pesan.
       </p>
       <SalesReportView />
-    </TenantChrome>
+    </div>
   );
 }

@@ -2,14 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Building2, Tags, FileText, PieChart, CalendarDays } from 'lucide-react';
+import { Building2, Tags, FileText, MessageSquare, PieChart, CalendarDays } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 
 export const navigation = [
   { name: 'Properti', href: '/tenant/properties', icon: Building2 },
   { name: 'Kategori', href: '/tenant/categories', icon: Tags },
-  { name: 'Pesanan', href: '/tenant/orders', icon: FileText },
-  { name: 'Laporan', href: '/tenant/reports', icon: PieChart },
+  { name: 'Transaksi', href: '/tenant/transactions', icon: FileText },
+  { name: 'Ulasan', href: '/tenant/reviews', icon: MessageSquare },
+  { name: 'Penjualan', href: '/tenant/reports/sales', icon: PieChart },
+  { name: 'Okupansi', href: '/tenant/reports/occupancy', icon: CalendarDays },
 ];
 
 function navLinkClass(isActive: boolean) {
@@ -41,16 +43,6 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
-function CalendarLink({ pathname }: { pathname: string }) {
-  const isActive = pathname.startsWith('/tenant/calendar');
-  return (
-    <Link href="/tenant/calendar" className={navLinkClass(isActive)}>
-      <CalendarDays className="h-5 w-5 shrink-0 text-muted-foreground group-hover:text-foreground" />
-      Kalender Properti
-    </Link>
-  );
-}
-
 function TenantNavContent({ pathname }: { pathname: string }) {
   return (
     <nav className="flex flex-1 flex-col p-4 space-y-1 overflow-y-auto">
@@ -62,10 +54,6 @@ function TenantNavContent({ pathname }: { pathname: string }) {
           isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
         />
       ))}
-      <div className="mt-4">
-        <SectionLabel label="Ketersediaan" />
-      </div>
-      <CalendarLink pathname={pathname} />
     </nav>
   );
 }
