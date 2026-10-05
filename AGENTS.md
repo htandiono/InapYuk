@@ -37,6 +37,7 @@ Feature 1 must not edit Feature 2 paths, and the other way around.
 - `apps/api/src/libs/`, `middlewares/`, `utils/`, `config/`
 - `packages/types/`
 - root `package.json`, CI, Tailwind tokens in `apps/web/src/app/globals.css`
+- `apps/web/src/components/layout/`
 
 Schema rule: **additive only**. Do not drop or rename columns, enums, or relations that already exist. Feature 2 already codes against this schema and the seed.
 
