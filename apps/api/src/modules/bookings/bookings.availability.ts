@@ -1,13 +1,7 @@
-import { eachNight, formatDateKey, toDateOnly } from '../../utils/date';
+import { holdingBookingWhere } from '../../services/holding.filter';
 import { conflict, notFound } from '../../utils/app-error';
+import { eachNight, formatDateKey, toDateOnly } from '../../utils/date';
 import type { BookingDb } from './bookings.db';
-
-const HOLDING_STATUSES = [
-  'WAITING_PAYMENT',
-  'WAITING_CONFIRMATION',
-  'PROCESSED',
-  'COMPLETED',
-] as const;
 
 interface Stock {
   booked: Map<string, number>;
@@ -49,7 +43,7 @@ async function countHeld(db: BookingDb, roomId: string, from: Date, to: Date) {
     by: ['date'],
     where: {
       date: { gte: from, lt: to },
-      booking: { roomId, status: { in: [...HOLDING_STATUSES] } },
+      booking: { roomId, ...holdingBookingWhere() },
     },
     _count: { _all: true },
   });

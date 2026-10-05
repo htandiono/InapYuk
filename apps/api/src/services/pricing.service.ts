@@ -1,5 +1,6 @@
 import type { PriceAdjustmentType } from '@inapyuk/types';
 import { prisma } from '../libs/prisma';
+import { holdingBookingWhere } from './holding.filter';
 import { eachNight, formatDateKey, toDateOnly } from '../utils/date';
 import { notFound } from '../utils/app-error';
 
@@ -70,10 +71,7 @@ async function getBookingGroups(roomId: string, from: Date, to: Date) {
     by: ['date'],
     where: {
       date: { gte: from, lt: to },
-      booking: {
-        roomId,
-        status: { in: ['WAITING_PAYMENT', 'WAITING_CONFIRMATION', 'PROCESSED', 'COMPLETED'] },
-      },
+      booking: { roomId, ...holdingBookingWhere() },
     },
     _count: { _all: true },
   });

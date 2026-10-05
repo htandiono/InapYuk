@@ -10,8 +10,9 @@ const REASON = 'Payment window expired without a transfer proof';
 /**
  * Owner: Feature 2 (htandiono), Sprint 1.
  *
- * Releases rooms when a guest never uploads payment proof in time. Safe to run
- * every five minutes: already-cancelled rows no longer match WAITING_PAYMENT.
+ * Marks unpaid bookings cancelled once paymentDeadline has passed. Availability
+ * already ignores those rows, so the daily Vercel run only tidies the status.
+ * The local schedule stays every five minutes. Cancelled rows no longer match.
  */
 export async function expireUnpaidBookings(): Promise<JobResult> {
   const due = await findExpiredUnpaid();

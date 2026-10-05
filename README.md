@@ -142,6 +142,8 @@ API environment, from `apps/api/.env.example`:
 
 `WEB_BASE_URL` has to be `https://inapyuk.space`. The login cookie is shared with
 `api.inapyuk.space` from that name, so the site can tell that someone is signed in.
+Use that custom domain. A `*.vercel.app` host is a public suffix, so a cookie for
+`.vercel.app` is not stored.
 
 The saved migration only edits the users table, and a new database does not have that
 table yet. After the API env is set, from `apps/api`:
@@ -151,11 +153,17 @@ npx prisma db push
 npm run db:seed
 ```
 
+`db push` does not record migration history. A later `migrate deploy` on that
+database needs a baseline first.
+
 Use the production `DATABASE_URL` and `DIRECT_URL` for those two commands. The seed
 password for every demo account is `Inapyuk123!`.
 
 The three jobs run once a day. A normal Vercel account only allows that. The unpaid
-booking job is `0 2 * * *` in `apps/api/vercel.json` (09:00 Jakarta). If the plan allows
-a more frequent job, change that one line to `*/5 * * * *`.
+booking job is `0 2 * * *` in `apps/api/vercel.json` (09:00 Jakarta). A room is free
+again as soon as `paymentDeadline` passes; that job only marks the booking cancelled.
+If the plan allows a more frequent job, change that one line to `*/5 * * * *`.
+
+`PAYMENT_DEADLINE_MINUTES` defaults to 60 when it is omitted. Set it only to change that.
 
 Feature 2 demo notes: [docs/DEMO-FEATURE-2.md](docs/DEMO-FEATURE-2.md).
