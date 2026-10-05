@@ -75,6 +75,7 @@ type BookingInput = {
   checkOut: string;
   withProof?: boolean;
   withNight?: boolean;
+  totalPrice?: number;
 };
 
 export async function seedBooking(input: BookingInput) {
@@ -87,15 +88,15 @@ export async function seedBooking(input: BookingInput) {
       checkIn: toDateOnly(input.checkIn),
       checkOut: toDateOnly(input.checkOut),
       guestCount: 1,
-      totalPrice: 500000,
+      totalPrice: input.totalPrice ?? 500000,
       status: input.status,
       paymentProofUrl: input.withProof ? 'https://example.com/proof.jpg' : null,
       paymentProofUploadedAt: input.withProof ? new Date() : null,
-      nights: input.withNight ? { create: nightRow(input.checkIn) } : undefined,
+      nights: input.withNight ? { create: nightRow(input.checkIn, input.totalPrice ?? 500000) } : undefined,
     },
   });
 }
 
-function nightRow(checkIn: string) {
-  return { date: toDateOnly(checkIn), basePrice: 500000, finalPrice: 500000 };
+function nightRow(checkIn: string, price: number) {
+  return { date: toDateOnly(checkIn), basePrice: price, finalPrice: price };
 }
