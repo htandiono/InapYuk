@@ -103,30 +103,67 @@ Starting Feature 1? Read [docs/HANDOFF-FEATURE-1.md](docs/HANDOFF-FEATURE-1.md) 
 Booking auto-cancellation, the check-in reminder, and marking a stay finished live in
 `apps/api/src/jobs`. The host calls `GET /api/cron/:job` with `CRON_SECRET`. `POST` still
 works if you want to trigger one by hand. Locally a small timer runs the same functions.
-On Vercel the schedule is `apps/api/vercel.json`, because a serverless function cannot
-keep its own timer.
+On Vercel the schedule is `apps/api/vercel.json`, and each job runs once a day.
 
 ## Deploy
 
-Two Vercel projects from this repo.
+Two Vercel projects, both from this repo. Leave the install command empty so Vercel
+installs the workspace from the repository root.
 
 | App | Root directory | Domain              |
 | --- | -------------- | ------------------- |
 | Web | `apps/web`     | `inapyuk.space`     |
 | API | `apps/api`     | `api.inapyuk.space` |
 
-On the web project set `NEXT_PUBLIC_API_BASE_URL` to `https://api.inapyuk.space/api` and
-`NEXT_PUBLIC_SITE_URL` to `https://inapyuk.space`. Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` when
-Google login is turned on.
+Web environment:
 
-On the API project, copy `apps/api/.env.example`. Point the database at the production
-Neon branch, set real JWT secrets, and set `CRON_SECRET` to the value Vercel sends with
-the schedule. `CORS_ORIGIN` and `WEB_BASE_URL` should be `https://inapyuk.space`.
+| Name | Value |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://api.inapyuk.space/api` |
+| `NEXT_PUBLIC_SITE_URL` | `https://inapyuk.space` |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | the Google client id, or leave empty |
 
-After the first deploy, from `apps/api` run `npm run db:deploy` and then `npm run db:seed`
-against that database so the demo accounts exist.
+Set these before the first web build. Changing them later means deploy again.
 
-The unpaid-booking job is every five minutes. That needs a Vercel plan which allows it.
-The check-in reminder and the finished-stay job run once a day.
+API environment, from `apps/api/.env.example`:
+
+| Name | Value |
+| --- | --- |
+| `DATABASE_URL` | Neon pooled connection |
+| `DIRECT_URL` | Neon direct connection |
+| `NODE_ENV` | `production` |
+| `CORS_ORIGIN` | `https://inapyuk.space` |
+| `WEB_BASE_URL` | `https://inapyuk.space` |
+| `JWT_ACCESS_SECRET` | a random string, at least 16 characters |
+| `JWT_REFRESH_SECRET` | a different random string, at least 16 characters |
+| `CRON_SECRET` | a random string, at least 8 characters |
+| `ENABLE_LOCAL_CRON` | `false` |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | required for photos and payment proofs. The server disk does not keep files. |
+
+`WEB_BASE_URL` has to be `https://inapyuk.space`. The login cookie is shared with
+`api.inapyuk.space` from that name, so the site can tell that someone is signed in.
+Use that custom domain. A `*.vercel.app` host is a public suffix, so a cookie for
+`.vercel.app` is not stored.
+
+The saved migration only edits the users table, and a new database does not have that
+table yet. After the API env is set, from `apps/api`:
+
+```bash
+npx prisma db push
+npm run db:seed
+```
+
+`db push` does not record migration history. A later `migrate deploy` on that
+database needs a baseline first.
+
+Use the production `DATABASE_URL` and `DIRECT_URL` for those two commands. The seed
+password for every demo account is `Inapyuk123!`.
+
+The three jobs run once a day. A normal Vercel account only allows that. The unpaid
+booking job is `0 2 * * *` in `apps/api/vercel.json` (09:00 Jakarta). A room is free
+again as soon as `paymentDeadline` passes; that job only marks the booking cancelled.
+If the plan allows a more frequent job, change that one line to `*/5 * * * *`.
+
+`PAYMENT_DEADLINE_MINUTES` defaults to 60 when it is omitted. Set it only to change that.
 
 Feature 2 demo notes: [docs/DEMO-FEATURE-2.md](docs/DEMO-FEATURE-2.md).

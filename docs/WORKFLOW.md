@@ -98,6 +98,7 @@ apps/api/src/utils/
 apps/api/src/services/pricing.service.ts
 packages/types/
 package.json, tsconfig, lint and CI config
+apps/web/src/components/layout/
 ```
 
 ## The one shared contract
