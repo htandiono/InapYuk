@@ -10,7 +10,9 @@ interface PriceCalendarProps {
   roomId: string;
   selectedDate: string | null;
   onSelectDate: (date: string | null) => void;
-  onNightDataChange: (data: { price: number; isAvailable: boolean } | null) => void;
+  onNightDataChange: (
+    data: { price: number; isAvailable: boolean; checkOut?: string } | null,
+  ) => void;
 }
 
 export function PriceCalendar({
@@ -27,6 +29,7 @@ export function PriceCalendar({
     return d;
   });
   const [nights, setNights] = useState<NightlyRate[]>([]);
+  const [checkOut, setCheckOut] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const onNightDataChangeRef = useRef(onNightDataChange);
 
@@ -57,16 +60,17 @@ export function PriceCalendar({
   }, [fetchCalendar]);
 
   useEffect(() => {
-    if (!selectedDate) {
-      onNightDataChangeRef.current(null);
+    onNightDataChangeRef.current(stayQuote(selectedDate, checkOut, nights));
+  }, [selectedDate, checkOut, nights]);
+
+  const pickDate = (day: string | null) => {
+    if (!day || !selectedDate || checkOut || day <= selectedDate) {
+      onSelectDate(day);
+      setCheckOut(null);
       return;
     }
-    if (nights.length > 0) {
-      const night = nights.find((n) => n.date.split('T')[0] === selectedDate.split('T')[0]);
-      if (night)
-        onNightDataChangeRef.current({ price: night.finalPrice, isAvailable: night.isAvailable });
-    }
-  }, [selectedDate, nights]);
+    setCheckOut(day);
+  };
 
   const handlePrevMonth = () => {
     setCurrentDate((p) => {
@@ -114,13 +118,34 @@ export function PriceCalendar({
         <CalendarGrid
           blanks={blanks}
           nights={nights}
-          selectedDate={selectedDate}
-          onSelectDate={onSelectDate}
+          checkIn={selectedDate?.split('T')[0] ?? null}
+          checkOut={checkOut}
+          onSelectDate={pickDate}
           formatPrice={formatPrice}
         />
       )}
     </div>
   );
+}
+
+function stayQuote(checkIn: string | null, checkOut: string | null, nights: NightlyRate[]) {
+  if (!checkIn) return null;
+  const start = checkIn.split('T')[0];
+  const end = checkOut ?? addDay(start);
+  const stay = nights.filter((night) => {
+    const day = night.date.split('T')[0];
+    return day >= start && day < end;
+  });
+  if (stay.length === 0) return null;
+  const price = stay.reduce((sum, night) => sum + night.finalPrice, 0);
+  const isAvailable = stay.every((night) => night.isAvailable);
+  return { price, isAvailable, checkOut: checkOut ? end : undefined };
+}
+
+function addDay(day: string) {
+  const next = new Date(`${day}T00:00:00`);
+  next.setDate(next.getDate() + 1);
+  return next.toISOString().split('T')[0];
 }
 
 function DayHeaders() {

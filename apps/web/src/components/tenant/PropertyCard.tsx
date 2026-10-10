@@ -212,7 +212,7 @@ function DesktopActionButton({
       variant={variant || 'outline'}
       size="sm"
       onClick={onClick}
-      className={`h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center ${variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : 'hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'}`}
+      className={`h-9 px-0 w-9 xl:w-auto xl:px-3 shadow-sm rounded-lg flex items-center justify-center ${variant === 'destructive' ? 'text-destructive hover:bg-destructive/10' : 'hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'}`}
     >
       {children}
     </Button>
