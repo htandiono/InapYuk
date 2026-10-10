@@ -6,12 +6,14 @@ interface Props {
   night: NightlyRate;
   dateObj: Date;
   isSelected: boolean;
+  isInRange?: boolean;
   onSelect: () => void;
 }
 
-export function DayCell({ formatPrice, night, dateObj, isSelected, onSelect }: Props) {
+export function DayCell({ formatPrice, night, dateObj, isSelected, isInRange, onSelect }: Props) {
   const isPast = dateObj < new Date(new Date().setHours(0, 0, 0, 0));
-  const classes = `flex flex-col items-center justify-start rounded-xl py-1.5 transition-all overflow-hidden ${isPast ? 'opacity-40 cursor-not-allowed' : night.isAvailable ? 'hover:bg-muted/50 cursor-pointer group' : 'cursor-not-allowed'}`;
+  const range = isInRange ? 'bg-primary/10' : '';
+  const classes = `flex flex-col items-center justify-start rounded-xl py-1.5 transition-all overflow-hidden ${range} ${isPast ? 'opacity-40 cursor-not-allowed' : night.isAvailable ? 'hover:bg-muted/50 cursor-pointer group' : 'cursor-not-allowed'}`;
   return (
     <div onClick={() => !isPast && night.isAvailable && onSelect()} className={classes}>
       <DayNumber dateObj={dateObj} isSelected={isSelected} isPast={isPast} />
