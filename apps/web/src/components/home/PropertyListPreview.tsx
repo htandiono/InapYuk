@@ -16,14 +16,19 @@ type PropertyPreview = {
 
 async function fetchPreviewProperties() {
   try {
-    const res = await api.get<{ items: PropertyPreview[] }>('/properties?limit=3', {
-      cache: 'no-store',
-    });
-    return res.items || [];
+    const res = await api.get<{ items: Array<PropertyPreview & { imageUrl?: string | null }> }>(
+      '/properties?limit=3',
+      { cache: 'no-store' },
+    );
+    return (res.items || []).map(withImages);
   } catch {
-    // Silent fail
     return [];
   }
+}
+
+function withImages(item: PropertyPreview & { imageUrl?: string | null }): PropertyPreview {
+  if (item.imageUrls?.length) return item;
+  return { ...item, imageUrls: item.imageUrl ? [item.imageUrl] : [] };
 }
 
 function PropertyCardContent({ p }: { p: PropertyPreview }) {

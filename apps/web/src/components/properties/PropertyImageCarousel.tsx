@@ -150,7 +150,7 @@ export function PropertyImageCarousel({
   const [current, setCurrent] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-  if (imageUrls.length === 0) return <EmptyImage aspectClass={aspectClass} />;
+  if (!imageUrls || imageUrls.length === 0) return <EmptyImage aspectClass={aspectClass} />;
   if (imageUrls.length === 1)
     return <SingleImage url={imageUrls[0]} name={name} aspectClass={aspectClass} />;
 
