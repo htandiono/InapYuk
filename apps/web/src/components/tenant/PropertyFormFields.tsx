@@ -2,7 +2,7 @@
 
 import { Controller, type Control } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import type { PropertyFormValues } from './PropertyFormNew';
+import type { PropertyFormValues } from './property-schema';
 
 interface PropertyFormFieldsProps {
   control: Control<PropertyFormValues>;

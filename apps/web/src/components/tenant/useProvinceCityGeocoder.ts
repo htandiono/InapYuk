@@ -16,7 +16,6 @@ export function useProvinceCityGeocoder({
   watchedCity,
   setValue,
   setSelectedGeo,
-  lastGeocodedAddressRef,
   lastProvinceCityRef,
   isReverseGeocodingRef,
   addDebugLog,
@@ -25,22 +24,21 @@ export function useProvinceCityGeocoder({
   watchedCity: string;
   setValue: UseFormSetValue<PropertyFormValues>;
   setSelectedGeo: (g: { lat: number; lng: number } | null) => void;
-  lastGeocodedAddressRef: React.MutableRefObject<string>;
   lastProvinceCityRef: React.MutableRefObject<string>;
   isReverseGeocodingRef: React.MutableRefObject<boolean>;
   addDebugLog?: (msg: string) => void;
 }) {
   useEffect(() => {
-    if (isReverseGeocodingRef.current) {
-      logUI('PROV/CITY: BLOCKED by reverse geocode in progress', addDebugLog);
-      return;
-    }
     const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
     if (provinceCityKey === lastProvinceCityRef.current) {
       logUI('PROV/CITY: no change detected, skipping', addDebugLog);
       return;
     }
     lastProvinceCityRef.current = provinceCityKey;
+    if (isReverseGeocodingRef.current) {
+      logUI('PROV/CITY: BLOCKED by reverse geocode in progress', addDebugLog);
+      return;
+    }
     logUI(
       `PROV/CITY EFFECT triggered: prov=${selectedProvinceId}, city=${watchedCity}`,
       addDebugLog,
@@ -49,11 +47,11 @@ export function useProvinceCityGeocoder({
     const timer = setTimeout(async () => {
       try {
         const province = PROVINCES.find((p) => p.id === selectedProvinceId)?.name;
-        const query = watchedCity
-          ? `${watchedCity}, ${province}, Indonesia`
-          : `${province}, Indonesia`;
+        // The API appends city, province and "Indonesia" to the query itself, so send only
+        // the place name; repeating them makes Nominatim return nothing.
+        const query = watchedCity || province || '';
         logUI(`PROV/CITY GEOCODER → Query: "${query}"`, addDebugLog);
-        const data = await autocompleteAddress(query, province, watchedCity);
+        const data = await autocompleteAddress(query, watchedCity ? province : undefined);
         logUI(`PROV/CITY GEOCODER → Result: ${data?.length ?? 0} items`, addDebugLog);
         if (data && data.length > 0) {
           const first = data[0];
@@ -64,12 +62,6 @@ export function useProvinceCityGeocoder({
             `Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`,
             addDebugLog,
           );
-          if (!lastGeocodedAddressRef.current) {
-            const formatted = `${watchedCity || province}, ${province}, Indonesia`;
-            setValue('address', formatted, { shouldValidate: true });
-            lastGeocodedAddressRef.current = formatted;
-            logUI(`Set address: "${formatted}"`, addDebugLog);
-          }
         } else {
           logUI('No results from autocomplete', addDebugLog);
           addDebugLog?.('⚠ Geocoding returned no results');

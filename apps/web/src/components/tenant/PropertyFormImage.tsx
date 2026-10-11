@@ -1,16 +1,15 @@
 'use client';
 
 import { PropertyFormImageGrid } from './PropertyFormImageGrid';
-import { usePropertyFormImages } from './usePropertyFormImages';
+import type { usePropertyFormImages } from './usePropertyFormImages';
 
 export function PropertyFormImages({
-  initialData,
+  hook,
   loading,
 }: {
-  initialData?: { images?: { id: string; url: string }[] };
+  hook: ReturnType<typeof usePropertyFormImages>;
   loading: boolean;
 }) {
-  const hook = usePropertyFormImages(initialData);
   return (
     <PropertyFormImageGrid
       existingImages={hook.existingImages}

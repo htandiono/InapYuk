@@ -15,6 +15,8 @@ interface Props {
   setSelectedGeo: (geo: { lat: number; lng: number } | null) => void;
   setValue: UseFormSetValue<PropertyFormValues>;
   addDebugLog?: (msg: string) => void;
+  /** Address that already has a saved pin, so it is not geocoded again on mount. */
+  initialAddress?: string;
 }
 
 function logUI(msg: string, addDebugLog?: (m: string) => void) {
@@ -31,16 +33,18 @@ export function useGeocodingEffects({
   setSelectedGeo,
   setValue,
   addDebugLog,
+  initialAddress,
 }: Props) {
-  const lastGeocodedAddressRef = useRef<string>('');
-  const lastProvinceCityRef = useRef<string>('');
+  const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
+  const lastGeocodedAddressRef = useRef<string>(initialAddress ?? '');
+  // Starts at the mounted key so opening a form does not count as a province/city change.
+  const lastProvinceCityRef = useRef<string>(provinceCityKey);
   const isReverseGeocodingRef = useRef(false);
 
-  const provinceCityKey = `${selectedProvinceId}|${watchedCity}`;
   useEffect(() => {
     if (provinceCityKey !== lastProvinceCityRef.current) {
       logUI(`State/City change: prov=${selectedProvinceId}, city=${watchedCity}`, addDebugLog);
-      lastProvinceCityRef.current = provinceCityKey;
+      // Only the address is re-geocoded here; useProvinceCityGeocoder owns lastProvinceCityRef.
       lastGeocodedAddressRef.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,7 +65,6 @@ export function useGeocodingEffects({
     watchedCity,
     setValue,
     setSelectedGeo,
-    lastGeocodedAddressRef,
     lastProvinceCityRef,
     isReverseGeocodingRef,
     addDebugLog,

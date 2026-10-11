@@ -1,6 +1,6 @@
 import { PROVINCES } from '@/data/indonesia-regions';
 import { Controller, Control, FieldErrors, ControllerRenderProps } from 'react-hook-form';
-import type { PropertyFormValues } from './PropertyFormNew';
+import type { PropertyFormValues } from './property-schema';
 
 interface ProvinceSelectProps {
   selectedProvinceId: string;

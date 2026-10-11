@@ -2,7 +2,7 @@
 import { PROVINCES } from '@/data/indonesia-regions';
 import { useEffect } from 'react';
 import { UseFormSetValue } from 'react-hook-form';
-import { autocompleteAddress } from './geocoding-utils';
+import { geocodeWithFallback } from './geocoding-utils';
 import { PropertyFormValues } from './property-schema';
 
 function logUI(msg: string, addDebugLog?: (m: string) => void) {
@@ -44,7 +44,7 @@ export function useAddressGeocoder({
       try {
         const province = PROVINCES.find((p) => p.id === selectedProvinceId)?.name;
         logUI(`ADDRESS GEOCODER → Query: "${addressValue}"`, addDebugLog);
-        const data = await autocompleteAddress(addressValue, province, watchedCity);
+        const data = await geocodeWithFallback(addressValue, province, watchedCity);
         logUI(`ADDRESS GEOCODER → Result: ${data?.length ?? 0} items`, addDebugLog);
         if (data && data.length > 0) {
           const first = data[0];

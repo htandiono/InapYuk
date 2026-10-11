@@ -1,10 +1,9 @@
 'use client';
 
-import { getCitiesByProvinceId, getProvinceIdByName } from '@/data/indonesia-regions';
+import { getCitiesByProvinceId } from '@/data/indonesia-regions';
 import { MapPin } from 'lucide-react';
-import { useState } from 'react';
 import { Control, FieldErrors, useWatch } from 'react-hook-form';
-import type { PropertyFormValues } from './PropertyFormNew';
+import type { PropertyFormValues } from './property-schema';
 import { LocationSearch } from './PropertyFormLocationSearch';
 import { ProvinceSelect } from './PropertyFormLocationProvince';
 import { CitySelect } from './PropertyFormLocationCity';
@@ -23,7 +22,8 @@ interface Props {
   control: Control<PropertyFormValues>;
   errors: FieldErrors<PropertyFormValues>;
   loading: boolean;
-  initialData?: { province?: string; latitude?: number | null; longitude?: number | null };
+  selectedProvinceId: string;
+  setSelectedProvinceId: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showSuggestions: boolean;
@@ -71,10 +71,7 @@ function LocationSelects({
 }
 
 export function PropertyFormLocation(props: Props) {
-  const initialProvinceId = props.initialData?.province
-    ? (getProvinceIdByName(props.initialData.province) ?? '')
-    : '';
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string>(initialProvinceId);
+  const { selectedProvinceId, setSelectedProvinceId } = props;
   const availableCities = getCitiesByProvinceId(selectedProvinceId);
   const addressValue = useWatch({ control: props.control, name: 'address' }) || '';
   return (
