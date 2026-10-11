@@ -157,6 +157,9 @@ npx prisma db push
 npm run db:seed
 ```
 
+Properties without coordinates (the seed has none) get a map pin from `npm run db:backfill-geo`,
+see [docs/BACKFILL-COORDINATES.md](docs/BACKFILL-COORDINATES.md).
+
 `db push` does not record migration history. A later `migrate deploy` on that
 database needs a baseline first.
 
