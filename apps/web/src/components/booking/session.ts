@@ -49,5 +49,5 @@ export function useSession() {
     () => '',
   );
   if (!token) return null;
-  return decodeSession(token);
+  return token.includes('.') ? decodeSession(token) : decodeHint(token);
 }
