@@ -42,66 +42,24 @@ function LocationHeader() {
   );
 }
 
-function LocationSelects({
-  selectedProvinceId,
-  setSelectedProvinceId,
-  availableCities,
-  control,
-  errors,
-  loading,
-}: LocationSelectsProps) {
+function LocationSelects(p: LocationSelectsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <ProvinceSelect
-        selectedProvinceId={selectedProvinceId}
-        setSelectedProvinceId={setSelectedProvinceId}
-        control={control}
-        errors={errors}
-        loading={loading}
-      />
-      <CitySelect
-        selectedProvinceId={selectedProvinceId}
-        availableCities={availableCities}
-        control={control}
-        errors={errors}
-        loading={loading}
-      />
+      <ProvinceSelect {...p} />
+      <CitySelect {...p} />
     </div>
   );
 }
 
-export function PropertyFormLocation(props: Props) {
-  const { selectedProvinceId, setSelectedProvinceId } = props;
-  const availableCities = getCitiesByProvinceId(selectedProvinceId);
-  const addressValue = useWatch({ control: props.control, name: 'address' }) || '';
+export function PropertyFormLocation(p: Props) {
+  const availableCities = getCitiesByProvinceId(p.selectedProvinceId);
+  const addressValue = useWatch({ control: p.control, name: 'address' }) || '';
   return (
     <div className="space-y-3">
       <LocationHeader />
-      <LocationSelects
-        selectedProvinceId={selectedProvinceId}
-        setSelectedProvinceId={setSelectedProvinceId}
-        availableCities={availableCities}
-        control={props.control}
-        errors={props.errors}
-        loading={props.loading}
-      />
-      <LocationSearch
-        loading={props.loading}
-        selectedProvinceId={selectedProvinceId}
-        searchQuery={props.searchQuery}
-        setSearchQuery={props.setSearchQuery}
-        showSuggestions={props.showSuggestions}
-        setShowSuggestions={props.setShowSuggestions}
-        selectedGeo={props.selectedGeo}
-        handleSuggestionSelect={props.handleSuggestionSelect}
-        handleMarkerDrag={props.handleMarkerDrag}
-      />
-      <StreetAddressField
-        control={props.control}
-        errors={props.errors}
-        loading={props.loading}
-        addressValue={addressValue}
-      />
+      <LocationSelects {...p} availableCities={availableCities} />
+      <LocationSearch {...p} />
+      <StreetAddressField {...p} addressValue={addressValue} />
     </div>
   );
 }

@@ -1,73 +1,37 @@
 'use client';
 import { PROVINCES } from '@/data/indonesia-regions';
 import { useEffect } from 'react';
-import { UseFormSetValue } from 'react-hook-form';
 import { geocodeWithFallback } from './geocoding-utils';
-import { PropertyFormValues } from './property-schema';
+import { applyGeo, type SetGeo, type SetValue } from './geocoding-sync';
 
-function logUI(msg: string, addDebugLog?: (m: string) => void) {
-  try {
-    addDebugLog?.('[GeoSync] ' + msg);
-  } catch {}
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function log(..._args: unknown[]) {
-  /* no-op */
-}
-
-export function useAddressGeocoder({
-  addressValue,
-  selectedProvinceId,
-  watchedCity,
-  setValue,
-  setSelectedGeo,
-  lastGeocodedAddressRef,
-  addDebugLog,
-}: {
+interface Params {
   addressValue: string;
   selectedProvinceId: string;
   watchedCity: string;
-  setValue: UseFormSetValue<PropertyFormValues>;
-  setSelectedGeo: (g: { lat: number; lng: number } | null) => void;
+  setValue: SetValue;
+  setSelectedGeo: SetGeo;
   lastGeocodedAddressRef: React.MutableRefObject<string>;
-  addDebugLog?: (msg: string) => void;
-}) {
+}
+
+async function syncAddress(p: Params) {
+  try {
+    const province = PROVINCES.find((x) => x.id === p.selectedProvinceId)?.name;
+    const data = await geocodeWithFallback(p.addressValue, province, p.watchedCity);
+    if (!data || data.length === 0) return;
+    applyGeo(p.setValue, p.setSelectedGeo, data[0]);
+    p.lastGeocodedAddressRef.current = p.addressValue;
+  } catch (err) {
+    console.error('Failed to sync map to typed address', err);
+  }
+}
+
+export function useAddressGeocoder(p: Params) {
+  const { addressValue, lastGeocodedAddressRef } = p;
   useEffect(() => {
-    log('ADDRESS_CHANGE:', {
-      addressValue,
-      lastGeocodedAddressRef: lastGeocodedAddressRef.current,
-    });
-    if (!addressValue || addressValue === lastGeocodedAddressRef.current || addressValue.length < 5)
-      return;
-    const timer = setTimeout(async () => {
-      try {
-        const province = PROVINCES.find((p) => p.id === selectedProvinceId)?.name;
-        logUI(`ADDRESS GEOCODER → Query: "${addressValue}"`, addDebugLog);
-        const data = await geocodeWithFallback(addressValue, province, watchedCity);
-        logUI(`ADDRESS GEOCODER → Result: ${data?.length ?? 0} items`, addDebugLog);
-        if (data && data.length > 0) {
-          const first = data[0];
-          setValue('latitude', first.lat);
-          setValue('longitude', first.lng);
-          setSelectedGeo({ lat: first.lat, lng: first.lng });
-          lastGeocodedAddressRef.current = addressValue;
-          logUI(
-            `Map synced to lat=${first.lat.toFixed(4)}, lng=${first.lng.toFixed(4)}`,
-            addDebugLog,
-          );
-        } else {
-          logUI('No results from autocomplete', addDebugLog);
-          addDebugLog?.('⚠ Address search returned no results');
-        }
-      } catch (err) {
-        console.error('Failed to sync map to typed address', err);
-        addDebugLog?.(
-          `✗ Address geocode error: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-    }, 1200);
+    if (!addressValue || addressValue === lastGeocodedAddressRef.current) return;
+    if (addressValue.length < 5) return;
+    const timer = setTimeout(() => syncAddress(p), 1200);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addressValue, selectedProvinceId, watchedCity, setValue, setSelectedGeo]);
+  }, [addressValue, p.selectedProvinceId, p.watchedCity, p.setValue, p.setSelectedGeo]);
 }

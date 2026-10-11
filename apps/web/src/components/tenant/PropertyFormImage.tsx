@@ -3,35 +3,24 @@
 import { PropertyFormImageGrid } from './PropertyFormImageGrid';
 import type { usePropertyFormImages } from './usePropertyFormImages';
 
-export function PropertyFormImages({
-  hook,
-  loading,
-}: {
-  hook: ReturnType<typeof usePropertyFormImages>;
-  loading: boolean;
-}) {
-  return (
-    <PropertyFormImageGrid
-      existingImages={hook.existingImages}
-      files={hook.files}
-      mainImageId={hook.mainImageId}
-      mainImageIndex={hook.mainImageIndex}
-      totalSlots={hook.totalSlots}
-      loading={loading}
-      handleFileChange={hook.handleFileChange}
-      removeNewFile={hook.removeNewFile}
-      onSetMainImageExisting={(id) => {
-        hook.setMainImageId(id);
-        hook.setMainImageIndex(null);
-      }}
-      onSetMainImageNew={(i) => {
-        hook.setMainImageIndex(i);
-        hook.setMainImageId(null);
-      }}
-      onDeleteExisting={(id) => {
-        hook.setDeletedImages([...hook.deletedImages, id]);
-        if (hook.mainImageId === id) hook.setMainImageId(null);
-      }}
-    />
-  );
+type ImagesHook = ReturnType<typeof usePropertyFormImages>;
+
+function useImageHandlers(h: ImagesHook) {
+  const setMain = (id: string | null, index: number | null) => {
+    h.setMainImageId(id);
+    h.setMainImageIndex(index);
+  };
+  return {
+    onSetMainImageExisting: (id: string) => setMain(id, null),
+    onSetMainImageNew: (i: number) => setMain(null, i),
+    onDeleteExisting: (id: string) => {
+      h.setDeletedImages([...h.deletedImages, id]);
+      if (h.mainImageId === id) h.setMainImageId(null);
+    },
+  };
+}
+
+export function PropertyFormImages({ hook, loading }: { hook: ImagesHook; loading: boolean }) {
+  const handlers = useImageHandlers(hook);
+  return <PropertyFormImageGrid {...hook} {...handlers} loading={loading} />;
 }

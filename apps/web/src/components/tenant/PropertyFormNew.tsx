@@ -12,6 +12,7 @@ import { usePropertyFormLogic } from './usePropertyFormLogic';
 export type { PropertyFormInitData, PropertyFormValues } from './property-schema';
 
 type Category = { id: string; name: string };
+type Logic = ReturnType<typeof usePropertyFormLogic>;
 
 function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,52 +25,64 @@ function useCategories() {
   return categories;
 }
 
-export default function PropertyForm({
-  initialData,
-  onSuccess,
-  onCancel,
-}: {
+function useTextValues(initialData?: PropertyFormInitData) {
+  const [nameValue, onNameChange] = useState(initialData?.name || '');
+  const [descriptionValue, onDescChange] = useState(initialData?.description || '');
+  return { nameValue, onNameChange, descriptionValue, onDescChange };
+}
+
+interface BasicProps {
+  logic: Logic;
+  categories: Category[];
+  initialData?: PropertyFormInitData;
+}
+
+function BasicSection({ logic, categories, initialData }: BasicProps) {
+  const text = useTextValues(initialData);
+  const { control, formState } = logic.form;
+  return (
+    <PropertyFormFields
+      {...text}
+      control={control}
+      errors={formState.errors}
+      loading={logic.loading}
+      categories={categories}
+    />
+  );
+}
+
+function LocationSection({ logic }: { logic: Logic }) {
+  const { control, formState } = logic.form;
+  return (
+    <PropertyFormLocation
+      {...logic}
+      control={control}
+      errors={formState.errors}
+      handleMarkerDrag={logic.geo.handleMarkerDrag}
+    />
+  );
+}
+
+function ActionsSection({ logic, onCancel }: { logic: Logic; onCancel?: () => void }) {
+  const onSubmit = logic.form.handleSubmit(logic.onSubmit);
+  return <PropertyFormActions loading={logic.loading} onCancel={onCancel} onSubmit={onSubmit} />;
+}
+
+interface FormProps {
   initialData?: PropertyFormInitData;
   onSuccess?: () => void;
   onCancel?: () => void;
-}) {
+}
+
+export default function PropertyForm({ initialData, onSuccess, onCancel }: FormProps) {
   const categories = useCategories();
   const logic = usePropertyFormLogic(initialData, onSuccess);
-  const [nameValue, setNameValue] = useState(initialData?.name || '');
-  const [descValue, setDescValue] = useState(initialData?.description || '');
-
   return (
     <>
-      <PropertyFormFields
-        control={logic.form.control}
-        errors={logic.form.formState.errors}
-        loading={logic.loading}
-        nameValue={nameValue}
-        descriptionValue={descValue}
-        onNameChange={setNameValue}
-        onDescChange={setDescValue}
-        categories={categories}
-      />
-      <PropertyFormLocation
-        control={logic.form.control}
-        errors={logic.form.formState.errors}
-        loading={logic.loading}
-        selectedProvinceId={logic.selectedProvinceId}
-        setSelectedProvinceId={logic.setSelectedProvinceId}
-        searchQuery={logic.searchQuery}
-        setSearchQuery={logic.setSearchQuery}
-        showSuggestions={logic.showSuggestions}
-        setShowSuggestions={logic.setShowSuggestions}
-        selectedGeo={logic.selectedGeo}
-        handleSuggestionSelect={logic.handleSuggestionSelect}
-        handleMarkerDrag={logic.geo.handleMarkerDrag}
-      />
+      <BasicSection logic={logic} categories={categories} initialData={initialData} />
+      <LocationSection logic={logic} />
       <PropertyFormImages hook={logic.imgHook} loading={logic.loading} />
-      <PropertyFormActions
-        loading={logic.loading}
-        onCancel={onCancel}
-        onSubmit={logic.form.handleSubmit(logic.onSubmit)}
-      />
+      <ActionsSection logic={logic} onCancel={onCancel} />
     </>
   );
 }
