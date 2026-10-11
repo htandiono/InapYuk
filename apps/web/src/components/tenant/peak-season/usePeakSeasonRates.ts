@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { PeakRate } from './types';
@@ -17,6 +17,17 @@ function doFetchRates(
     .finally(() => setFetching(false));
 }
 
+function onAddSuccess(fetchRates: () => void) {
+  toast.success('Harga musiman berhasil ditambahkan');
+  fetchRates();
+  return true;
+}
+
+function onAddError(err: unknown) {
+  toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan');
+  return false;
+}
+
 function doAddRate(
   roomId: string | null,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -27,15 +38,8 @@ function doAddRate(
   setLoading(true);
   return api
     .post(`/rooms/tenant/rooms/${roomId}/peak-season`, data)
-    .then(async () => {
-      toast.success('Harga musiman berhasil ditambahkan');
-      await fetchRates();
-      return true;
-    })
-    .catch((err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan');
-      return false;
-    })
+    .then(() => onAddSuccess(fetchRates))
+    .catch(onAddError)
     .finally(() => setLoading(false));
 }
 
@@ -55,10 +59,14 @@ export function usePeakSeasonRates(roomId: string | null) {
   const [rates, setRates] = useState<PeakRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-
-  const fetchRates = () => doFetchRates(roomId, setRates, setFetching);
-  const addRate = (data: Omit<PeakRate, 'id'>) => doAddRate(roomId, setLoading, fetchRates, data);
-  const deleteRate = (rateId: string) => doDeleteRate(rateId, fetchRates);
-
+  const fetchRates = useCallback(() => doFetchRates(roomId, setRates, setFetching), [roomId]);
+  const addRate = useCallback(
+    (data: Omit<PeakRate, 'id'>) => doAddRate(roomId, setLoading, fetchRates, data),
+    [roomId, fetchRates],
+  );
+  const deleteRate = useCallback(
+    (rateId: string) => doDeleteRate(rateId, fetchRates),
+    [fetchRates],
+  );
   return { rates, fetching, loading, fetchRates, addRate, deleteRate };
 }
