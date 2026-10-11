@@ -14,19 +14,30 @@ async function handleExistingUser(email: string) {
   }
 }
 
-function sendVerificationEmail(email: string, name: string, token: string, isTenant: boolean) {
+type Recipient = { email: string; name: string };
+
+// Awaited so the serverless runtime cannot freeze the function before the mail is sent.
+async function sendVerificationEmail(user: Recipient, token: string, subject: string) {
   const verificationUrl = `${env.WEB_BASE_URL}/verify?token=${token}`;
-  sendMail({
-    to: email,
-    subject: isTenant ? 'Verifikasi Akun InapYuk (Tenant)' : 'Verifikasi Akun InapYuk',
+  await sendMail({
+    to: user.email,
+    subject,
     template: 'email-verification',
-    context: { name, verificationUrl, expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES },
+    context: {
+      name: user.name,
+      verificationUrl,
+      expiresInMinutes: env.VERIFICATION_TOKEN_TTL_MINUTES,
+    },
   }).catch((err) => {
-    logger.error(`[MailError] Failed to send verification email to ${email}`, err);
+    logger.error(`[MailError] Failed to send verification email to ${user.email}`, err);
   });
 }
 
 import type { Prisma } from '../../generated/prisma/client';
+
+function newUserData(input: Recipient, role: 'USER' | 'TENANT'): Prisma.UserCreateInput {
+  return { email: input.email, name: input.name, role, provider: 'EMAIL', isVerified: false };
+}
 
 async function createUserAndToken(
   tx: Prisma.TransactionClient,
@@ -43,19 +54,10 @@ async function createUserAndToken(
 export async function registerUser(input: RegisterUserInput) {
   await handleExistingUser(input.email);
   const { rawToken, tokenHash, expiresAt } = createTokenData();
-
-  const { user } = await prisma.$transaction(async (tx) => {
-    const data: Prisma.UserCreateInput = {
-      email: input.email,
-      name: input.name,
-      role: 'USER',
-      provider: 'EMAIL',
-      isVerified: false,
-    };
-    return createUserAndToken(tx, data, { tokenHash, expiresAt });
-  });
-
-  sendVerificationEmail(user.email, user.name, rawToken, false);
+  const { user } = await prisma.$transaction((tx) =>
+    createUserAndToken(tx, newUserData(input, 'USER'), { tokenHash, expiresAt }),
+  );
+  await sendVerificationEmail(user, rawToken, 'Verifikasi Akun InapYuk');
   return user;
 }
 
@@ -64,20 +66,10 @@ async function createTenantWithProfile(
   input: RegisterTenantInput,
   tokenData: { tokenHash: string; expiresAt: Date },
 ) {
-  const data: Prisma.UserCreateInput = {
-    email: input.email,
-    name: input.name,
-    role: 'TENANT',
-    provider: 'EMAIL',
-    isVerified: false,
-  };
-  const result = await createUserAndToken(tx, data, tokenData);
+  const result = await createUserAndToken(tx, newUserData(input, 'TENANT'), tokenData);
+  const { companyName, companyAddress } = input;
   await tx.tenantProfile.create({
-    data: {
-      userId: result.user.id,
-      companyName: input.companyName,
-      companyAddress: input.companyAddress,
-    },
+    data: { userId: result.user.id, companyName, companyAddress },
   });
   return result;
 }
@@ -85,11 +77,9 @@ async function createTenantWithProfile(
 export async function registerTenant(input: RegisterTenantInput) {
   await handleExistingUser(input.email);
   const { rawToken, tokenHash, expiresAt } = createTokenData();
-
-  const { user } = await prisma.$transaction(async (tx) => {
-    return createTenantWithProfile(tx, input, { tokenHash, expiresAt });
-  });
-
-  sendVerificationEmail(user.email, user.name, rawToken, true);
+  const { user } = await prisma.$transaction((tx) =>
+    createTenantWithProfile(tx, input, { tokenHash, expiresAt }),
+  );
+  await sendVerificationEmail(user, rawToken, 'Verifikasi Akun InapYuk (Tenant)');
   return user;
 }

@@ -138,6 +138,10 @@ API environment, from `apps/api/.env.example`:
 | `JWT_REFRESH_SECRET` | a different random string, at least 16 characters |
 | `CRON_SECRET` | a random string, at least 8 characters |
 | `ENABLE_LOCAL_CRON` | `false` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | `smtp.gmail.com`, `587`, `false` |
+| `SMTP_USER`, `SMTP_PASSWORD` | the sender Gmail and its App Password. Without both, no email is sent and the API only logs a warning. |
+| `MAIL_FROM_NAME`, `MAIL_FROM_ADDRESS` | `InapYuk`, `no-reply@inapyuk.space` |
+| `GOOGLE_CLIENT_ID` | the same Google client id as the web app |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | required for photos and payment proofs. The server disk does not keep files. |
 
 `WEB_BASE_URL` has to be `https://inapyuk.space`. The login cookie is shared with
