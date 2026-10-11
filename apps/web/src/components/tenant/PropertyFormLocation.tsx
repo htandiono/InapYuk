@@ -3,11 +3,12 @@
 import { getCitiesByProvinceId, getProvinceIdByName } from '@/data/indonesia-regions';
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
-import { Control, FieldErrors } from 'react-hook-form';
+import { Control, FieldErrors, useWatch } from 'react-hook-form';
 import type { PropertyFormValues } from './PropertyFormNew';
 import { LocationSearch } from './PropertyFormLocationSearch';
 import { ProvinceSelect } from './PropertyFormLocationProvince';
 import { CitySelect } from './PropertyFormLocationCity';
+import { StreetAddressField } from './StreetAddressField';
 
 interface LocationSelectsProps {
   selectedProvinceId: string;
@@ -75,6 +76,7 @@ export function PropertyFormLocation(props: Props) {
     : '';
   const [selectedProvinceId, setSelectedProvinceId] = useState<string>(initialProvinceId);
   const availableCities = getCitiesByProvinceId(selectedProvinceId);
+  const addressValue = useWatch({ control: props.control, name: 'address' }) || '';
   return (
     <div className="space-y-3">
       <LocationHeader />
@@ -96,6 +98,12 @@ export function PropertyFormLocation(props: Props) {
         selectedGeo={props.selectedGeo}
         handleSuggestionSelect={props.handleSuggestionSelect}
         handleMarkerDrag={props.handleMarkerDrag}
+      />
+      <StreetAddressField
+        control={props.control}
+        errors={props.errors}
+        loading={props.loading}
+        addressValue={addressValue}
       />
     </div>
   );

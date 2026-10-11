@@ -17,8 +17,8 @@ export function PeakSeasonForm({ rates, loading, onSubmit }: PeakSeasonFormProps
     <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/20">
       <h4 className="font-semibold mb-2 text-sm">Tambah Harga Baru</h4>
       <NameField formData={formData} setFormData={setFormData} />
-      <div className="grid grid-cols-2 gap-4"><DateFields formData={formData} setFormData={setFormData} /></div>
-      <div className="grid grid-cols-2 gap-4"><AdjustmentFields formData={formData} setFormData={setFormData} /></div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><DateFields formData={formData} setFormData={setFormData} /></div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><AdjustmentFields formData={formData} setFormData={setFormData} /></div>
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={loading}>{loading ? 'Menyimpan...' : 'Tambah'}</Button>
       </div>
@@ -40,11 +40,11 @@ function DateFields({ formData, setFormData }: { formData: FormData; setFormData
     <>
       <div className="space-y-2">
         <Label>Tanggal Mulai</Label>
-        <Input type="date" required value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+        <Input type="date" required className="w-full min-w-0" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
       </div>
       <div className="space-y-2">
         <Label>Tanggal Akhir</Label>
-        <Input type="date" required value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} min={formData.startDate} />
+        <Input type="date" required className="w-full min-w-0" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} min={formData.startDate} />
       </div>
     </>
   );

@@ -24,11 +24,26 @@ function setAuthCookies(res: Response, tokens: { accessToken: string; refreshTok
     ...cookieOpts,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+  res.cookie('sessionHint', readHint(tokens.accessToken), hintCookie(7 * 24 * 60 * 60 * 1000));
+}
+
+function hintCookie(maxAge: number) {
+  return { ...cookieOpts, httpOnly: false, maxAge };
+}
+
+function readHint(accessToken: string): string {
+  const part = accessToken.split('.')[1] ?? '';
+  const payload = JSON.parse(Buffer.from(part, 'base64url').toString()) as {
+    role?: string;
+    isVerified?: boolean;
+  };
+  return `${payload.role ?? 'USER'}:${payload.isVerified ? '1' : '0'}`;
 }
 
 function clearAuthCookies(res: Response) {
   res.clearCookie('accessToken', cookieOpts);
   res.clearCookie('refreshToken', cookieOpts);
+  res.clearCookie('sessionHint', { ...cookieOpts, httpOnly: false });
 }
 
 export async function handleRegisterUser(req: Request, res: Response) {

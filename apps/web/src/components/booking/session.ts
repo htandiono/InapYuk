@@ -5,8 +5,7 @@ import { useSyncExternalStore } from 'react';
 /** Reads the login token from the cookie or local storage. */
 export function readAccessToken(): string | undefined {
   if (typeof window === 'undefined') return undefined;
-  const fromCookie = readCookie('accessToken');
-  return fromCookie || window.localStorage.getItem('inapyuk.accessToken') || undefined;
+  return readCookie('sessionHint') || readCookie('accessToken') || undefined;
 }
 
 function readCookie(name: string): string | undefined {
@@ -18,7 +17,13 @@ function readCookie(name: string): string | undefined {
 export function readSession(): { isVerified: boolean; role: string } | null {
   const token = readAccessToken();
   if (!token) return null;
+  if (token.includes(':')) return decodeHint(token);
   return decodeSession(token);
+}
+
+function decodeHint(hint: string): { isVerified: boolean; role: string } {
+  const [role, verified] = hint.split(':');
+  return { role: role || 'USER', isVerified: verified === '1' };
 }
 
 function decodeSession(token: string): { isVerified: boolean; role: string } | null {
