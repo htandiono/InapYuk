@@ -1,6 +1,8 @@
 import { PROVINCES } from '@/data/indonesia-regions';
 import { Controller, Control, FieldErrors, ControllerRenderProps } from 'react-hook-form';
-import type { PropertyFormValues } from './PropertyFormNew';
+import { FieldError } from './FieldParts';
+import type { PropertyFormValues } from './property-schema';
+import { selectClass } from './select-styles';
 
 interface ProvinceSelectProps {
   selectedProvinceId: string;
@@ -10,76 +12,49 @@ interface ProvinceSelectProps {
   loading: boolean;
 }
 
-function ProvinceSelectLabel() {
-  return (
-    <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
-      Provinsi <span className="text-destructive">*</span>
-    </label>
-  );
-}
-
-function ProvinceSelectInput({
-  field,
-  loading,
-  selectedProvinceId,
-  setSelectedProvinceId,
-  errors,
-}: {
+type InputProps = ProvinceSelectProps & {
   field: ControllerRenderProps<PropertyFormValues, 'state'>;
-  loading: boolean;
-  selectedProvinceId: string;
-  setSelectedProvinceId: (id: string) => void;
-  errors: FieldErrors<PropertyFormValues>;
-}) {
+};
+
+function ProvinceOptions() {
   return (
-    <select
-      value={selectedProvinceId}
-      disabled={loading}
-      onChange={(e) => {
-        const province = PROVINCES.find((p) => p.id === e.target.value);
-        setSelectedProvinceId(e.target.value);
-        field.onChange(province?.name ?? '');
-      }}
-      className={`w-full h-10 rounded-md border bg-background px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 ${errors.state ? 'border-destructive ring-1 ring-destructive' : 'border-input hover:border-primary/50'}`}
-    >
+    <>
       <option value="">Pilih Provinsi...</option>
       {PROVINCES.map((p) => (
         <option key={p.id} value={p.id}>
           {p.name}
         </option>
       ))}
+    </>
+  );
+}
+
+function ProvinceSelectInput(p: InputProps) {
+  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    p.setSelectedProvinceId(e.target.value);
+    p.field.onChange(PROVINCES.find((x) => x.id === e.target.value)?.name ?? '');
+  };
+  const className = selectClass(Boolean(p.errors.state), 'disabled:opacity-50');
+  const props = { value: p.selectedProvinceId, disabled: p.loading, onChange, className };
+  return (
+    <select {...props}>
+      <ProvinceOptions />
     </select>
   );
 }
 
-export function ProvinceSelect({
-  selectedProvinceId,
-  setSelectedProvinceId,
-  control,
-  errors,
-  loading,
-}: ProvinceSelectProps) {
+export function ProvinceSelect(p: ProvinceSelectProps) {
   return (
     <div>
-      <ProvinceSelectLabel />
+      <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
+        Provinsi <span className="text-destructive">*</span>
+      </label>
       <Controller
         name="state"
-        control={control}
-        render={({ field }) => (
-          <ProvinceSelectInput
-            field={field}
-            loading={loading}
-            selectedProvinceId={selectedProvinceId}
-            setSelectedProvinceId={setSelectedProvinceId}
-            errors={errors}
-          />
-        )}
+        control={p.control}
+        render={({ field }) => <ProvinceSelectInput {...p} field={field} />}
       />
-      {errors.state && (
-        <p className="flex items-center gap-1 text-destructive text-xs mt-1.5">
-          <span>⚠</span> {errors.state.message}
-        </p>
-      )}
+      {p.errors.state && <FieldError message={p.errors.state.message} />}
     </div>
   );
 }

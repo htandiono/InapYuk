@@ -1,10 +1,9 @@
 'use client';
 
-import { getCitiesByProvinceId, getProvinceIdByName } from '@/data/indonesia-regions';
+import { getCitiesByProvinceId } from '@/data/indonesia-regions';
 import { MapPin } from 'lucide-react';
-import { useState } from 'react';
 import { Control, FieldErrors, useWatch } from 'react-hook-form';
-import type { PropertyFormValues } from './PropertyFormNew';
+import type { PropertyFormValues } from './property-schema';
 import { LocationSearch } from './PropertyFormLocationSearch';
 import { ProvinceSelect } from './PropertyFormLocationProvince';
 import { CitySelect } from './PropertyFormLocationCity';
@@ -23,7 +22,8 @@ interface Props {
   control: Control<PropertyFormValues>;
   errors: FieldErrors<PropertyFormValues>;
   loading: boolean;
-  initialData?: { province?: string; latitude?: number | null; longitude?: number | null };
+  selectedProvinceId: string;
+  setSelectedProvinceId: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showSuggestions: boolean;
@@ -42,69 +42,24 @@ function LocationHeader() {
   );
 }
 
-function LocationSelects({
-  selectedProvinceId,
-  setSelectedProvinceId,
-  availableCities,
-  control,
-  errors,
-  loading,
-}: LocationSelectsProps) {
+function LocationSelects(p: LocationSelectsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <ProvinceSelect
-        selectedProvinceId={selectedProvinceId}
-        setSelectedProvinceId={setSelectedProvinceId}
-        control={control}
-        errors={errors}
-        loading={loading}
-      />
-      <CitySelect
-        selectedProvinceId={selectedProvinceId}
-        availableCities={availableCities}
-        control={control}
-        errors={errors}
-        loading={loading}
-      />
+      <ProvinceSelect {...p} />
+      <CitySelect {...p} />
     </div>
   );
 }
 
-export function PropertyFormLocation(props: Props) {
-  const initialProvinceId = props.initialData?.province
-    ? (getProvinceIdByName(props.initialData.province) ?? '')
-    : '';
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string>(initialProvinceId);
-  const availableCities = getCitiesByProvinceId(selectedProvinceId);
-  const addressValue = useWatch({ control: props.control, name: 'address' }) || '';
+export function PropertyFormLocation(p: Props) {
+  const availableCities = getCitiesByProvinceId(p.selectedProvinceId);
+  const addressValue = useWatch({ control: p.control, name: 'address' }) || '';
   return (
     <div className="space-y-3">
       <LocationHeader />
-      <LocationSelects
-        selectedProvinceId={selectedProvinceId}
-        setSelectedProvinceId={setSelectedProvinceId}
-        availableCities={availableCities}
-        control={props.control}
-        errors={props.errors}
-        loading={props.loading}
-      />
-      <LocationSearch
-        loading={props.loading}
-        selectedProvinceId={selectedProvinceId}
-        searchQuery={props.searchQuery}
-        setSearchQuery={props.setSearchQuery}
-        showSuggestions={props.showSuggestions}
-        setShowSuggestions={props.setShowSuggestions}
-        selectedGeo={props.selectedGeo}
-        handleSuggestionSelect={props.handleSuggestionSelect}
-        handleMarkerDrag={props.handleMarkerDrag}
-      />
-      <StreetAddressField
-        control={props.control}
-        errors={props.errors}
-        loading={props.loading}
-        addressValue={addressValue}
-      />
+      <LocationSelects {...p} availableCities={availableCities} />
+      <LocationSearch {...p} />
+      <StreetAddressField {...p} addressValue={addressValue} />
     </div>
   );
 }

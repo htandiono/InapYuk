@@ -41,6 +41,14 @@ export async function autocompleteAddress(
   return api.get(`/geo/autocomplete?${searchParams.toString()}`);
 }
 
+/** A street address Nominatim cannot resolve still gets a pin at the city (or province) centre. */
+export async function geocodeWithFallback(address: string, province?: string, city?: string) {
+  const exact = await autocompleteAddress(address, province, city);
+  if (exact.length > 0) return exact;
+  const place = city || province;
+  return place ? autocompleteAddress(place, city ? province : undefined) : [];
+}
+
 export function findProvinceId(provinceName: string): string | undefined {
   return (
     getProvinceIdByName(provinceName) ||
